@@ -56,8 +56,10 @@ int main() {
 
     simulation << "t" << simpleSystem.time << "; p1, " << pos1.x << ", " << pos1.y << ", " << pos1.z << "; p2, " << pos2.x << ", " << pos2.y << ", " << pos2.z << endl;
 
+    const int orbits = 10;
+
     // evolve the system over a single full orbit period    
-    while (simpleSystem.time < 2 * PI / sqrt(2)) {
+    while (simpleSystem.time < orbits * 2 * PI / sqrt(2)) {
         grav1_2.apply();
         simpleSystem.evolve();
 
@@ -66,10 +68,10 @@ int main() {
 
 		simulation << "t" << simpleSystem.time << "; p1, " << pos1.x << ", " << pos1.y << ", " << pos1.z << "; p2, " << pos2.x << ", " << pos2.y << ", " << pos2.z << endl;
 
-        if ((int)(simpleSystem.time * 1000) % 100 == 0) {
+        /*if ((int)(simpleSystem.time * 1000) % 100 == 0) {
             cout << "  Particle 1 Position: (" << pos1 << ")" << endl;
             cout << "  Particle 2 Position: (" << pos2 << ")" << endl << endl;
-        }
+        }*/
 
     }
 
@@ -132,7 +134,7 @@ int main() {
     vector<float> circleVert;
     vector<unsigned int> circleInd;
 
-    circleZ(circleVert, circleInd, 0.01f, 12, { 1.0f, 0.0f, 0.0f });
+    circleZ(circleVert, circleInd, 0.02f, 12, { 1.0f, 0.0f, 0.0f });
 
     for (size_t i = 0; i < circleVert.size(); i++) {
         cout << circleVert[i] << ", ";
@@ -258,33 +260,30 @@ int main() {
    //         glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(circleInd.size()), GL_UNSIGNED_INT, 0);
    //     }
 
-  //      for (System & subsystem : simpleSystem.subsystems) {
-  //          model = glm::mat4(1.0f);
-  //          model = glm::translate(model, glm::vec3(subsystem.position.x, subsystem.position.y, subsystem.position.z));
-  //          shader.setMat4("model", model);
-  //          // draw the circle
-  //          glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(circleInd.size()), GL_UNSIGNED_INT, 0);
-		//}
+        for (System & subsystem : simpleSystem.subsystems) {
+            model = glm::mat4(1.0f);
+            model = glm::translate(model, glm::vec3(subsystem.position.x, subsystem.position.y, subsystem.position.z));
+            shader.setMat4("model", model);
+            // draw the circle
+            glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(circleInd.size()), GL_UNSIGNED_INT, 0);
+		}
 
         //glDrawArrays(GL_TRIANGLES, 0, 6);
         //glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(circleInd.size()), GL_UNSIGNED_INT, 0);
         // glBindVertexArray(0); // no need to unbind it every time 
 
+        bool foundTargetTime = false;
+
+        float prevSystemTime = simpleSystem.time;
+        float nextTime = simpleSystem.time;
+
 		// Wait for frame time to elapse (16ms for ~60FPS)
         while (chrono::high_resolution_clock::now() - lastFrameTime < frameDuration) { 
-            /* wait */ 
-        
-            // But also read in data to render animation
-            inputData >> ws;
-
-			bool foundTargetTime = false;
-
-			float prevSystemTime = simpleSystem.time;
+            /* wait */
 			
 			// Read next time from file until we find the time that matches or exceeds the target frame time
 			// ***** THIS IS UNTESTED *****
-            while (!inputData.eof() && !foundTargetTime) {
-                float nextTime;
+            if (!inputData.eof() && !foundTargetTime) {
 				string line = "";
 				getline(inputData, line);
                 if (line.length() != 0) {
@@ -297,6 +296,25 @@ int main() {
 				simpleSystem.time = nextTime;
                 if (simpleSystem.time - prevSystemTime >= frameTime) {
                     foundTargetTime = true;
+
+					cout << "Frame Time: " << simpleSystem.time << endl;
+
+					// Update subsystem positions
+                    for (int i = 0; i < simpleSystem.subsystems.size(); i++) {
+						size_t pPos = line.find("p" + to_string(i + 1) + ",");
+                        
+                        if (pPos != string::npos) {
+                            size_t start = pPos + 3;
+                            size_t end = line.find(';', start);
+                            string positionStr = line.substr(start, end - start);
+                            // Parse positionStr for x, y, z
+                            float x, y, z;
+                            sscanf_s(positionStr.c_str(), "%f, %f, %f", &x, &y, &z);
+                            simpleSystem.subsystems[i].position = vec3(x, y, z);
+
+							cout << "  Particle " << (i + 1) << " Position: (" << simpleSystem.subsystems[i].position << ")" << endl;
+                        }
+                    }
                 }
             }
         };

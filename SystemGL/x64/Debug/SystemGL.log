@@ -1,3 +1,5 @@
 ﻿  Source.cpp
-C:\Users\chris\source\repos\SystemGL\SystemGL\Source.cpp(340,21): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\chris\source\repos\SystemGL\SystemGL\Source.cpp(277,30): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\chris\source\repos\SystemGL\SystemGL\Source.cpp(278,24): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\chris\source\repos\SystemGL\SystemGL\Source.cpp(391,21): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
   SystemGL.vcxproj -> C:\Users\chris\source\repos\SystemGL\x64\Debug\SystemGL.exe

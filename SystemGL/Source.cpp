@@ -73,6 +73,9 @@ int main() {
 
     }
 
+    // close files
+    simulation.close();
+
     cout << "Final Positions after evolution:" << endl;
     cout << "  Particle 1 Position: (" << pos1 << ")" << endl;
     cout << "  Particle 2 Position: (" << pos2 << ")" << endl << endl;
@@ -129,7 +132,7 @@ int main() {
     vector<float> circleVert;
     vector<unsigned int> circleInd;
 
-    circleZ(circleVert, circleInd, 0.25f, 10, { 1.0f, 0.0f, 0.0f });
+    circleZ(circleVert, circleInd, 0.01f, 12, { 1.0f, 0.0f, 0.0f });
 
     for (size_t i = 0; i < circleVert.size(); i++) {
         cout << circleVert[i] << ", ";
@@ -205,6 +208,11 @@ int main() {
 
     chrono::high_resolution_clock::time_point lastFrameTime = chrono::high_resolution_clock::now();
 	chrono::milliseconds frameDuration(16); // Approx. 60 FPS
+	float frameTime = frameDuration.count() / 1000.0f; // in seconds
+
+	ifstream inputData("simulation.txt");
+
+	simpleSystem.time = 0.0;
 
     // render loop
     // -----------
@@ -239,23 +247,59 @@ int main() {
 
         glBindVertexArray(VAO); // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
 
-        for (unsigned int i = 0; i < 10; i++) {
-            model = glm::mat4(1.0f);
-            model = glm::rotate(model, glm::radians(-1.0f * iterations), glm::vec3(0.0f, 0.0f, 0.1f));
-			model = glm::translate(model, circlePositions[i]);
+   //     for (unsigned int i = 0; i < 10; i++) {
+   //         model = glm::mat4(1.0f);
+   //         model = glm::rotate(model, glm::radians(-1.0f * iterations), glm::vec3(0.0f, 0.0f, 0.1f));
+			//model = glm::translate(model, circlePositions[i]);
 
-			shader.setMat4("model", model);
+			//shader.setMat4("model", model);
 
-            // draw the circle
-            glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(circleInd.size()), GL_UNSIGNED_INT, 0);
-        }
+   //         // draw the circle
+   //         glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(circleInd.size()), GL_UNSIGNED_INT, 0);
+   //     }
+
+  //      for (System & subsystem : simpleSystem.subsystems) {
+  //          model = glm::mat4(1.0f);
+  //          model = glm::translate(model, glm::vec3(subsystem.position.x, subsystem.position.y, subsystem.position.z));
+  //          shader.setMat4("model", model);
+  //          // draw the circle
+  //          glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(circleInd.size()), GL_UNSIGNED_INT, 0);
+		//}
 
         //glDrawArrays(GL_TRIANGLES, 0, 6);
         //glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(circleInd.size()), GL_UNSIGNED_INT, 0);
         // glBindVertexArray(0); // no need to unbind it every time 
 
 		// Wait for frame time to elapse (16ms for ~60FPS)
-        while (chrono::high_resolution_clock::now() - lastFrameTime < frameDuration) { /* wait */ };
+        while (chrono::high_resolution_clock::now() - lastFrameTime < frameDuration) { 
+            /* wait */ 
+        
+            // But also read in data to render animation
+            inputData >> ws;
+
+			bool foundTargetTime = false;
+
+			float prevSystemTime = simpleSystem.time;
+			
+			// Read next time from file until we find the time that matches or exceeds the target frame time
+			// ***** THIS IS UNTESTED *****
+            while (!inputData.eof() && !foundTargetTime) {
+                float nextTime;
+				string line = "";
+				getline(inputData, line);
+                if (line.length() != 0) {
+					size_t tPos = line.find(';');
+                    if (tPos != string::npos) {
+                        string timeStr = line.substr(1, tPos - 1);
+                        nextTime = stof(timeStr);
+                    }
+                }
+				simpleSystem.time = nextTime;
+                if (simpleSystem.time - prevSystemTime >= frameTime) {
+                    foundTargetTime = true;
+                }
+            }
+        };
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
@@ -269,9 +313,6 @@ int main() {
 
 
     }
-
-    // close files
-	simulation.close();
 
     // optional: de-allocate all resources once they've outlived their purpose:
     // ------------------------------------------------------------------------

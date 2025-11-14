@@ -82,8 +82,7 @@
               "RelativeToolTip": "SystemGL\\vertex.glsl",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
-              "WhenOpened": "2025-11-12T22:35:47.536Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-11-12T22:35:47.536Z"
             },
             {
               "$type": "Document",
@@ -95,8 +94,7 @@
               "RelativeToolTip": "SystemGL\\fragment.glsl",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
-              "WhenOpened": "2025-11-12T22:36:52.12Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-11-12T22:36:52.12Z"
             },
             {
               "$type": "Document",
@@ -108,8 +106,7 @@
               "RelativeToolTip": "SystemGL\\Shader.cpp",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABMAAAAtAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
-              "WhenOpened": "2025-11-12T22:23:31.316Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-11-12T22:23:31.316Z"
             },
             {
               "$type": "Document",
@@ -121,8 +118,7 @@
               "RelativeToolTip": "SystemGL\\Shader.h",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABcAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
-              "WhenOpened": "2025-11-12T22:22:38.524Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-11-12T22:22:38.524Z"
             },
             {
               "$type": "Document",
@@ -134,8 +130,7 @@
               "RelativeToolTip": "SystemGL\\System.h",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABEAAAAnAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
-              "WhenOpened": "2025-11-11T21:33:00.652Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-11-11T21:33:00.652Z"
             }
           ]
         }

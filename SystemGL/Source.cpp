@@ -3,6 +3,7 @@
 
 #include <cmath>
 #include <chrono>
+#include <sstream> // For file parsing
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -18,8 +19,12 @@ void processInput(GLFWwindow* window);
 void circleZ(vector<float>& vertices, vector<unsigned int>& indices, float radius, int subdivisions, glm::vec3 color);
 
 // settings
-const unsigned int SCR_WIDTH = 800;
-const unsigned int SCR_HEIGHT = 600;
+unsigned int SCR_WIDTH = 800;
+unsigned int SCR_HEIGHT = 600;
+
+// keyboard input processing
+bool KEY_E = false;
+bool KEY_SPACE = false;
 
 int main() {
     cout << "Hello, World!" << endl << endl;
@@ -35,48 +40,43 @@ int main() {
 
     System particle1(pos1, vel, 1.0);
     System particle2(pos2, -vel, 1.0);
+	System particle3(vec3(0, 0.0, 0.0), vec3(0, 0.0, 0.0), 0.05);
 
     // combine particles into a single system
     // ---------------------------------------
-    System simpleSystem({ particle1, particle2 });
+    System simpleSystem({ particle1, particle2, particle3 });
 
     // define gravitational interaction between particles
-    Interaction grav1_2(&simpleSystem.subsystems[0], &simpleSystem.subsystems[1], 'G');
+    //Interaction grav1_2(&simpleSystem.subsystems[0], &simpleSystem.subsystems[1], 'G');
 
-    cout << "  Particle 1 Position: (" << pos1 << ")" << endl;
-    cout << "  Particle 2 Position: (" << pos2 << ")" << endl << endl;
+	//simpleGravitationalOrbitSim(simpleSystem, ofstream());
 
-    cout << "  Particle 1 Velocity: (" << vel << ")" << endl;
-    cout << "  Particle 2 Velocity: (" << -vel << ")" << endl << endl;
+  //  std::ofstream simulation;
+  //  simulation.open("simulation.txt");
 
-    cout << "Evolving the system for set steps..." << endl << endl;
+  //  simulation << "t" << simpleSystem.time << "; p1, " << pos1.x << ", " << pos1.y << ", " << pos1.z << "; p2, " << pos2.x << ", " << pos2.y << ", " << pos2.z << endl;
 
-    std::ofstream simulation;
-    simulation.open("simulation.txt");
+  //  const int orbits = 10;
 
-    simulation << "t" << simpleSystem.time << "; p1, " << pos1.x << ", " << pos1.y << ", " << pos1.z << "; p2, " << pos2.x << ", " << pos2.y << ", " << pos2.z << endl;
+  //  // evolve the system over a single full orbit period    
+  //  while (simpleSystem.time < orbits * 2 * PI / sqrt(2)) {
+  //      grav1_2.apply();
+  //      simpleSystem.evolve();
 
-    const int orbits = 10;
+  //      pos1 = simpleSystem.subsystems[0].position;
+  //      pos2 = simpleSystem.subsystems[1].position;
 
-    // evolve the system over a single full orbit period    
-    while (simpleSystem.time < orbits * 2 * PI / sqrt(2)) {
-        grav1_2.apply();
-        simpleSystem.evolve();
+		//simulation << "t" << simpleSystem.time << "; p1, " << pos1.x << ", " << pos1.y << ", " << pos1.z << "; p2, " << pos2.x << ", " << pos2.y << ", " << pos2.z << endl;
 
-        pos1 = simpleSystem.subsystems[0].position;
-        pos2 = simpleSystem.subsystems[1].position;
+  //      /*if ((int)(simpleSystem.time * 1000) % 100 == 0) {
+  //          cout << "  Particle 1 Position: (" << pos1 << ")" << endl;
+  //          cout << "  Particle 2 Position: (" << pos2 << ")" << endl << endl;
+  //      }*/
 
-		simulation << "t" << simpleSystem.time << "; p1, " << pos1.x << ", " << pos1.y << ", " << pos1.z << "; p2, " << pos2.x << ", " << pos2.y << ", " << pos2.z << endl;
+  //  }
 
-        /*if ((int)(simpleSystem.time * 1000) % 100 == 0) {
-            cout << "  Particle 1 Position: (" << pos1 << ")" << endl;
-            cout << "  Particle 2 Position: (" << pos2 << ")" << endl << endl;
-        }*/
-
-    }
-
-    // close files
-    simulation.close();
+  //  // close files
+  //  simulation.close();
 
     cout << "Final Positions after evolution:" << endl;
     cout << "  Particle 1 Position: (" << pos1 << ")" << endl;
@@ -117,52 +117,10 @@ int main() {
     // ------
     Shader shader("C:/Users/chris/source/repos/SystemGL/SystemGL/vertex.glsl", "C:/Users/chris/source/repos/SystemGL/SystemGL/fragment.glsl");
 
-    // set up vertex data (and buffer(s)) and configure vertex attributes
-    // ------------------------------------------------------------------
- //   float vertices[] = {
- //       // positions         // colors
- //        0.5f,  0.5f, 0.0f,  1.0f, 0.0f, 0.0f,   // top right
- //        0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,   // bottom right
- //       -0.5f, -0.5f, 0.0f,  0.0f, 0.0f, 1.0f,   // bottom left
- //       -0.5f,  0.5f, 0.0f,  0.0f, 0.0f, 0.0f   // top left 
- //   };
- //   unsigned int indices[] = {  // note that we start from 0!
- //       0, 1, 3,   // first triangle
- //       1, 2, 3    // second triangle
-    //};
-
     vector<float> circleVert;
     vector<unsigned int> circleInd;
 
     circleZ(circleVert, circleInd, 0.02f, 12, { 1.0f, 0.0f, 0.0f });
-
-    for (size_t i = 0; i < circleVert.size(); i++) {
-        cout << circleVert[i] << ", ";
-        if ((i + 1) % 6 == 0) cout << endl;
-    }
-    cout << endl;
-    for (size_t i = 0; i < circleInd.size(); i++) {
-        cout << circleInd[i] << ", ";
-        if ((i + 1) % 3 == 0) cout << endl;
-    }
-    cout << endl;
-
-    glm::vec3 circlePositions[] = {
-        glm::vec3(0.0f,  0.0f,  0.0f),
-        glm::vec3(2.0f,  5.0f, 0.0f),
-        glm::vec3(-1.5f, -2.2f, 0.0f),
-        glm::vec3(-3.8f, -2.0f, 0.0f),
-        glm::vec3(2.4f, -0.4f, 0.0f),
-        glm::vec3(-1.7f,  3.0f, 0.0f),
-        glm::vec3(1.3f, -2.0f, 0.0f),
-        glm::vec3(1.5f,  2.0f, 0.0f),
-        glm::vec3(1.5f,  0.2f, 0.0f),
-        glm::vec3(-1.3f,  1.0f, 0.0f)
-    };
-
-    for (glm::vec3 &val : circlePositions) {
-		val /= 5.0f;
-    }
 
     unsigned int VBO, VAO, EBO;
     glGenVertexArrays(1, &VAO);
@@ -171,13 +129,13 @@ int main() {
     // bind the Vertex Array Object first, then bind and set vertex buffer(s), and then configure vertex attributes(s).
     glBindVertexArray(VAO);
 
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, circleVert.size() * sizeof(float), circleVert.data(), GL_STATIC_DRAW);
     /*
     GL_STREAM_DRAW: the data is set only once and used by the GPU at most a few times.
     GL_STATIC_DRAW: the data is set only once and used many times.
     GL_DYNAMIC_DRAW: the data is changed a lot and used many times.
     */
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, circleVert.size() * sizeof(float), circleVert.data(), GL_STATIC_DRAW);
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, circleInd.size() * sizeof(unsigned int), circleInd.data(), GL_STATIC_DRAW);
@@ -202,7 +160,8 @@ int main() {
 
 
     // uncomment this call to draw in wireframe polygons.
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
 
     float angle = 0.0f;
 
@@ -212,125 +171,168 @@ int main() {
 	chrono::milliseconds frameDuration(16); // Approx. 60 FPS
 	float frameTime = frameDuration.count() / 1000.0f; // in seconds
 
+    float targetTime = frameTime;
+
 	ifstream inputData("simulation.txt");
 
 	simpleSystem.time = 0.0;
 
+	bool pause = true;
+
+    chrono::milliseconds spaceBuffer(250); 
+	chrono::high_resolution_clock::time_point prevSpacePressedTime = chrono::high_resolution_clock::now();
+
+    // shader.use();
+
     // render loop
     // -----------
-    while (!glfwWindowShouldClose(window))
-    {
-        // input
-        // -----
-        processInput(window);
+    try {
+        while (!glfwWindowShouldClose(window))
+        {
+            // input
+            // -----
+            processInput(window);
 
-        // render
-        // ------
-        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
+            if (KEY_E) {
+                simpleSystem.time = 0.0;
 
-        // activate shader
-        shader.use();
+                simpleSystem.subsystems[0].position = pos1;
+                simpleSystem.subsystems[1].position = pos2;
+                simpleSystem.subsystems[2].position = vec3(0, 0.0, 0.0);
+                simpleSystem.subsystems[0].velocity = vel;
+                simpleSystem.subsystems[1].velocity = -vel;
+                simpleSystem.subsystems[2].velocity = vec3(0, 0.0, 0.0);
 
-        // create transformations
-        glm::mat4 model = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
-        glm::mat4 view = glm::mat4(1.0f);
-        glm::mat4 projection = glm::mat4(1.0f);
-        view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
-        projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-        // retrieve the matrix uniform locations
-        unsigned int modelLoc = glGetUniformLocation(shader.ID, "model");
-        unsigned int viewLoc = glGetUniformLocation(shader.ID, "view");
-        // pass them to the shaders (3 different ways)
-        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-        glUniformMatrix4fv(viewLoc, 1, GL_FALSE, &view[0][0]);
-        // note: currently we set the projection matrix each frame, but since the projection matrix rarely changes it's often best practice to set it outside the main loop only once.
-        shader.setMat4("projection", projection);
+                // Execute the loaded simulation and re-open the created simulation file
+                inputData.close();
+                simpleGravitationalOrbitSim(simpleSystem, ofstream());
+                inputData.open("simulation.txt");
 
-        glBindVertexArray(VAO); // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
+                targetTime = frameTime;
 
-   //     for (unsigned int i = 0; i < 10; i++) {
-   //         model = glm::mat4(1.0f);
-   //         model = glm::rotate(model, glm::radians(-1.0f * iterations), glm::vec3(0.0f, 0.0f, 0.1f));
-			//model = glm::translate(model, circlePositions[i]);
+                pause = true;
+            }
+            if (KEY_SPACE && chrono::high_resolution_clock::now() - prevSpacePressedTime > spaceBuffer) {
+                pause = !pause;
+                KEY_SPACE = false;
+				prevSpacePressedTime = chrono::high_resolution_clock::now();
+            }
+				
+            KEY_SPACE = false;
+            KEY_E = false;
 
-			//shader.setMat4("model", model);
+            // render
+            // ------
+            glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+            glClear(GL_COLOR_BUFFER_BIT);
 
-   //         // draw the circle
-   //         glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(circleInd.size()), GL_UNSIGNED_INT, 0);
-   //     }
+            // activate shader
+            shader.use();
 
-        for (System & subsystem : simpleSystem.subsystems) {
-            model = glm::mat4(1.0f);
-            model = glm::translate(model, glm::vec3(subsystem.position.x, subsystem.position.y, subsystem.position.z));
-            shader.setMat4("model", model);
-            // draw the circle
-            glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(circleInd.size()), GL_UNSIGNED_INT, 0);
-		}
+            // update projection matrix each frame in case user changes window size
+            glm::mat4 projection = glm::mat4(1.0f);
+            projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+            shader.setMat4("projection", projection);
 
-        //glDrawArrays(GL_TRIANGLES, 0, 6);
-        //glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(circleInd.size()), GL_UNSIGNED_INT, 0);
-        // glBindVertexArray(0); // no need to unbind it every time 
+            // view transformation
+            glm::mat4 view = glm::mat4(1.0f);
+            view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+            shader.setMat4("view", view);
 
-        bool foundTargetTime = false;
+            glBindVertexArray(VAO); // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
 
-        float prevSystemTime = simpleSystem.time;
-        float nextTime = simpleSystem.time;
+            for (System& subsystem : simpleSystem.subsystems) {
+                glm::mat4 model = glm::mat4(1.0f);
+                model = glm::translate(model, glm::vec3(subsystem.position.x, subsystem.position.y, subsystem.position.z));
+                shader.setMat4("model", model);
+                // draw the circle
+                glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(circleInd.size()), GL_UNSIGNED_INT, 0);
+            }
 
-		// Wait for frame time to elapse (16ms for ~60FPS)
-        while (chrono::high_resolution_clock::now() - lastFrameTime < frameDuration) { 
-            /* wait */
-			
-			// Read next time from file until we find the time that matches or exceeds the target frame time
-			// ***** THIS IS UNTESTED *****
-            if (!inputData.eof() && !foundTargetTime) {
-				string line = "";
-				getline(inputData, line);
-                if (line.length() != 0) {
-					size_t tPos = line.find(';');
-                    if (tPos != string::npos) {
-                        string timeStr = line.substr(1, tPos - 1);
-                        nextTime = stof(timeStr);
-                    }
-                }
-				simpleSystem.time = nextTime;
-                if (simpleSystem.time - prevSystemTime >= frameTime) {
-                    foundTargetTime = true;
+            bool foundTargetTime = false;
 
-					cout << "Frame Time: " << simpleSystem.time << endl;
+            float nextTime = simpleSystem.time;
 
-					// Update subsystem positions
-                    for (int i = 0; i < simpleSystem.subsystems.size(); i++) {
-						size_t pPos = line.find("p" + to_string(i + 1) + ",");
-                        
-                        if (pPos != string::npos) {
-                            size_t start = pPos + 3;
+            // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
+            // -------------------------------------------------------------------------------
+            glfwSwapBuffers(window);
+            glfwPollEvents();
+
+            // Wait for frame time to elapse (16ms for ~60FPS)
+            while (chrono::high_resolution_clock::now() - lastFrameTime < frameDuration) {
+                /* wait */
+
+
+				// IMPORTANT: AFTER RENDERING WE UPDATE THE SIMULATION STATE FOR THE NEXT FRAME
+                // Read next time from file until we find the time that matches or exceeds the target frame time
+                // Right now, if there is enough lag, this implementation will skip frames, but by preloading the files
+                // like this, we should avoid stuttering due to the low processing cost
+                // If issues occur, the sim can output a lower fidelity sim to reduce file size and read time
+                // ***** THIS IS UNTESTED *****
+                if (inputData.eof()) {
+                    pause = true;
+                } else if (!foundTargetTime && !pause) {
+                    string line = "";
+                    getline(inputData, line);
+
+                    // THIS NEEDS TO BE MOVED UP BEFORE THE FIRST LOOP
+                    if (simpleSystem.time >= targetTime) {
+                        foundTargetTime = true;
+
+                        cout << "System Time: " << simpleSystem.time << endl;
+                        cout << "Target Time: " << targetTime << endl;
+
+                        targetTime += frameTime;
+
+                        for (int i = 0; i < simpleSystem.subsystems.size(); i++) {
+                            std::string search = std::string("p") + std::to_string(i + 1) + ",";
+                            size_t pPos = line.find(search);
+                            if (pPos == std::string::npos) continue;
+
+                            size_t start = pPos + search.length();
                             size_t end = line.find(';', start);
-                            string positionStr = line.substr(start, end - start);
-                            // Parse positionStr for x, y, z
-                            float x, y, z;
-                            sscanf_s(positionStr.c_str(), "%f, %f, %f", &x, &y, &z);
-                            simpleSystem.subsystems[i].position = vec3(x, y, z);
+                            if (end == std::string::npos) end = line.size();
 
-							cout << "  Particle " << (i + 1) << " Position: (" << simpleSystem.subsystems[i].position << ")" << endl;
+                            std::string positionStr = line.substr(start, end - start);
+                            // remove commas to simplify parsing, or replace with spaces
+                            for (char& c : positionStr) if (c == ',') c = ' ';
+
+                            std::istringstream iss(positionStr);
+                            float x, y, z;
+                            if (!(iss >> x >> y >> z)) {
+                                // parsing failed; log and continue
+                                std::cerr << "Failed to parse position for particle " << (i + 1) << ": '" << positionStr << "'\n";
+                                continue;
+                            }
+                            simpleSystem.subsystems[i].position = vec3(x, y, z);
+                            cout << "  Particle " << (i + 1) << " Position: (" << simpleSystem.subsystems[i].position << ")" << endl;
+                        }
+                    } else if (line.length() != 0) {
+                        size_t tPos = line.find(';');
+                        if (tPos != string::npos) {
+                            string timeStr = line.substr(1, tPos - 1);
+                            nextTime = stof(timeStr);
                         }
                     }
+
+                    simpleSystem.time = nextTime;
+
+                    
                 }
-            }
-        };
+            };
 
-        // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
-        // -------------------------------------------------------------------------------
-        glfwSwapBuffers(window);
-        glfwPollEvents();
+            // Swapping frame time calculation after waiting to avoid time spent in file I/O or rendering
+            lastFrameTime = chrono::high_resolution_clock::now();
 
-		// Swapping frame time calculation after swapping buffers so that the time taken to render and display is included
-		lastFrameTime = chrono::high_resolution_clock::now();
-
-		iterations++;
+            iterations++;
 
 
-    }
+        }
+    } catch (const std::exception& e) {
+        std::cerr << "An error occurred during the render loop: " << e.what() << std::endl;
+	}
+
+    inputData.close();
 
     // optional: de-allocate all resources once they've outlived their purpose:
     // ------------------------------------------------------------------------
@@ -351,12 +353,24 @@ void processInput(GLFWwindow* window)
 {
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, true);
+    if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
+    {
+        // Execute the loaded simulation and render the created simulation file
+		KEY_E = true;
+	}
+    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+    {
+        // Pause functionality can be implemented here
+        KEY_SPACE = true;
+	}
 }
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
 // ---------------------------------------------------------------------------------------------
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
+	SCR_WIDTH = width;
+	SCR_HEIGHT = height;
 	// make sure the viewport matches the new window dimensions; note that width and 
 	// height will be significantly larger than specified on retina displays.
 	glViewport(0, 0, width, height);

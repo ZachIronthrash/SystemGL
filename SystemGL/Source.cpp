@@ -17,8 +17,8 @@ using namespace std;
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
 
-void resetSystem(System& system);
-void updateSubsystemFromFile(System& system, ifstream& inputData, float& targetTime, bool& foundTargetTime);
+void resetSystem(System& system, int n);
+void updateSystemFromFile(System& system, ifstream& inputData, float& targetTime, bool& foundTargetTime);
 void circleZ(vector<float>& vertices, vector<unsigned int>& indices, float radius, int subdivisions, glm::vec3 color);
 
 // settings
@@ -38,9 +38,23 @@ int main() {
     cout << "Hello, World!" << endl << endl;
 
     cout << "Creating a simple system..." << endl;
-
+    
     System simpleSystem;
-    resetSystem(simpleSystem);
+    resetSystem(simpleSystem, 100);
+
+    System pressureApproximationSystem;
+
+    ifstream data;
+	data.open("simulation.txt");
+
+    float zero = 0.0f;
+    resetSystem(pressureApproximationSystem, 100);
+	bool foundTarget = false;
+	updateSystemFromFile(pressureApproximationSystem, data, zero, foundTarget);
+
+    for (System& particle : pressureApproximationSystem.subsystems) {
+        cout << "Particle Position: (" << particle.position << ")" << endl;
+	}
 
  //   // initialize particles as separate systems
  //   // ---------------------------------------
@@ -187,12 +201,15 @@ int main() {
             processInput(window);
 
             if (KEY_E) {
-                resetSystem(simpleSystem);
+                resetSystem(pressureApproximationSystem, 100);
 
                 // Execute the loaded simulation and re-open the created simulation file
                 inputData.close();
-                simpleGravitationalOrbitSim(simpleSystem, ofstream());
+                //simpleGravitationalOrbitSim(simpleSystem, ofstream());
+                pressureApproximation(pressureApproximationSystem, 100.0, ofstream());
                 inputData.open("simulation.txt");
+
+                updateSystemFromFile(pressureApproximationSystem, inputData, zero, foundTarget);
 
                 targetTime = FRAME_TIME;
 
@@ -232,7 +249,7 @@ int main() {
 			shader.setMat4("model", model);
 			bbMesh.draw(shader);
 
-            for (System& subsystem : simpleSystem.subsystems) {
+            for (System& subsystem : pressureApproximationSystem.subsystems) {
                 glm::mat4 model = glm::mat4(1.0f);
                 model = glm::translate(model, glm::vec3(subsystem.position.x, subsystem.position.y, subsystem.position.z));
                 shader.setMat4("model", model);
@@ -268,7 +285,7 @@ int main() {
                     // This call doesn't guarantee a successful update so this name is a misnomer
                     // Instead this checks the next line for the target time and this while loop
                     // calls the function repeatadly until the target time is found
-                    updateSubsystemFromFile(simpleSystem, inputData, targetTime, foundTargetTime); 
+                    updateSystemFromFile(pressureApproximationSystem, inputData, targetTime, foundTargetTime); 
                 }
             };
 
@@ -327,28 +344,16 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 	glViewport(0, 0, width, height);
 }
 
-void resetSystem(System& system) {
-    vec3 pos1(-0.5, 0.0, 0.0);
-    vec3 pos2(0.5, 0.0, 0.0);
-
-    vec3 vel(0.0, 1.0 / sqrt(2.0), 0.0);
-
-    System particle1(pos1, vel, 1.0);
-    System particle2(pos2, -vel, 1.0);
-    System particle3(vec3(0, 0.0, 0.0), vec3(0, 0.0, 0.0), 0.05);
-
-    // reset time
-    // ----------
+void resetSystem(System& system, int n) {
     system.time = 0;
 
-    // combine particles into a single system
-    // ---------------------------------------
     system.subsystems.clear();
-    system.subsystems.push_back(particle1);
-    system.subsystems.push_back(particle2);
-    system.subsystems.push_back(particle3);
+    for (int i = 0; i < n; i++) {
+		System particle;
+		system.subsystems.push_back(particle);
+    }
 }
-void updateSubsystemFromFile(System& system, ifstream& inputData, float& targetTime, bool& foundTargetTime) {
+void updateSystemFromFile(System& system, ifstream& inputData, float& targetTime, bool& foundTargetTime) {
         string line = "";
         getline(inputData, line);
 

@@ -3,28 +3,16 @@
   "WorkspaceRootPath": "C:\\Users\\chris\\source\\repos\\SystemGL\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\chris\\source\\repos\\SystemGL\\SystemGL\\Mesh.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:SystemGL\\Mesh.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{E1A3E90A-0F25-44D5-A5E3-4476F44B9C4D}|SystemGL\\SystemGL.vcxproj|C:\\Users\\chris\\source\\repos\\SystemGL\\SystemGL\\Source.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
       "RelativeMoniker": "D:0:0:{E1A3E90A-0F25-44D5-A5E3-4476F44B9C4D}|SystemGL\\SystemGL.vcxproj|solutionrelative:SystemGL\\Source.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{E1A3E90A-0F25-44D5-A5E3-4476F44B9C4D}|SystemGL\\SystemGL.vcxproj|C:\\Users\\chris\\source\\repos\\SystemGL\\SystemGL\\System.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
       "RelativeMoniker": "D:0:0:{E1A3E90A-0F25-44D5-A5E3-4476F44B9C4D}|SystemGL\\SystemGL.vcxproj|solutionrelative:SystemGL\\System.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\chris\\source\\repos\\SystemGL\\SystemGL\\vertex.glsl||{8B382828-6202-11D1-8870-0000F87579D2}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:SystemGL\\vertex.glsl||{8B382828-6202-11D1-8870-0000F87579D2}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\chris\\source\\repos\\SystemGL\\SystemGL\\fragment.glsl||{8A5AA6CF-46E3-4520-A70A-7393D15233E9}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:SystemGL\\fragment.glsl||{8A5AA6CF-46E3-4520-A70A-7393D15233E9}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{E1A3E90A-0F25-44D5-A5E3-4476F44B9C4D}|SystemGL\\SystemGL.vcxproj|C:\\Users\\chris\\source\\repos\\SystemGL\\SystemGL\\Shader.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
-      "RelativeMoniker": "D:0:0:{E1A3E90A-0F25-44D5-A5E3-4476F44B9C4D}|SystemGL\\SystemGL.vcxproj|solutionrelative:SystemGL\\Shader.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{E1A3E90A-0F25-44D5-A5E3-4476F44B9C4D}|SystemGL\\SystemGL.vcxproj|C:\\Users\\chris\\source\\repos\\SystemGL\\SystemGL\\Shader.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
-      "RelativeMoniker": "D:0:0:{E1A3E90A-0F25-44D5-A5E3-4476F44B9C4D}|SystemGL\\SystemGL.vcxproj|solutionrelative:SystemGL\\Shader.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     }
   ],
   "DocumentGroupContainers": [
@@ -56,17 +44,17 @@
         },
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 0,
+          "SelectedChildIndex": 1,
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 1,
               "Title": "Source.cpp",
               "DocumentMoniker": "C:\\Users\\chris\\source\\repos\\SystemGL\\SystemGL\\Source.cpp",
               "RelativeDocumentMoniker": "SystemGL\\Source.cpp",
-              "ToolTip": "C:\\Users\\chris\\source\\repos\\SystemGL\\SystemGL\\Source.cpp*",
-              "RelativeToolTip": "SystemGL\\Source.cpp*",
-              "ViewState": "AgIAABgBAAAAAAAAAAAkwDQBAAAZAAAAAAAAAA==",
+              "ToolTip": "C:\\Users\\chris\\source\\repos\\SystemGL\\SystemGL\\Source.cpp",
+              "RelativeToolTip": "SystemGL\\Source.cpp",
+              "ViewState": "AgIAAAgAAAAAAAAAAAAAAG4AAAAfAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
               "WhenOpened": "2025-11-12T23:40:33.167Z",
               "IsPinned": true,
@@ -74,64 +62,29 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
-              "Title": "System.h",
-              "DocumentMoniker": "C:\\Users\\chris\\source\\repos\\SystemGL\\SystemGL\\System.h",
-              "RelativeDocumentMoniker": "SystemGL\\System.h",
-              "ToolTip": "C:\\Users\\chris\\source\\repos\\SystemGL\\SystemGL\\System.h",
-              "RelativeToolTip": "SystemGL\\System.h",
-              "ViewState": "AgIAADMAAAAAAAAAAAArwHwAAAAAAAAAAAAAAA==",
+              "DocumentIndex": 0,
+              "Title": "Mesh.h",
+              "DocumentMoniker": "C:\\Users\\chris\\source\\repos\\SystemGL\\SystemGL\\Mesh.h",
+              "RelativeDocumentMoniker": "SystemGL\\Mesh.h",
+              "ToolTip": "C:\\Users\\chris\\source\\repos\\SystemGL\\SystemGL\\Mesh.h*",
+              "RelativeToolTip": "SystemGL\\Mesh.h*",
+              "ViewState": "AgIAAAoAAAAAAAAAAAArwCEAAAA5AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
-              "WhenOpened": "2025-11-11T21:33:00.652Z",
+              "WhenOpened": "2025-11-17T10:18:53.605Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 2,
-              "Title": "vertex.glsl",
-              "DocumentMoniker": "C:\\Users\\chris\\source\\repos\\SystemGL\\SystemGL\\vertex.glsl",
-              "RelativeDocumentMoniker": "SystemGL\\vertex.glsl",
-              "ToolTip": "C:\\Users\\chris\\source\\repos\\SystemGL\\SystemGL\\vertex.glsl",
-              "RelativeToolTip": "SystemGL\\vertex.glsl",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
-              "WhenOpened": "2025-11-12T22:35:47.536Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 3,
-              "Title": "fragment.glsl",
-              "DocumentMoniker": "C:\\Users\\chris\\source\\repos\\SystemGL\\SystemGL\\fragment.glsl",
-              "RelativeDocumentMoniker": "SystemGL\\fragment.glsl",
-              "ToolTip": "C:\\Users\\chris\\source\\repos\\SystemGL\\SystemGL\\fragment.glsl",
-              "RelativeToolTip": "SystemGL\\fragment.glsl",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAAABAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
-              "WhenOpened": "2025-11-12T22:36:52.12Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 4,
-              "Title": "Shader.cpp",
-              "DocumentMoniker": "C:\\Users\\chris\\source\\repos\\SystemGL\\SystemGL\\Shader.cpp",
-              "RelativeDocumentMoniker": "SystemGL\\Shader.cpp",
-              "ToolTip": "C:\\Users\\chris\\source\\repos\\SystemGL\\SystemGL\\Shader.cpp",
-              "RelativeToolTip": "SystemGL\\Shader.cpp",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABMAAAAtAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
-              "WhenOpened": "2025-11-12T22:23:31.316Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 5,
-              "Title": "Shader.h",
-              "DocumentMoniker": "C:\\Users\\chris\\source\\repos\\SystemGL\\SystemGL\\Shader.h",
-              "RelativeDocumentMoniker": "SystemGL\\Shader.h",
-              "ToolTip": "C:\\Users\\chris\\source\\repos\\SystemGL\\SystemGL\\Shader.h",
-              "RelativeToolTip": "SystemGL\\Shader.h",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABcAAAAAAAAAAAAAAA==",
+              "Title": "System.h",
+              "DocumentMoniker": "C:\\Users\\chris\\source\\repos\\SystemGL\\SystemGL\\System.h",
+              "RelativeDocumentMoniker": "SystemGL\\System.h",
+              "ToolTip": "C:\\Users\\chris\\source\\repos\\SystemGL\\SystemGL\\System.h",
+              "RelativeToolTip": "SystemGL\\System.h",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAHwAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
-              "WhenOpened": "2025-11-12T22:22:38.524Z"
+              "WhenOpened": "2025-11-11T21:33:00.652Z",
+              "EditorCaption": ""
             }
           ]
         }

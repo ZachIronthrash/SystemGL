@@ -1,5 +1,6 @@
 #include "System.h"
 #include "Shader.h"
+#include "Mesh.h"
 
 #include <cmath>
 #include <chrono>
@@ -16,71 +17,54 @@ using namespace std;
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
 
+void resetSystem(System& system);
+void updateSubsystemFromFile(System& system, ifstream& inputData, float& targetTime, bool& foundTargetTime);
 void circleZ(vector<float>& vertices, vector<unsigned int>& indices, float radius, int subdivisions, glm::vec3 color);
 
 // settings
 unsigned int SCR_WIDTH = 800;
 unsigned int SCR_HEIGHT = 600;
 
+chrono::milliseconds FRAME_DURATION(16); // Approx. 60 FPS
+float FRAME_TIME = FRAME_DURATION.count() / 1000.0f; // in seconds
+
 // keyboard input processing
 bool KEY_E = false;
 bool KEY_SPACE = false;
+
+bool PAUSE = true;
 
 int main() {
     cout << "Hello, World!" << endl << endl;
 
     cout << "Creating a simple system..." << endl;
 
-    // initialize particles as separate systems
-    // ---------------------------------------
-    vec3 pos1(-0.5, 0.0, 0.0);
-    vec3 pos2(0.5, 0.0, 0.0);
+    System simpleSystem;
+    resetSystem(simpleSystem);
 
-    vec3 vel(0.0, 1.0 / sqrt(2.0), 0.0);
+ //   // initialize particles as separate systems
+ //   // ---------------------------------------
+ //   vec3 pos1(-0.5, 0.0, 0.0);
+ //   vec3 pos2(0.5, 0.0, 0.0);
 
-    System particle1(pos1, vel, 1.0);
-    System particle2(pos2, -vel, 1.0);
-	System particle3(vec3(0, 0.0, 0.0), vec3(0, 0.0, 0.0), 0.05);
+ //   vec3 vel(0.0, 1.0 / sqrt(2.0), 0.0);
 
-    // combine particles into a single system
-    // ---------------------------------------
-    System simpleSystem({ particle1, particle2, particle3 });
+ //   System particle1(pos1, vel, 1.0);
+ //   System particle2(pos2, -vel, 1.0);
+	//System particle3(vec3(0, 0.0, 0.0), vec3(0, 0.0, 0.0), 0.05);
+
+ //   // combine particles into a single system
+ //   // ---------------------------------------
+ //   System simpleSystem({ particle1, particle2, particle3 });
 
     // define gravitational interaction between particles
     //Interaction grav1_2(&simpleSystem.subsystems[0], &simpleSystem.subsystems[1], 'G');
 
 	//simpleGravitationalOrbitSim(simpleSystem, ofstream());
 
-  //  std::ofstream simulation;
-  //  simulation.open("simulation.txt");
-
-  //  simulation << "t" << simpleSystem.time << "; p1, " << pos1.x << ", " << pos1.y << ", " << pos1.z << "; p2, " << pos2.x << ", " << pos2.y << ", " << pos2.z << endl;
-
-  //  const int orbits = 10;
-
-  //  // evolve the system over a single full orbit period    
-  //  while (simpleSystem.time < orbits * 2 * PI / sqrt(2)) {
-  //      grav1_2.apply();
-  //      simpleSystem.evolve();
-
-  //      pos1 = simpleSystem.subsystems[0].position;
-  //      pos2 = simpleSystem.subsystems[1].position;
-
-		//simulation << "t" << simpleSystem.time << "; p1, " << pos1.x << ", " << pos1.y << ", " << pos1.z << "; p2, " << pos2.x << ", " << pos2.y << ", " << pos2.z << endl;
-
-  //      /*if ((int)(simpleSystem.time * 1000) % 100 == 0) {
-  //          cout << "  Particle 1 Position: (" << pos1 << ")" << endl;
-  //          cout << "  Particle 2 Position: (" << pos2 << ")" << endl << endl;
-  //      }*/
-
-  //  }
-
-  //  // close files
-  //  simulation.close();
-
-    cout << "Final Positions after evolution:" << endl;
+    /*cout << "Final Positions after evolution:" << endl;
     cout << "  Particle 1 Position: (" << pos1 << ")" << endl;
-    cout << "  Particle 2 Position: (" << pos2 << ")" << endl << endl;
+    cout << "  Particle 2 Position: (" << pos2 << ")" << endl << endl;*/
 
     // glfw: initialize and configure
     // ------------------------------
@@ -122,63 +106,72 @@ int main() {
 
     circleZ(circleVert, circleInd, 0.02f, 12, { 1.0f, 0.0f, 0.0f });
 
-    unsigned int VBO, VAO, EBO;
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-    glGenBuffers(1, &EBO);
-    // bind the Vertex Array Object first, then bind and set vertex buffer(s), and then configure vertex attributes(s).
-    glBindVertexArray(VAO);
+    float bbWidth = 2.0f;
+    float bbHeight = 2.0f;
+    float boundingBoxVert[] = {
+		// positions                        // colors
+         bbWidth / 2,  bbHeight / 2, 0,     0, 0, 0,    // Top right
+         bbWidth / 2, -bbHeight / 2, 0,     0, 0, 0,    // Bottom right
+        -bbWidth / 2,  bbHeight / 2, 0,     0, 0, 0,    // Top left
+        -bbWidth / 2, -bbHeight / 2, 0,     0, 0, 0     // Bottom left
+    };
+    unsigned int boundingBoxInd[] = {
+        0, 1, 2,
+        2, 3, 1
+    };
 
-    /*
-    GL_STREAM_DRAW: the data is set only once and used by the GPU at most a few times.
-    GL_STATIC_DRAW: the data is set only once and used many times.
-    GL_DYNAMIC_DRAW: the data is changed a lot and used many times.
-    */
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, circleVert.size() * sizeof(float), circleVert.data(), GL_STATIC_DRAW);
+	Mesh circleMesh(circleVert, circleInd);
+    Mesh bbMesh(boundingBoxVert, boundingBoxInd);
 
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, circleInd.size() * sizeof(unsigned int), circleInd.data(), GL_STATIC_DRAW);
+    //unsigned int VBO, VAO, EBO;
+    //glGenVertexArrays(1, &VAO);
+    //glGenBuffers(1, &VBO);
+    //glGenBuffers(1, &EBO);
+    //// bind the Vertex Array Object first, then bind and set vertex buffer(s), and then configure vertex attributes(s).
+    //glBindVertexArray(VAO);
 
-    // position attribute
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-    // color attribute
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
+    ///*
+    //GL_STREAM_DRAW: the data is set only once and used by the GPU at most a few times.
+    //GL_STATIC_DRAW: the data is set only once and used many times.
+    //GL_DYNAMIC_DRAW: the data is changed a lot and used many times.
+    //*/
+    //glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    //glBufferData(GL_ARRAY_BUFFER, circleVert.size() * sizeof(float), circleVert.data(), GL_STATIC_DRAW);
+
+    //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    //glBufferData(GL_ELEMENT_ARRAY_BUFFER, circleInd.size() * sizeof(unsigned int), circleInd.data(), GL_STATIC_DRAW);
+
+    //// position attribute
+    //glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+    //glEnableVertexAttribArray(0);
+    //// color attribute
+    //glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+    //glEnableVertexAttribArray(1);
 
 
-    // note that this is allowed, the call to glVertexAttribPointer registered VBO as the vertex attribute's bound vertex buffer object so afterwards we can safely unbind
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    //// note that this is allowed, the call to glVertexAttribPointer registered VBO as the vertex attribute's bound vertex buffer object so afterwards we can safely unbind
+    //glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-    // remember: do NOT unbind the EBO while a VAO is active as the bound element buffer object IS stored in the VAO; keep the EBO bound.
-    //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    //// remember: do NOT unbind the EBO while a VAO is active as the bound element buffer object IS stored in the VAO; keep the EBO bound.
+    ////glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
-    // You can unbind the VAO afterwards so other VAO calls won't accidentally modify this VAO, but this rarely happens. Modifying other
-    // VAOs requires a call to glBindVertexArray anyways so we generally don't unbind VAOs (nor VBOs) when it's not directly necessary.
-    glBindVertexArray(0);
+    //// You can unbind the VAO afterwards so other VAO calls won't accidentally modify this VAO, but this rarely happens. Modifying other
+    //// VAOs requires a call to glBindVertexArray anyways so we generally don't unbind VAOs (nor VBOs) when it's not directly necessary.
+    //glBindVertexArray(0);
 
 
     // uncomment this call to draw in wireframe polygons.
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-
-    float angle = 0.0f;
-
     int iterations = 0;
 
-    chrono::high_resolution_clock::time_point lastFrameTime = chrono::high_resolution_clock::now();
-	chrono::milliseconds frameDuration(16); // Approx. 60 FPS
-	float frameTime = frameDuration.count() / 1000.0f; // in seconds
-
-    float targetTime = frameTime;
+    float targetTime = FRAME_TIME;
 
 	ifstream inputData("simulation.txt");
 
 	simpleSystem.time = 0.0;
 
-	bool pause = true;
-
+    chrono::high_resolution_clock::time_point lastFrameTime = chrono::high_resolution_clock::now();
     chrono::milliseconds spaceBuffer(250); 
 	chrono::high_resolution_clock::time_point prevSpacePressedTime = chrono::high_resolution_clock::now();
 
@@ -194,26 +187,19 @@ int main() {
             processInput(window);
 
             if (KEY_E) {
-                simpleSystem.time = 0.0;
-
-                simpleSystem.subsystems[0].position = pos1;
-                simpleSystem.subsystems[1].position = pos2;
-                simpleSystem.subsystems[2].position = vec3(0, 0.0, 0.0);
-                simpleSystem.subsystems[0].velocity = vel;
-                simpleSystem.subsystems[1].velocity = -vel;
-                simpleSystem.subsystems[2].velocity = vec3(0, 0.0, 0.0);
+                resetSystem(simpleSystem);
 
                 // Execute the loaded simulation and re-open the created simulation file
                 inputData.close();
                 simpleGravitationalOrbitSim(simpleSystem, ofstream());
                 inputData.open("simulation.txt");
 
-                targetTime = frameTime;
+                targetTime = FRAME_TIME;
 
-                pause = true;
+                PAUSE = true;
             }
             if (KEY_SPACE && chrono::high_resolution_clock::now() - prevSpacePressedTime > spaceBuffer) {
-                pause = !pause;
+                PAUSE = !PAUSE;
                 KEY_SPACE = false;
 				prevSpacePressedTime = chrono::high_resolution_clock::now();
             }
@@ -239,19 +225,25 @@ int main() {
             view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
             shader.setMat4("view", view);
 
-            glBindVertexArray(VAO); // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
+            //glBindVertexArray(VAO); // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
+
+			// Draw bounding box before particles
+			glm::mat4 model = glm::mat4(1.0f);
+			shader.setMat4("model", model);
+			bbMesh.draw(shader);
 
             for (System& subsystem : simpleSystem.subsystems) {
                 glm::mat4 model = glm::mat4(1.0f);
                 model = glm::translate(model, glm::vec3(subsystem.position.x, subsystem.position.y, subsystem.position.z));
                 shader.setMat4("model", model);
                 // draw the circle
-                glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(circleInd.size()), GL_UNSIGNED_INT, 0);
+                //glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(circleInd.size()), GL_UNSIGNED_INT, 0);
+				circleMesh.draw(shader);
             }
 
             bool foundTargetTime = false;
 
-            float nextTime = simpleSystem.time;
+            //float nextTime = (float)simpleSystem.time;
 
             // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
             // -------------------------------------------------------------------------------
@@ -259,7 +251,7 @@ int main() {
             glfwPollEvents();
 
             // Wait for frame time to elapse (16ms for ~60FPS)
-            while (chrono::high_resolution_clock::now() - lastFrameTime < frameDuration) {
+            while (chrono::high_resolution_clock::now() - lastFrameTime < FRAME_DURATION) {
                 /* wait */
 
 
@@ -270,54 +262,13 @@ int main() {
                 // If issues occur, the sim can output a lower fidelity sim to reduce file size and read time
                 // ***** THIS IS UNTESTED *****
                 if (inputData.eof()) {
-                    pause = true;
-                } else if (!foundTargetTime && !pause) {
-                    string line = "";
-                    getline(inputData, line);
-
-                    // THIS NEEDS TO BE MOVED UP BEFORE THE FIRST LOOP
-                    if (simpleSystem.time >= targetTime) {
-                        foundTargetTime = true;
-
-                        cout << "System Time: " << simpleSystem.time << endl;
-                        cout << "Target Time: " << targetTime << endl;
-
-                        targetTime += frameTime;
-
-                        for (int i = 0; i < simpleSystem.subsystems.size(); i++) {
-                            std::string search = std::string("p") + std::to_string(i + 1) + ",";
-                            size_t pPos = line.find(search);
-                            if (pPos == std::string::npos) continue;
-
-                            size_t start = pPos + search.length();
-                            size_t end = line.find(';', start);
-                            if (end == std::string::npos) end = line.size();
-
-                            std::string positionStr = line.substr(start, end - start);
-                            // remove commas to simplify parsing, or replace with spaces
-                            for (char& c : positionStr) if (c == ',') c = ' ';
-
-                            std::istringstream iss(positionStr);
-                            float x, y, z;
-                            if (!(iss >> x >> y >> z)) {
-                                // parsing failed; log and continue
-                                std::cerr << "Failed to parse position for particle " << (i + 1) << ": '" << positionStr << "'\n";
-                                continue;
-                            }
-                            simpleSystem.subsystems[i].position = vec3(x, y, z);
-                            cout << "  Particle " << (i + 1) << " Position: (" << simpleSystem.subsystems[i].position << ")" << endl;
-                        }
-                    } else if (line.length() != 0) {
-                        size_t tPos = line.find(';');
-                        if (tPos != string::npos) {
-                            string timeStr = line.substr(1, tPos - 1);
-                            nextTime = stof(timeStr);
-                        }
-                    }
-
-                    simpleSystem.time = nextTime;
-
-                    
+                    PAUSE = true;
+                }
+                else if (!foundTargetTime && !PAUSE) {
+                    // This call doesn't guarantee a successful update so this name is a misnomer
+                    // Instead this checks the next line for the target time and this while loop
+                    // calls the function repeatadly until the target time is found
+                    updateSubsystemFromFile(simpleSystem, inputData, targetTime, foundTargetTime); 
                 }
             };
 
@@ -336,9 +287,9 @@ int main() {
 
     // optional: de-allocate all resources once they've outlived their purpose:
     // ------------------------------------------------------------------------
-    glDeleteVertexArrays(1, &VAO);
+   /* glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
-    glDeleteBuffers(1, &EBO);
+    glDeleteBuffers(1, &EBO);*/
 
     // glfw: terminate, clearing all previously allocated GLFW resources.
     // ------------------------------------------------------------------
@@ -376,6 +327,76 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 	glViewport(0, 0, width, height);
 }
 
+void resetSystem(System& system) {
+    vec3 pos1(-0.5, 0.0, 0.0);
+    vec3 pos2(0.5, 0.0, 0.0);
+
+    vec3 vel(0.0, 1.0 / sqrt(2.0), 0.0);
+
+    System particle1(pos1, vel, 1.0);
+    System particle2(pos2, -vel, 1.0);
+    System particle3(vec3(0, 0.0, 0.0), vec3(0, 0.0, 0.0), 0.05);
+
+    // reset time
+    // ----------
+    system.time = 0;
+
+    // combine particles into a single system
+    // ---------------------------------------
+    system.subsystems.clear();
+    system.subsystems.push_back(particle1);
+    system.subsystems.push_back(particle2);
+    system.subsystems.push_back(particle3);
+}
+void updateSubsystemFromFile(System& system, ifstream& inputData, float& targetTime, bool& foundTargetTime) {
+        string line = "";
+        getline(inputData, line);
+
+        float nextTime = system.time;
+
+        if (system.time >= targetTime) {
+            foundTargetTime = true;
+
+            cout << "System Time: " << system.time << endl;
+            cout << "Target Time: " << targetTime << endl;
+
+            targetTime += FRAME_TIME;
+
+            for (int i = 0; i < system.subsystems.size(); i++) {
+                std::string search = std::string("p") + std::to_string(i + 1) + ",";
+                size_t pPos = line.find(search);
+                if (pPos == std::string::npos) continue;
+
+                size_t start = pPos + search.length();
+                size_t end = line.find(';', start);
+                if (end == std::string::npos) end = line.size();
+
+                std::string positionStr = line.substr(start, end - start);
+                // remove commas to simplify parsing, or replace with spaces
+                for (char& c : positionStr) if (c == ',') c = ' ';
+
+                std::istringstream iss(positionStr);
+                float x, y, z;
+                if (!(iss >> x >> y >> z)) {
+                    // parsing failed; log and continue
+                    std::cerr << "Failed to parse position for particle " << (i + 1) << ": '" << positionStr << "'\n";
+                    continue;
+                }
+                system.subsystems[i].position = vec3(x, y, z);
+                //cout << "  Particle " << (i + 1) << " Position: (" << simpleSystem.subsystems[i].position << ")" << endl;
+            }
+        }
+        else if (line.length() != 0) {
+            size_t tPos = line.find(';');
+            if (tPos != string::npos) {
+                string timeStr = line.substr(1, tPos - 1);
+                nextTime = stof(timeStr);
+            }
+        }
+
+        system.time = nextTime;
+}
+
 /*
 * Adds vertex data to vertices and index data to indices for a circle in the Z plane centered at the origin.
 * 
@@ -402,7 +423,7 @@ void circleZ(vector<float>& vertices, vector<unsigned int>& indices, float radiu
 	// But the last vertex doesn't follow the loop pattern, so we handle it after
 	// We only need subdivisions triangles, each connecting two adjacent subdivision points and the center point
     for (int i = 0; i < subdivisions; i++) {
-        float angle = 2.0f * PI * i / subdivisions;
+        float angle = 2.0f * (float)PI * i / subdivisions;
         vertices.push_back(radius * cos(angle));            // x
         vertices.push_back(radius * sin(angle));            // y
         vertices.push_back(0.0f);                           // z

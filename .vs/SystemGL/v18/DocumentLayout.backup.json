@@ -1,0 +1,127 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\chris\\source\\repos\\SystemGL\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{E1A3E90A-0F25-44D5-A5E3-4476F44B9C4D}|SystemGL\\SystemGL.vcxproj|C:\\Users\\chris\\source\\repos\\SystemGL\\SystemGL\\Source.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{E1A3E90A-0F25-44D5-A5E3-4476F44B9C4D}|SystemGL\\SystemGL.vcxproj|solutionrelative:SystemGL\\Source.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{E1A3E90A-0F25-44D5-A5E3-4476F44B9C4D}|SystemGL\\SystemGL.vcxproj|C:\\Users\\chris\\source\\repos\\SystemGL\\SystemGL\\System.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{E1A3E90A-0F25-44D5-A5E3-4476F44B9C4D}|SystemGL\\SystemGL.vcxproj|solutionrelative:SystemGL\\System.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{E1A3E90A-0F25-44D5-A5E3-4476F44B9C4D}|SystemGL\\SystemGL.vcxproj|C:\\Users\\chris\\source\\repos\\SystemGL\\SystemGL\\System.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{E1A3E90A-0F25-44D5-A5E3-4476F44B9C4D}|SystemGL\\SystemGL.vcxproj|solutionrelative:SystemGL\\System.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\chris\\source\\repos\\SystemGL\\SystemGL\\systemData.txt||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:SystemGL\\systemData.txt||{8B382828-6202-11D1-8870-0000F87579D2}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\chris\\source\\repos\\SystemGL\\SystemGL\\vertex.glsl||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:SystemGL\\vertex.glsl||{8B382828-6202-11D1-8870-0000F87579D2}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": -1,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{3ae79031-e1bc-11d0-8f78-00a0c9110057}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{34e76e81-ee4a-11d0-ae2e-00a0c90fffc3}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{d78612c7-9962-4b83-95d9-268046dad23a}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{aa2115a1-9712-457b-9047-dbb71ca2cdd2}"
+            }
+          ]
+        },
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 0,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "Source.cpp",
+              "DocumentMoniker": "C:\\Users\\chris\\source\\repos\\SystemGL\\SystemGL\\Source.cpp",
+              "RelativeDocumentMoniker": "SystemGL\\Source.cpp",
+              "ToolTip": "C:\\Users\\chris\\source\\repos\\SystemGL\\SystemGL\\Source.cpp",
+              "RelativeToolTip": "SystemGL\\Source.cpp",
+              "ViewState": "AgIAAG4AAAAAAAAAAAAAAIEAAAAYAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2025-11-12T23:40:33.167Z",
+              "IsPinned": true,
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "System.h",
+              "DocumentMoniker": "C:\\Users\\chris\\source\\repos\\SystemGL\\SystemGL\\System.h",
+              "RelativeDocumentMoniker": "SystemGL\\System.h",
+              "ToolTip": "C:\\Users\\chris\\source\\repos\\SystemGL\\SystemGL\\System.h",
+              "RelativeToolTip": "SystemGL\\System.h",
+              "ViewState": "AgIAAKABAAAAAAAAAAAAAL8BAAAZAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
+              "WhenOpened": "2025-11-11T21:33:00.652Z",
+              "IsPinned": true,
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "System.cpp",
+              "DocumentMoniker": "C:\\Users\\chris\\source\\repos\\SystemGL\\SystemGL\\System.cpp",
+              "RelativeDocumentMoniker": "SystemGL\\System.cpp",
+              "ToolTip": "C:\\Users\\chris\\source\\repos\\SystemGL\\SystemGL\\System.cpp",
+              "RelativeToolTip": "SystemGL\\System.cpp",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2025-11-23T04:26:33.194Z",
+              "IsPinned": true
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "vertex.glsl",
+              "DocumentMoniker": "C:\\Users\\chris\\source\\repos\\SystemGL\\SystemGL\\vertex.glsl",
+              "RelativeDocumentMoniker": "SystemGL\\vertex.glsl",
+              "ToolTip": "C:\\Users\\chris\\source\\repos\\SystemGL\\SystemGL\\vertex.glsl",
+              "RelativeToolTip": "SystemGL\\vertex.glsl",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2025-12-06T12:03:38.88Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "systemData.txt",
+              "DocumentMoniker": "C:\\Users\\chris\\source\\repos\\SystemGL\\SystemGL\\systemData.txt",
+              "RelativeDocumentMoniker": "SystemGL\\systemData.txt",
+              "ToolTip": "C:\\Users\\chris\\source\\repos\\SystemGL\\SystemGL\\systemData.txt",
+              "RelativeToolTip": "SystemGL\\systemData.txt",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAF4AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003109|",
+              "WhenOpened": "2025-11-23T04:27:35.051Z"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

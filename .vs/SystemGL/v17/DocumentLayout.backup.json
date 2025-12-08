@@ -11,12 +11,12 @@
       "RelativeMoniker": "D:0:0:{E1A3E90A-0F25-44D5-A5E3-4476F44B9C4D}|SystemGL\\SystemGL.vcxproj|solutionrelative:SystemGL\\System.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{E1A3E90A-0F25-44D5-A5E3-4476F44B9C4D}|SystemGL\\SystemGL.vcxproj|C:\\Users\\chris\\source\\repos\\SystemGL\\SystemGL\\simulation.txt||{8B382828-6202-11D1-8870-0000F87579D2}",
-      "RelativeMoniker": "D:0:0:{E1A3E90A-0F25-44D5-A5E3-4476F44B9C4D}|SystemGL\\SystemGL.vcxproj|solutionrelative:SystemGL\\simulation.txt||{8B382828-6202-11D1-8870-0000F87579D2}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\chris\\source\\repos\\SystemGL\\SystemGL\\Mesh.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:SystemGL\\Mesh.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\chris\\source\\repos\\SystemGL\\SystemGL\\simulation.txt||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:SystemGL\\simulation.txt||{8B382828-6202-11D1-8870-0000F87579D2}"
     }
   ],
   "DocumentGroupContainers": [
@@ -58,7 +58,7 @@
               "RelativeDocumentMoniker": "SystemGL\\Source.cpp",
               "ToolTip": "C:\\Users\\chris\\source\\repos\\SystemGL\\SystemGL\\Source.cpp",
               "RelativeToolTip": "SystemGL\\Source.cpp",
-              "ViewState": "AgIAAMEAAAAAAAAAAAAAANIAAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAABoAAAAAAAAAAAAUwCgBAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
               "WhenOpened": "2025-11-12T23:40:33.167Z",
               "IsPinned": true,
@@ -72,28 +72,26 @@
               "RelativeDocumentMoniker": "SystemGL\\System.h",
               "ToolTip": "C:\\Users\\chris\\source\\repos\\SystemGL\\SystemGL\\System.h",
               "RelativeToolTip": "SystemGL\\System.h",
-              "ViewState": "AgIAAH0AAAAAAAAAAAAAAKgAAAAGAAAAAAAAAA==",
+              "ViewState": "AgIAAN4AAAAAAAAAAAAEwO8AAAAbAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
               "WhenOpened": "2025-11-11T21:33:00.652Z",
-              "IsPinned": true,
-              "EditorCaption": ""
+              "IsPinned": true
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 3,
               "Title": "simulation.txt",
               "DocumentMoniker": "C:\\Users\\chris\\source\\repos\\SystemGL\\SystemGL\\simulation.txt",
               "RelativeDocumentMoniker": "SystemGL\\simulation.txt",
               "ToolTip": "C:\\Users\\chris\\source\\repos\\SystemGL\\SystemGL\\simulation.txt",
               "RelativeToolTip": "SystemGL\\simulation.txt",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAKGGAQAAAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABIAAAArAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003109|",
-              "WhenOpened": "2025-11-18T06:38:25.433Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-11-19T07:26:15.436Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 2,
               "Title": "Mesh.h",
               "DocumentMoniker": "C:\\Users\\chris\\source\\repos\\SystemGL\\SystemGL\\Mesh.h",
               "RelativeDocumentMoniker": "SystemGL\\Mesh.h",
@@ -101,8 +99,7 @@
               "RelativeToolTip": "SystemGL\\Mesh.h",
               "ViewState": "AgIAABIAAAAAAAAAAAAAADYAAAAVAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
-              "WhenOpened": "2025-11-17T10:18:53.605Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-11-17T10:18:53.605Z"
             }
           ]
         }

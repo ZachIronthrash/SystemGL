@@ -1,9 +1,2 @@
 ﻿  Source.cpp
-C:\Users\chris\source\repos\SystemGL\SystemGL\System.h(272,12): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
-  (compiling source file 'Source.cpp')
-  
-C:\Users\chris\source\repos\SystemGL\SystemGL\Mesh.h(79,50): warning C4267: 'argument': conversion from 'size_t' to 'GLsizei', possible loss of data
-  (compiling source file 'Source.cpp')
-  
-C:\Users\chris\source\repos\SystemGL\SystemGL\Source.cpp(360,24): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
   SystemGL.vcxproj -> C:\Users\chris\source\repos\SystemGL\x64\Debug\SystemGL.exe

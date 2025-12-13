@@ -1,5 +1,7 @@
-#pragma once
+﻿#pragma once
 
+#include "Shader.h"
+#include "Mesh.h"
 #include <fstream>
 #include <iostream>
 #include <vector>
@@ -18,6 +20,14 @@
 #include <sstream>
 #include <algorithm>
 #include <cctype>
+
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
+#include <cmath>
 
 /*
 * constants
@@ -117,6 +127,8 @@ struct vec3 {
 	vec3 normalized() const;
 
 	long double dot(vec3 avec) const { return x * avec.x + y * avec.y + z * avec.z; };
+
+	long double volume() const { return x * y * z; };
 
 	/*
 	* helper function for printing vec3's
@@ -233,6 +245,8 @@ public:
 	* @param position - initial position of the particle
 	* @param velocity - initial velocity of the particle
 	* @param mass - mass of the particle
+	* 
+	* @ensures this->position = position, this->velocity = velocity, this->mass = mass
 	*/
 	Particle(vec3 position, vec3 velocity, long double mass/*, long double dt = 0.001*/);
 
@@ -266,31 +280,31 @@ public:
 	/*
 	* fetches the position of the particle
 	* 
-	* @returns position
+	* @return position
 	*/
 	vec3 getPosition();
 	/*
 	* fetches the velocity of the particle
 	* 
-	* @returns velocity
+	* @return velocity
 	*/
 	vec3 getVelocity();
 	/*
 	* fetches the mass of the particle
 	* 
-	* @returns mass
+	* @return mass
 	*/
 	long double getMass();
 	///*
 	//* fetches the time of the particle
 	//* 
-	//* @returns time
+	//* @return time
 	//*/
 	//long double getTime() { return time; };
 	///*
 	//* fetches the dt of the particle
 	//* 
-	//* returns dt
+	//* return dt
 	//*/
 	//long double getDt() { return dt; };
 
@@ -319,9 +333,12 @@ public:
 	//*/
 	//void pushTime() { time += dt; };
 
-	long double calcKE() { 
-		return 0.5 * mass * velocity.dot(velocity); 
-	};
+	/*
+	* calculates the KE from velocity and mass
+	* 
+	* @return 0.5 * MASS * |VELOCITY| * |VELOCITY|
+	*/
+	long double calcKE();
 
 private:
 	vec3 position = vec3(0); // [m]
@@ -332,52 +349,111 @@ private:
 	//const long double dt; // [s]
 };
 
+/*
+* template class for various models
+* currently lacks any subsystem handling
+*/
 class System {
 public:
 
-	System(long double dt = 0.001) : dt(dt) {};
+	/*
+	* default constructor
+	* 
+	* @param dt - initial value of dt
+	* 
+	* @ensures this->dt = dt
+	*/
+	System(long double dt = 0.001);
 
-	virtual void addParticle(Particle& particle) {
-		particles.push_back(particle);
-	};
+	/*
+	* appends particle to particles
+	* 
+	* @param particle - the particle to append
+	* 
+	* @ensures particles = #particle.push_back(particle)
+	*/
+	virtual void addParticle(Particle& particle);
+	/*
+	* returns the number of particles in particles
+	* 
+	* @return particles.size()
+	*/
+	virtual size_t numberOfParticles();
+	/*
+	* returns a reference to particles
+	* 
+	* @return &particles
+	*/
+	virtual std::vector<Particle>& getParticles();
 
-	virtual size_t numberOfParticles() {
-		return particles.size();
-	}
+	/*
+	* returns a reference to the i'th particle
+	* 
+	* @param i - the particle to fetch
+	* 
+	* @return &particle[i]
+	*/
+	virtual Particle& getParticle(int i);
+	/*
+	* returns the current time
+	* 
+	* @return time
+	*/
+	virtual long double getTime();
+	/* returns the current delta-time
+	* 
+	* @return dt
+	*/
+	virtual long double getDt();
 
-	virtual std::vector<Particle>& getParticles() {
-		return particles;
-	}
+	/*
+	* sets time to given value
+	* 
+	* @param time - the time to set
+	* 
+	* @ensures this->time = time
+	*/
+	virtual void setTime(long double time);
+	/*
+	* sets dt to given value
+	* 
+	* @param dt - the dt to set
+	* 
+	* @ensures this->dt = dt
+	*/
+	virtual void setDt(long double dt);
 
-	virtual Particle& getParticle(int i) {
-		return particles[i];
-	}
-	virtual long double getTime() {
-		return time;
-	}
-	virtual long double getDt() {
-		return dt;
-	}
+	/*
+	* pushes time foward by dt
+	* 
+	* @ensures time = #time + dt
+	*/
+	virtual void timeStep();
 
-	virtual void setTime(long double time) {
-		time = time;
-	}
+	/*
+	* follows a simple kinematics scheme to evolve the particles in the system
+	* no acceleration handling for now
+	* 
+	* @ensures timeStep()
+	* @ensures particles.position = #particles.position + particles.velocity * dt
+	*/
+	virtual void evolve();
 
-	virtual void timeStep() {
-		step++;
-		time += dt;
-	};
+	/*
+	* draws every particle in the system to the screen
+	* 
+	* @param shader		- the shader to use when drawing
+	* @param mesh		- the mesh to draw for each particle
+	* @param fidelity	- draw only particles for which index is a multiple of fidelity
+	* @param offset		- a vector describing the offset to apply to the mesh before drawing
+	* 
+	* @ensures mesh.positions = #mesh.positions + offset
+	* @ensures mesh is drawn to screen at correct position with the supplied shader
+	* @ensures particle is only drawn if particle.index % fidelity = 0
+	*/
+	virtual void drawSystemParticles(Shader& shader, Mesh& mesh, unsigned fidelity, vec3 offset = 0.0l);
 
-	virtual void evolve() {
-		// Evolve particles
-		for (Particle& particle : particles) {
-			particle.translateBy(dt * particle.getVelocity());
-		}
-
-		// step time once after all evolutions are complete
-		timeStep();
-	}
-
+private:
 	std::vector<Particle> particles;
 
 	long double boxSize[2] = { 1, 1 };
@@ -389,161 +465,102 @@ public:
 
 class PressureSystem : public System {
 public:
-	// 2d only for now
-	PressureSystem(int numParticles, long double sysmass, long double molarMass, long double targetTemp, std::mt19937& generator, long double* boxSize = new long double[3]{ 1, 1, 1 }, long double dt = 0.001) {
-		this->boxSize[0] = boxSize[0];
-		this->boxSize[1] = boxSize[1];
-		this->boxSize[2] = boxSize[2];
-		this->dt = dt;
+	vec3 boxSize; // [m] : halfwidth, halfheight
 
-		//long double temp = 292l;
-
-		//double moles = sysmass / molarMass; 
-
-		long double scale_parameter = BOLTZMANN * targetTemp * MOLE / molarMass;
-
-		std::gamma_distribution<long double> maxwell_dist(3.0 / 2.0, scale_parameter);
-
-		std::uniform_real_distribution<long double> uniform_dist(-1.0, 1.0);
-
-		for (int i = 0; i < numParticles; i++) {
-			vec3 randomPos(
-				uniform_dist(generator) * boxSize[0],
-				uniform_dist(generator) * boxSize[1],
-				uniform_dist(generator) * boxSize[2]
-			);
-			long double randomSpeed = std::sqrt(2.0l * maxwell_dist(generator));
-
-			vec3 randomVel(
-				uniform_dist(generator),
-				uniform_dist(generator),
-				uniform_dist(generator)
-			);
-
-			randomVel = randomSpeed * randomVel.normalized();
-
-			/*long double scalingFactor = 0;
-			bool correction = false;
-			if (randomVel.x > 2 * boxSize[0] / dt) {
-				double scale = boxSize[0] / randomVel.x;
-				scalingFactor = scale;
-				correction = true;
-			}
-			if (randomVel.y > 2 * boxSize[1] / dt) {
-				double scale = boxSize[1] / randomVel.y;
-				scalingFactor = (scale < scalingFactor) ? scale : scalingFactor;
-				correction = true;
-			}
-			if (randomVel.z > 2 * boxSize[2] / dt) {
-				double scale = boxSize[2] / randomVel.z;
-				scalingFactor = (scale < scalingFactor) ? scale : scalingFactor;
-				correction = true;
-			}
-
-			if (correction) {
-				randomVel *= scalingFactor;
-			}*/
-
-			Particle particle(randomPos, randomVel, sysmass / numParticles);
-			addParticle(particle);
-		}
-
-		/*vec3 systemVel = vec3(0);
-		long double massSum = 0l;
-		for (Particle& particle : getParticles()) {
-			massSum += particle.getMass();
-			systemVel += particle.getVelocity() * particle.getMass();
-		}
-		systemVel /= massSum;
-
-		for (Particle& particle : getParticles()) {
-			particle.accelerateBy(-systemVel);
-		}*/
-	}
 	/*
-	* @returns a 4 element array with the impulse on each wall of the box: +x, -x, +y, -y (, +z, -z... eventually)
-	*  ^ should return a 6 element array when 3rd dimension is added
+	* default constructor
+	* 
+	* @param numParticles	- the number of particles in the system
+	* @param sysmass		- the total mass of the particles to approximate
+	* @param molarMass		- the molar mass of the particles to approximate
+	* @param targetTemp		- the target temperature of the randomly generated system
+	* @param generator		- the rng to sample
+	* @param boxSize		- the size of the bounding box
+	* @param dt				- initial value of dt for the system
+	* 
+	* @ensures for all particles mass = sysmass / numParticles
+	* @ensures this->dt = dt
+	* @ensures particle velocities are randomly assigned using generator and the correct distribution is used for supplied targetTemp & molarMass
+	* @ensures this->boxSize = boxSize
+	* @ensures a working mesh is created for the system boundaries with vertices according to boxSize
 	*/
-	std::array<long double, 6> reflectParticles() {
-		long double impPlusX = 0;
-		long double impMinusX = 0;
-		long double impPlusY = 0;
-		long double impMinusY = 0;
-		long double impPlusZ = 0;
-		long double impMinusZ = 0;
+	PressureSystem(int numParticles, long double sysmass, long double molarMass, long double targetTemp, std::mt19937& generator, vec3 boxSize = vec3( 1, 1, 1 ), long double dt = 0.001l);
 
-		for (Particle& particle : getParticles()) {
-			vec3 position = particle.getPosition();
-			long double mass = particle.getMass();
+	/*
+	* reflects the particles which exited the box and returns the total change in impulse
+	* 
+	* @ensures |particle.position| < boxSize
+	*	|particle.position.x| = 2 * boxSize.x - |#particle.position.x| if |particle.position.x| > boxSize
+	*	|particle.position.y| = 2 * boxSize.y - |#particle.position.y| if |particle.position.y| > boxSize
+	*	|particle.position.z| = 2 * boxSize.z - |#particle.position.z| if |particle.position.z| > boxSize
+	* @ensures |DISTANCE_TRAVELED| = |#DISTANCE_TRAVELED| for each particle
+	* @ensures particle.velocity is flipped according to reflection direction for each particle
+	* @return sum(MASS * ΔVELOCITY for each particle)
+	*/
+	vec3 reflectParticles();
 
-			vec3 newP = position;
-			vec3 newV = particle.getVelocity();
+	/*
+	* calls System::evolve() then reflectParticles() returning the impulses
+	* 
+	* @return reflectParticles()
+	*/
+	vec3 impulseEvolve();
 
-			if (position.x > boxSize[0]) {
-				long double difference = position.x - boxSize[0];
-
-				newP.x = boxSize[0] - difference;
-				newV.x = -newV.x;
-				impPlusX += abs(2 * newV.x * mass);
-			} 
-			else if (position.x < -boxSize[0]) {
-				long double difference = -position.x - boxSize[0];
-
-				newP.x = -boxSize[0] + difference;
-				newV.x = -newV.x;
-				impMinusX += abs(2 * newV.x * mass);
-			}
-
-			if (position.y > boxSize[1]) {
-				long double difference = position.y - boxSize[1];
-
-				newP.y = boxSize[1] - difference;
-				newV.y = -newV.y;
-				impPlusY += abs(2 * newV.y * mass);
-			}
-			else if (position.y < -boxSize[1]) {
-				long double difference = -position.y - boxSize[1];
-
-				newP.y = -boxSize[1] + difference;
-				newV.y = -newV.y;
-				impMinusY += abs(2 * newV.y * mass);
-			}
-
-			if (position.z > boxSize[2]) {
-				long double difference = position.z - boxSize[2];
-
-				newP.z = boxSize[2] - difference;
-				newV.z = -newV.z;
-				impPlusZ += abs(2 * newV.z * mass);
-			}
-			else if (position.z < -boxSize[2]) {
-				long double difference = -position.z - boxSize[2];
-
-				newP.z = -boxSize[2] + difference;
-				newV.z = -newV.z;
-				impMinusZ += abs(2 * newV.z * mass);
-			}
-
-			particle.setPosition(newP);
-			particle.setVelocity(newV);
-		}
-
-		return { impPlusX, impMinusX, impPlusY, impMinusY, impPlusZ, impMinusZ };
-	}
-
-	//void evolve() {
-	//	System::evolve();
-	//	reflectParticles();
-	//}
-	std::array<long double, 6> impulseEvolve() {
-		System::evolve();
-
-		return reflectParticles();
-	}
+	/*
+	* draws boxMesh to screen with the supplied shader and offset
+	* 
+	* @param shader		- the shader to use when drawing
+	* @param offset		- a vector describing the offset to apply to the mesh before drawing
+	* 
+	* @ensures mesh.positions = #mesh.positions + offset
+	* @ensures mesh is drawn to screen at correct position with the supplied shader
+	*/
+	void drawSystemBounds(Shader& shader, vec3 offset = 0.0l);
 
 private:
-	long double boxSize[3] = { 1, 1, 1 }; // [m] : halfwidth, halfheight
+	Mesh boxMesh;
+
+	/*
+	* creates vertex and index data for the bounding box
+	* 
+	* @param vertices	- the container for the vertex data
+	* @param indices	- the container for the index data
+	* 
+	* @updates vertices and indices with data for the bounding box of the system
+	* @clears vertices
+	* @clears indices
+	* 
+	* @ensures vertices describe a square behind all particles in the system
+	* @ensures indices correctly order vertices to draw desired structure
+	*/
+	void createVertexAndIndexData(std::vector<float>& vertices, std::vector<unsigned int>& indices) {
+		float size[3] = { (float)boxSize.x, (float)boxSize.y, (float)boxSize.z };
+		float boundingBoxVert[] = {
+			// positions                                            // colors
+			 size[0],  size[1], -size[2],     0, 0, 0,    // Top right
+			 size[0], -size[1], -size[2],     0, 0, 0,    // Bottom right
+			-size[0],  size[1], -size[2],     0, 0, 0,    // Top left
+			-size[0], -size[1], -size[2],     0, 0, 0     // Bottom left
+		};
+		unsigned int boundingBoxInd[] = {
+			0, 1, 2,
+			2, 3, 1
+		};
+
+		vertices.clear();
+		indices.clear();
+
+		for (float f : boundingBoxVert) {
+			vertices.push_back(f);
+		}
+		for (unsigned int i : boundingBoxInd) {
+			indices.push_back(i);
+		}
+	}
 };
+
+// ARCHIVAL CODE
+// -------------
 
 ///*
 //* Essentially a wrapper class with an empty force function

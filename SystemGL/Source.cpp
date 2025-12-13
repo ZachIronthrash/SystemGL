@@ -1,27 +1,20 @@
 #include "System.h"
-#include "Shader.h"
-#include "Mesh.h"
-
-#include <cmath>
-#include <chrono>
-#include <sstream> // For file parsing
-
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
 
 using namespace std;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
 
-//void resetSystem(System& system, int n);
-//void findParticlePositions(System& system, vector<vec3>& particlePositions, ifstream& inputData, float& targetTime, bool& foundTargetTime);
-//void updateSystemFromFile(System& system, ifstream& inputData, float& targetTime, bool& foundTargetTime);
-void drawSystemParticles(System& system, Shader& shader, Mesh& mesh, unsigned fidelity);
-void circleZ(vector<float>& vertices, vector<unsigned int>& indices, float radius, int subdivisions, glm::vec3 color);
+void configureGLFW();
+
+int configureWindow(GLFWwindow* window, bool& retFlag);
+
+int loadGLAD(bool& retFlag);
+
+void getIntWithDefault(istream& in, int& v);
+
+
+void getLongDoubleWithDefault(istream& in, long double& v);
 
 // settings
 unsigned int SCR_WIDTH = 800;
@@ -38,141 +31,100 @@ bool KEY_N = false;
 bool PAUSE = true;
 
 int main() {
-    /*cout << "Hello, World!" << endl << endl;
+    // variable initialization
+    // -----------------------
+    int numParticles = 2000;
 
-    cout << "Creating a simple system..." << endl;
-    
-    System simpleSystem;
-    resetSystem(simpleSystem, 100);
+    cout << "Select particle count (\"-\" for default: " << numParticles << "): ";
 
-    System pressureApproximationSystem;
+    getIntWithDefault(cin, numParticles);
 
-    ifstream data;
-	data.open("simulation.txt");
+    // default to helium molar mass
+    long double molarMass = 0.004003l; // [kg / mol]
 
-    float zero = 0.0f;
-    resetSystem(pressureApproximationSystem, 10);
-	bool foundTarget = false;
-	updateSystemFromFile(pressureApproximationSystem, data, zero, foundTarget);
+    cout << "Select molar mass of particle (default: helium molar mass 0.004003): ";
 
-	for (int i = 0; i < pressureApproximationSystem.numberOfSubsystems(); i++) {
-        cout << "Particle Position: (" << pressureApproximationSystem.subsystem(i).derivePosition() << ")" << endl;
-	}*/
+    getLongDoubleWithDefault(cin, molarMass);
 
- //   // initialize particles as separate systems
- //   // ---------------------------------------
- //   vec3 pos1(-0.5, 0.0, 0.0);
- //   vec3 pos2(0.5, 0.0, 0.0);
+    long double targetTemp = 100.0l;
 
- //   vec3 vel(0.0, 1.0 / sqrt(2.0), 0.0);
+    cout << "Select target temperature (default: " << targetTemp << " K): ";
 
- //   System particle1(pos1, vel, 1.0);
- //   System particle2(pos2, -vel, 1.0);
-	//System particle3(vec3(0, 0.0, 0.0), vec3(0, 0.0, 0.0), 0.05);
+    getLongDoubleWithDefault(cin, targetTemp);
 
- //   // combine particles into a single system
- //   // ---------------------------------------
- //   System simpleSystem({ particle1, particle2, particle3 });
+    long double systemMass = 0.5 * molarMass; // [kg]
 
-    // define gravitational interaction between particles
-    //Interaction grav1_2(&simpleSystem.subsystems[0], &simpleSystem.subsystems[1], 'G');
+    cout << "Select total system mass (default: " << systemMass << " Kg): ";
 
-	//simpleGravitationalOrbitSim(simpleSystem, ofstream());
+    getLongDoubleWithDefault(cin, systemMass);
 
-    /*cout << "Final Positions after evolution:" << endl;
-    cout << "  Particle 1 Position: (" << pos1 << ")" << endl;
-    cout << "  Particle 2 Position: (" << pos2 << ")" << endl << endl;*/
+    long double dt = 0.001l;
 
-    // glfw: initialize and configure
-    // ------------------------------
-    glfwInit();
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    cout << "Select simulation time step (default: " << dt << "): ";
 
-#ifdef __APPLE__
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-#endif
+    getLongDoubleWithDefault(cin, dt);
+
+    vec3 boxSize = vec3(1.0l, 1.0l, 5.0l);
+
+    cout << "Select bounding box size (\"-\" for any default values: " << boxSize << "): ";
+
+    getLongDoubleWithDefault(cin, boxSize.x);
+    getLongDoubleWithDefault(cin, boxSize.y);
+    getLongDoubleWithDefault(cin, boxSize.z);
+
+    // configure glfw
+    // --------------
+    configureGLFW();
 
     // glfw window creation
     // --------------------
-    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", NULL, NULL);
-    if (window == NULL)
-    {
-        std::cout << "Failed to create GLFW window" << std::endl;
-        glfwTerminate();
-        return -1;
-    }
-    glfwMakeContextCurrent(window);
-    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "SystemGL by Christopher Hart", NULL, NULL);
+
+    bool retFlag;
+    int retVal = configureWindow(window, retFlag); // auto-gen: probably not ideal
+    if (retFlag) return retVal;
 
     // glad: load all OpenGL function pointers
     // ---------------------------------------
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-    {
-        std::cout << "Failed to initialize GLAD" << std::endl;
-        return -1;
-    }
+    retVal = loadGLAD(retFlag); // auto-gen: probably not ideal
+    if (retFlag) return retVal;
 
     // shader
     // ------
     Shader shader("C:/Users/chris/source/repos/SystemGL/SystemGL/vertex.glsl", "C:/Users/chris/source/repos/SystemGL/SystemGL/fragment.glsl");
 
+    // circle mesh
+    // -----------
     vector<float> circleVert;
     vector<unsigned int> circleInd;
 
-    float circleRadius = 0.005f;
+    float circleRadius = 0.01f;
 
     circleZ(circleVert, circleInd, circleRadius, 6, { 1.0f, 0.0f, 0.0f });
 
-    float bbWidth = 1.5f;
-    float bbHeight = 1.5f;
-    float bbDepth = 10.0f;
-    float boundingBoxVert[] = {
-		// positions                        // colors
-         bbWidth / 2.0f,  bbHeight / 2.0f, -bbDepth / 2.0f,     0, 0, 0,    // Top right
-         bbWidth / 2.0f, -bbHeight / 2.0f, -bbDepth / 2.0f,     0, 0, 0,    // Bottom right
-        -bbWidth / 2.0f,  bbHeight / 2.0f, -bbDepth / 2.0f,     0, 0, 0,    // Top left
-        -bbWidth / 2.0f, -bbHeight / 2.0f, -bbDepth / 2.0f,     0, 0, 0     // Bottom left
-    };
-    unsigned int boundingBoxInd[] = {
-        0, 1, 2,
-        2, 3, 1
-    };
+    Mesh circleMesh(circleVert, circleInd);
 
-	Mesh circleMesh(circleVert, circleInd);
-    Mesh bbMesh(boundingBoxVert, boundingBoxInd);
-
-    // uncomment this call to draw in wireframe polygons.
-    // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
+    // init time tracking
+    // ------------------
     int iterations = 0;
 
     float targetTime = FRAME_TIME;
 
     chrono::high_resolution_clock::time_point lastFrameTime = chrono::high_resolution_clock::now();
-    chrono::milliseconds spaceBuffer(250); 
 	chrono::high_resolution_clock::time_point prevSpacePressedTime = chrono::high_resolution_clock::now();
 
-    int numParticles = 2000;
+    chrono::milliseconds spaceBuffer(250);
 
+    // init simulation
+    // ---------------
     unsigned seed = (int)std::chrono::system_clock::now().time_since_epoch().count();
 
     mt19937 generator(seed);
 
-    long double heliumMolarMass = 0.004003l; // [kg / mol]
+    PressureSystem system(numParticles, systemMass, molarMass, targetTemp, generator, boxSize, dt);
 
-    long double targetTemp = 10.0l;
-    
-    // using helium mass
-    long double systemMass = 0.5 * heliumMolarMass; // [kg]
-
-    long double bbHalfWidth = bbWidth / 2.0l;
-    long double bbHalfHeight = bbHeight / 2.0l;
-    long double bbHalfDepth = bbDepth / 2.0l;
-
-    PressureSystem system(numParticles, systemMass, heliumMolarMass, targetTemp, generator, new long double[3]{ bbHalfWidth, bbHalfHeight, bbHalfDepth});
-
+    // calculate predicted values
+    // --------------------------
     vec3 systemPos = vec3(0);
     long double massSum = 0l;
     for (Particle& particle : system.getParticles()) {
@@ -184,8 +136,6 @@ int main() {
 
     cout << "System position: " << systemPos << endl;
 
-    //ofstream velocityData("velocity.txt");
-
     vec3 systemVel = vec3(0);
     massSum = 0l;
     for (Particle& particle : system.getParticles()) {
@@ -194,8 +144,6 @@ int main() {
     }
 
     systemVel /= massSum;
-
-    //velocityData.close();
 
     cout << "System velocity: " << systemVel << endl;
 
@@ -216,60 +164,28 @@ int main() {
     //      from the definitions of the above equations:
     //          NUMBER_OF_PARTICLES = SYSTEM_MASS * MOLE / MOLAR_MASS
     //          BOLTZMANN = R_GAS / MOLE
-    //      
-    long double temperature = (2 * systemKE * heliumMolarMass) / (3 * R_GAS * systemMass);
+    // we use this new formula because the kinetic energies of the tiny particles
+    //      we are simulating are super small so the sum remains in accurate limits     
+    long double temperature = (2 * systemKE * molarMass) / (3 * R_GAS * systemMass);
     cout << "System temperature: " << temperature << " vs. Target temperature: " << targetTemp << endl;
 
-    long double numberOfGasParticles = systemMass / heliumMolarMass;
+    long double molesOfGasParticles = systemMass / molarMass;
 
     // PV = nRT
-    long double predictedPressure = numberOfGasParticles * R_GAS * temperature / (bbWidth * bbHeight * bbWidth);
+    long double predictedPressure = molesOfGasParticles * R_GAS * temperature / (8.0l * boxSize.volume());
 
     cout << "Predicted pressure: " << predictedPressure << endl;
-
- //   srand(unsigned int(time(0))); // Seed random number generator
-
- //   BoundSystem basicSystem;
-
- //   for (int i = 0; i < numParticles; i++) {
- //       vec3 randomPos(
- //           ((double)rand() / RAND_MAX) * 2.0f - 1.0f,
- //           ((double)rand() / RAND_MAX) * 2.0f - 1.0f,
- //           0 /*((double)rand() / RAND_MAX) * 2.0f - 1.0f*/
- //       );
- //       vec3 randomVel(
- //           ((double)rand() / RAND_MAX) * 2.0f - 1.0f,
- //           ((double)rand() / RAND_MAX) * 2.0f - 1.0f,
- //           0 /*((double)rand() / RAND_MAX) * 2.0f - 1.0f*/
- //       );
-
-	//	Particle particle(randomPos, randomVel, 1.0);
- //       basicSystem.addParticle(particle);
- //   }
-
- //   // Create a bound subsystem and add it to the basic system.
- //   // NOTE: BoundSystem (and System) is non-copyable because it contains std::unique_ptr members.
- //   // Construct the subsystem directly as a unique_ptr and populate it, then move it into the parent.
- //   auto boundSubsystemPtr = std::make_unique<BoundSystem>();
- //   boundSubsystemPtr->addParticle(Particle(vec3(0, 0, 0), vec3(1, 0, 0), 1.0));
- //   boundSubsystemPtr->addParticle(Particle(vec3(0, 0, 0), vec3(-1, 0, 0), 1.0));
-
- //   basicSystem.addSubsystem(std::move(boundSubsystemPtr));
-
- //   /*cout << basicSystem.getSubsystem(0).getParticle(0).getPosition() << endl;
- //   cout << basicSystem.getSubsystem(0).getParticle(1).getPosition() << endl;*/
-
-	//Simulation simulation(basicSystem, "systemData.txt", "simulationTest.txt");
 
     unsigned int simIterations = 0;
     unsigned int missedFrameIterations = 0;
 
-    // std::array<unsigned int, 6> impulseCounts = { 0, 0, 0, 0, 0, 0 };
+    // init pressure approximation arrays
+    // ----------------------------------
+    /*std::array<long double, 6>*/ vec3 impulse;
 
-    std::array<long double, 6> impulse;
+    /*std::array<long double, 6>*/ vec3 avgForce = { 0L, 0L, 0L };
 
-    std::array<long double, 6> avgForce = { 0L, 0L, 0L, 0L, 0L, 0L };
-
+    // window size to orthographic projection scaling factor
     float s = 0.002f;
 
     // render loop
@@ -279,10 +195,10 @@ int main() {
         {
             // input
             // -----
-
             if (KEY_N) {
                 KEY_N = false;
             }
+
             processInput(window);
 
             //if (KEY_E) {
@@ -320,37 +236,28 @@ int main() {
 
             // update projection matrix each frame in case user changes window size
             glm::mat4 projection = glm::mat4(1.0f);
+
+            // switch comments for projection matrix
             //projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
             projection = glm::ortho(-(float)SCR_WIDTH * s, (float)SCR_WIDTH * s, -(float)SCR_HEIGHT * s, (float)SCR_HEIGHT * s, -10.0f, 10.0f);
+
             shader.setMat4("projection", projection);
 
             // view transformation
             glm::mat4 view = glm::mat4(1.0f);
+
+            // uncomment for projection matrix
             //view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+
             shader.setMat4("view", view);
 
-            //glBindVertexArray(VAO); // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
-
 			// Draw bounding box before particles
-			glm::mat4 model = glm::mat4(1.0f);
-			shader.setMat4("model", model);
-			bbMesh.draw(shader);
+            system.drawSystemBounds(shader);
 
-            drawSystemParticles(system, shader, circleMesh, 10);
-
-    //        for (int i = 0; i < pressureApproximationSystem.numberOfSubsystems(); i++) {
-    //            glm::mat4 model = glm::mat4(1.0f);
-				//vec3 subsystemPos = pressureApproximationSystem.subsystem(i).derivePosition();
-    //            model = glm::translate(model, glm::vec3(subsystemPos.x, subsystemPos.y, subsystemPos.z));
-    //            shader.setMat4("model", model);
-    //            // draw the circle
-    //            //glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(circleInd.size()), GL_UNSIGNED_INT, 0);
-				//circleMesh.draw(shader);
-    //        }
+            // draw particles
+            system.drawSystemParticles(shader, circleMesh, 10);
 
             bool foundTargetTime = false;
-
-            //float nextTime = (float)simpleSystem.time;
 
             // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
             // -------------------------------------------------------------------------------
@@ -367,54 +274,19 @@ int main() {
                     //system.evolve();
                     impulse = system.impulseEvolve(); 
 
-                   /* double dt = system.getDt();
-                    if (impulse[0] != 0.0) { avgForce[0] += (impulse[0] / dt - avgForce[0]) / ++impulseCounts[0]; }
-                    if (impulse[1] != 0.0) { avgForce[1] += (impulse[1] / dt - avgForce[1]) / ++impulseCounts[1]; }
-                    if (impulse[2] != 0.0) { avgForce[2] += (impulse[2] / dt - avgForce[2]) / ++impulseCounts[2]; }
-                    if (impulse[3] != 0.0) { avgForce[3] += (impulse[3] / dt - avgForce[3]) / ++impulseCounts[3]; }
-                    if (impulse[4] != 0.0) { avgForce[4] += (impulse[4] / dt - avgForce[4]) / ++impulseCounts[4]; }
-                    if (impulse[5] != 0.0) { avgForce[5] += (impulse[5] / dt - avgForce[5]) / ++impulseCounts[5]; }*/
-
                     double dt = system.getDt();
-
-                    if (simIterations != 0) {
-                        avgForce[0] += (impulse[0] / dt - avgForce[0]) / simIterations;
-                        avgForce[1] += (impulse[1] / dt - avgForce[1]) / simIterations;
-                        avgForce[2] += (impulse[2] / dt - avgForce[2]) / simIterations;
-                        avgForce[3] += (impulse[3] / dt - avgForce[3]) / simIterations;
-                        avgForce[4] += (impulse[4] / dt - avgForce[4]) / simIterations;
-                        avgForce[5] += (impulse[5] / dt - avgForce[5]) / simIterations;
-                    }
-                    else {
-                        avgForce[0] = impulse[0] / dt;
-                        avgForce[1] = impulse[1] / dt;
-                        avgForce[2] = impulse[2] / dt;
-                        avgForce[3] = impulse[3] / dt;
-                        avgForce[4] = impulse[4] / dt;
-                        avgForce[5] = impulse[5] / dt;
-                    }
-
-                    /*cout << avgForce[0] << endl;
-                    cout << avgForce[1] << endl;
-                    cout << avgForce[2] << endl;
-                    cout << avgForce[3] << endl;
-                    cout << avgForce[4] << endl;
-                    cout << avgForce[5] << endl;*/
 
                     simIterations++;
 
-                   /* cout << "Impulses;" << endl;
-                    cout << "  +x: " << impulse[0] << endl;
-                    cout << "  -x: " << impulse[1] << endl;
-                    cout << "  +y: " << impulse[2] << endl;
-                    cout << "  -y: " << impulse[3] << endl;*/
+                    avgForce.x += (impulse.x / dt - avgForce.x) / simIterations;
+                    avgForce.y += (impulse.y / dt - avgForce.y) / simIterations;
+                    avgForce.z += (impulse.z / dt - avgForce.z) / simIterations;
                 }
             };
 
             if (system.getTime() >= targetTime) {
 
                 //cout << setfill(' ') << setw(15) << fixed << setprecision(10) << "Average force: " << avgForce[0] << ", " << avgForce[1] << ", " << avgForce[2] << ", " << avgForce[3] << ", " << avgForce[4] << ", " << avgForce[5] << endl;
-                
                 
                 /*systemPos = vec3(0);
                 massSum = 0;
@@ -432,66 +304,126 @@ int main() {
                 cout << "     Iterations skipped: " << ++missedFrameIterations << endl;
             }
             if (!PAUSE) {
-                // replace 1/4 with proper area calculation in the future
-                //double approximatedPressure = 0.25 * (1.0/6.0) * (avgForce[0] + avgForce[1] + avgForce[2] + avgForce[3] + avgForce[4] + avgForce[5]);
-
-                array<float, 6> approximatedPressure = {
-                    static_cast<float>(avgForce[0]) / (bbHeight * bbDepth),
-                    static_cast<float>(avgForce[1]) / (bbHeight * bbDepth),
-                    static_cast<float>(avgForce[2]) / (bbWidth * bbDepth),
-                    static_cast<float>(avgForce[3]) / (bbWidth * bbDepth),
-                    static_cast<float>(avgForce[4]) / (bbHeight * bbWidth),
-                    static_cast<float>(avgForce[5]) / (bbHeight * bbWidth)
+                // calcuate pressure approximation and output
+                // ------------------------------------------
+                vec3 approximatedPressure = {
+                    avgForce.x / (4.0l * boxSize.y * boxSize.z),    
+                    avgForce.y / (4.0l * boxSize.x * boxSize.z),
+                    avgForce.z / (4.0l * boxSize.x * boxSize.y)
                 };
 
-                float avgApproxPressure = approximatedPressure[0];
-                avgApproxPressure += approximatedPressure[1];
-                avgApproxPressure += approximatedPressure[2];
-                avgApproxPressure += approximatedPressure[3];
-                avgApproxPressure += approximatedPressure[4];
-                avgApproxPressure += approximatedPressure[5];
-                avgApproxPressure /= 6.0f;
-                //avgApproxPressure = 0.25 * (1.0 / 6.0) * (avgForce[0] + avgForce[1] + avgForce[2] + avgForce[3] + avgForce[4] + avgForce[5]);
+                float avgApproxPressure = static_cast<float>(approximatedPressure.x);
+                avgApproxPressure += static_cast<float>(approximatedPressure.y);
+                avgApproxPressure += static_cast<float>(approximatedPressure.z);
+                avgApproxPressure /= 6.0f; // over six not three because we collate adjacent faces
+                // pressureX = |pressureTopX| + |pressureBottomX|
 
-                // TODO:
-                // why are the pressures different
-                // and why is the approximation only wrong when not a cube?
-                // despite each of the pressures being roughly the same when not a cube?
-                cout << approximatedPressure[0] << endl;
-                cout << approximatedPressure[1] << endl;
-                cout << approximatedPressure[2] << endl;
-                cout << approximatedPressure[3] << endl;
-                cout << approximatedPressure[4] << endl;
-                cout << approximatedPressure[5] << endl;
                 cout << setfill(' ') << setw(15) << fixed << setprecision(10) << "Pressure approximation: " << avgApproxPressure;
                 cout << fixed << setprecision(5) << ", % error: " << 100 * (avgApproxPressure - predictedPressure) / predictedPressure << endl;
+
+                /*cout << fixed << setprecision(5) << approximatedPressure << endl;*/
             }
 
 
             // Swapping frame time calculation after waiting to avoid time spent in file I/O or rendering
             lastFrameTime = chrono::high_resolution_clock::now();
 
-            iterations++;
-
-
+            iterations++; // dont think this is used rn
         }
     } catch (const std::exception& e) {
         std::cerr << "An error occurred during the render loop: " << e.what() << std::endl;
 	}
-
-    //inputData.close();
-
-    // optional: de-allocate all resources once they've outlived their purpose:
-    // ------------------------------------------------------------------------
-   /* glDeleteVertexArrays(1, &VAO);
-    glDeleteBuffers(1, &VBO);
-    glDeleteBuffers(1, &EBO);*/
 
     // glfw: terminate, clearing all previously allocated GLFW resources.
     // ------------------------------------------------------------------
     glfwTerminate();
 	
 	return 0;
+}
+
+void getIntWithDefault(istream& in, int& v)
+{
+    string str;
+
+    getline(in, str);
+
+    while (str.empty()) {
+        cout << "Invalid entry. Enter again: ";
+        getline(in, str);
+    }
+    {
+        int i;
+        stringstream ss(str);
+
+        if (!(ss >> i)) {
+            i = v;
+        }
+
+        v = i;
+    }
+}
+
+void getLongDoubleWithDefault(istream& in, long double& v)
+{
+    string str;
+
+    getline(in, str);
+
+    while (str.empty()) {
+        cout << "Invalid entry. Enter again: ";
+        getline(in, str);
+    }
+    {
+        long double l;
+        stringstream ss(str);
+
+        if (!(ss >> l)) {
+            l = v;
+        }
+
+        v = l;
+    }
+}
+
+int loadGLAD(bool& retFlag)
+{
+    retFlag = true;
+    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+    {
+        std::cout << "Failed to initialize GLAD" << std::endl;
+        return -1;
+    }
+    retFlag = false;
+    return {};
+}
+
+int configureWindow(GLFWwindow* window, bool& retFlag)
+{
+    retFlag = true;
+    if (window == NULL)
+    {
+        std::cout << "Failed to create GLFW window" << std::endl;
+        glfwTerminate();
+        return -1;
+    }
+    glfwMakeContextCurrent(window);
+    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    retFlag = false;
+    return {};
+}
+
+void configureGLFW()
+{
+    // glfw: initialize and configure
+    // ------------------------------
+    glfwInit();
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+#ifdef __APPLE__
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+#endif
 }
 
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
@@ -526,81 +458,44 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 	glViewport(0, 0, width, height);
 }
 
-void drawSystemParticles(System& system, Shader& shader, Mesh& mesh, unsigned fidelity) {
-    int i = 0;
-    for (Particle particle : system.getParticles()) {
-        if (i % fidelity == 0) {
-            glm::mat4 model = glm::mat4(1.0f);
-            vec3 particlePos = particle.getPosition();
-            model = glm::translate(model, glm::vec3(particlePos.x, particlePos.y, particlePos.z));
-            shader.setMat4("model", model);
-            mesh.draw(shader);
-        }
-        i++;
-    }
-    //for (size_t i = 0; i < system.numberOfSubsystems(); i++) {
-    //    drawSystemParticles(*system.getSubsystem(i), shader, mesh);
-    //}
+// ARCHIVAL CODE
+// -------------
 
-    //        for (int i = 0; i < pressureApproximationSystem.numberOfSubsystems(); i++) {
-    //            glm::mat4 model = glm::mat4(1.0f);
-                //vec3 subsystemPos = pressureApproximationSystem.subsystem(i).derivePosition();
-    //            model = glm::translate(model, glm::vec3(subsystemPos.x, subsystemPos.y, subsystemPos.z));
-    //            shader.setMat4("model", model);
-    //            // draw the circle
-    //            //glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(circleInd.size()), GL_UNSIGNED_INT, 0);
-                //circleMesh.draw(shader);
-    //        }
-}
+//void drawSystemParticles(System& system, Shader& shader, Mesh& mesh, unsigned fidelity) {
+//    int i = 0;
+//    for (Particle particle : system.getParticles()) {
+//        if (i % fidelity == 0) {
+//            glm::mat4 model = glm::mat4(1.0f);
+//            vec3 particlePos = particle.getPosition();
+//            model = glm::translate(model, glm::vec3(particlePos.x, particlePos.y, particlePos.z));
+//            shader.setMat4("model", model);
+//            mesh.draw(shader);
+//        }
+//        i++;
+//    }
+//}
 
-/*
-* Adds vertex data to vertices and index data to indices for a circle in the Z plane centered at the origin.
-* 
-* @param vertices - vector to append vertex data to (x, y, z, r, g, b for each vertex; alpha value pending further development)
-* @param indices - vector to append index data to (unsigned int indices for triangles, starts from 0, middle point is at index = subdivisions)
-* @param radius - radius of the circle
-* @param subdivisions - number of subdivisions (triangles) to create the circle
-* @param color - color of the circle (r, g, b)
-* 
-* @updates vertices - with valid vertex data with specified radius, subdivisions, and color
-* @updates indices - with valid index data for triangles composing the circle
-* 
-* @requires radius > 0, subdivisions >= 3, 0 <= color.r,g,b <= 1.0f
-* @ensures vertices and indices are appended with new data
-*/
-void circleZ(vector<float>& vertices, vector<unsigned int>& indices, float radius, int subdivisions, glm::vec3 color) {
-	assert(radius > 0.0f);
-	assert(subdivisions >= 3);
-	assert(color.x >= 0.0f && color.x <= 1.0f);
-	assert(color.y >= 0.0f && color.y <= 1.0f);
-	assert(color.z >= 0.0f && color.z <= 1.0f);
+// bounding box mesh
+    // -------------------
+  //  float bbWidth = 2.0f;
+  //  float bbHeight = 2.5f;
+  //  float bbDepth = 10.0f;
+  //  float boundingBoxVert[] = {
+        //// positions                                            // colors
+  //       bbWidth / 2.0f,  bbHeight / 2.0f, -bbDepth / 2.0f,     0, 0, 0,    // Top right
+  //       bbWidth / 2.0f, -bbHeight / 2.0f, -bbDepth / 2.0f,     0, 0, 0,    // Bottom right
+  //      -bbWidth / 2.0f,  bbHeight / 2.0f, -bbDepth / 2.0f,     0, 0, 0,    // Top left
+  //      -bbWidth / 2.0f, -bbHeight / 2.0f, -bbDepth / 2.0f,     0, 0, 0     // Bottom left
+  //  };
+  //  unsigned int boundingBoxInd[] = {
+  //      0, 1, 2,
+  //      2, 3, 1
+  //  };
 
-	// We need (subdivisions + 1) vertices: one for each subdivision point and one for the center
-	// But the last vertex doesn't follow the loop pattern, so we handle it after
-	// We only need subdivisions triangles, each connecting two adjacent subdivision points and the center point
-    for (int i = 0; i < subdivisions; i++) {
-        float angle = 2.0f * (float)PI * i / subdivisions;
-        vertices.push_back(radius * cos(angle));            // x
-        vertices.push_back(radius * sin(angle));            // y
-        vertices.push_back(0.0f);                           // z
-        vertices.push_back(color.x);                           // r
-        vertices.push_back(color.y);                          // g
-        vertices.push_back(color.z);                           // b
+  //   Mesh bbMesh(boundingBoxVert, boundingBoxInd);
 
-        // triangle: i, (i+1) % subdivisions, centerIndex (will be subdivisions)
-        indices.push_back(subdivisions);
-        indices.push_back(i);
-        indices.push_back((i + 1) % subdivisions);
-
-    }
-
-    vertices.push_back(0.0f);       // center x
-    vertices.push_back(0.0f);       // center y
-    vertices.push_back(0.0f);       // center z
-    vertices.push_back(color.x);       // r
-    vertices.push_back(color.y);		// g
-    vertices.push_back(color.z); 		// b
-}
+    // uncomment this call to draw in wireframe polygons.
+    // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
 //void resetSystem(System& system, int n) {
 //    system.setTime(0.0);
@@ -739,3 +634,51 @@ void circleZ(vector<float>& vertices, vector<unsigned int>& indices, float radiu
 //
 //        system.setTime(nextTime);
 //}
+
+//   srand(unsigned int(time(0))); // Seed random number generator
+
+ //   BoundSystem basicSystem;
+
+ //   for (int i = 0; i < numParticles; i++) {
+ //       vec3 randomPos(
+ //           ((double)rand() / RAND_MAX) * 2.0f - 1.0f,
+ //           ((double)rand() / RAND_MAX) * 2.0f - 1.0f,
+ //           0 /*((double)rand() / RAND_MAX) * 2.0f - 1.0f*/
+ //       );
+ //       vec3 randomVel(
+ //           ((double)rand() / RAND_MAX) * 2.0f - 1.0f,
+ //           ((double)rand() / RAND_MAX) * 2.0f - 1.0f,
+ //           0 /*((double)rand() / RAND_MAX) * 2.0f - 1.0f*/
+ //       );
+
+    //	Particle particle(randomPos, randomVel, 1.0);
+ //       basicSystem.addParticle(particle);
+ //   }
+
+ //   // Create a bound subsystem and add it to the basic system.
+ //   // NOTE: BoundSystem (and System) is non-copyable because it contains std::unique_ptr members.
+ //   // Construct the subsystem directly as a unique_ptr and populate it, then move it into the parent.
+ //   auto boundSubsystemPtr = std::make_unique<BoundSystem>();
+ //   boundSubsystemPtr->addParticle(Particle(vec3(0, 0, 0), vec3(1, 0, 0), 1.0));
+ //   boundSubsystemPtr->addParticle(Particle(vec3(0, 0, 0), vec3(-1, 0, 0), 1.0));
+
+ //   basicSystem.addSubsystem(std::move(boundSubsystemPtr));
+
+ //   /*cout << basicSystem.getSubsystem(0).getParticle(0).getPosition() << endl;
+ //   cout << basicSystem.getSubsystem(0).getParticle(1).getPosition() << endl;*/
+
+    //Simulation simulation(basicSystem, "systemData.txt", "simulationTest.txt");
+
+//for (size_t i = 0; i < system.numberOfSubsystems(); i++) {
+    //    drawSystemParticles(*system.getSubsystem(i), shader, mesh);
+    //}
+
+    //        for (int i = 0; i < pressureApproximationSystem.numberOfSubsystems(); i++) {
+    //            glm::mat4 model = glm::mat4(1.0f);
+                //vec3 subsystemPos = pressureApproximationSystem.subsystem(i).derivePosition();
+    //            model = glm::translate(model, glm::vec3(subsystemPos.x, subsystemPos.y, subsystemPos.z));
+    //            shader.setMat4("model", model);
+    //            // draw the circle
+    //            //glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(circleInd.size()), GL_UNSIGNED_INT, 0);
+                //circleMesh.draw(shader);
+    //        }

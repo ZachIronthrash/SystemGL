@@ -1,3 +1,5 @@
+#include "Simulation.h"
+
 #include "System.h"
 
 using namespace std;
@@ -63,6 +65,12 @@ int main() {
     cout << "Select simulation time step (default: " << dt << "): ";
 
     getLongDoubleWithDefault(cin, dt);
+
+    int fidelity = 10;
+
+    cout << "Select render fidelity (default: every " << fidelity << "th particle): ";
+
+    getIntWithDefault(cin, fidelity);
 
     vec3 boxSize = vec3(1.0l, 1.0l, 5.0l);
 
@@ -255,7 +263,7 @@ int main() {
             system.drawSystemBounds(shader);
 
             // draw particles
-            system.drawSystemParticles(shader, circleMesh, 10);
+            system.drawSystemParticles(shader, circleMesh, fidelity);
 
             bool foundTargetTime = false;
 

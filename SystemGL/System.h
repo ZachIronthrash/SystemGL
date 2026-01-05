@@ -506,6 +506,10 @@ public:
 	*/
 	vec3 impulseEvolve();
 
+	void evolve() override {
+		impulseEvolve();
+	}
+
 	/*
 	* draws boxMesh to screen with the supplied shader and offset
 	* 

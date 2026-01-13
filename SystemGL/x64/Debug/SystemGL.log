@@ -1,15 +1,2 @@
 ﻿  Source.cpp
-C:\Users\chris\source\repos\SystemGL\SystemGL\Simulation.h(25,44): error C2065: 'PAUSE': undeclared identifier
-  (compiling source file 'Source.cpp')
-  
-C:\Users\chris\source\repos\SystemGL\SystemGL\Simulation.h(25,53): error C2065: 'KEY_N': undeclared identifier
-  (compiling source file 'Source.cpp')
-  
-C:\Users\chris\source\repos\SystemGL\SystemGL\Simulation.h(27,25): error C2440: 'initializing': cannot convert from 'void' to 'long double'
-  (compiling source file 'Source.cpp')
-      C:\Users\chris\source\repos\SystemGL\SystemGL\Simulation.h(27,25):
-      Expressions of type void cannot be converted to other types
-  
-C:\Users\chris\source\repos\SystemGL\SystemGL\Simulation.h(38,2): error C2181: illegal else without matching if
-  (compiling source file 'Source.cpp')
-  
+  SystemGL.vcxproj -> C:\Users\chris\source\repos\SystemGL\x64\Debug\SystemGL.exe

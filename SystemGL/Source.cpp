@@ -131,6 +131,10 @@ int main() {
 
     PressureSystem system(numParticles, systemMass, molarMass, targetTemp, generator, boxSize, dt);
 
+    Simulation pressureSim(&system, "pressure_simulation.txt");
+
+    pressureSim.run((long double)FRAME_TIME, 1.0l); // run for 1000 seconds
+
     // calculate predicted values
     // --------------------------
     vec3 systemPos = vec3(0);

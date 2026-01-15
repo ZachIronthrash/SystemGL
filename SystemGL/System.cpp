@@ -209,12 +209,12 @@ PressureSystem::PressureSystem(int numParticles, long double sysmass, long doubl
 		addParticle(particle);
 	}
 
-	std::vector<float> vertices;
+	/*std::vector<float> vertices;
 	std::vector<unsigned int> indices;
 
 	createVertexAndIndexData(vertices, indices);
 
-	this->boxMesh = Mesh(vertices, indices);
+	this->boxMesh = Mesh(vertices, indices);*/
 
 	/*vec3 systemVel = vec3(0);
 	long double massSum = 0l;
@@ -306,13 +306,6 @@ PressureSystem::PressureSystem(int numParticles, long double sysmass, long doubl
 	System::evolve();
 
 	return reflectParticles();
-}
-
-void PressureSystem::drawSystemBounds(Shader& shader, vec3 offset) {
-	glm::mat4 model = glm::mat4(1.0f);
-	model = glm::translate(model, glm::vec3(offset.x, offset.y, offset.z));
-	shader.setMat4("model", model);
-	boxMesh.draw(shader);
 }
 
 // ARCHIVAL CODE

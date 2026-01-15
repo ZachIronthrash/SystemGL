@@ -9,36 +9,36 @@
 
 class Simulation {
 public:
-	Simulation(System* s, std::string f) : system(s), file(f) {}
+	Simulation(System* s, std::string f, long double ts, long double ss) : system(s), file(f), timeScale(ts), spaceScale(ss) {}
 
 	void run(long double frameTime, long double endTime) {
 		std::ofstream o;
 		o.open(file);
 
-		long double targetTime = system->getTime()/* + frameTime*/;
+		long double targetTime = getScaledTime()/* + frameTime*/;
 		unsigned frameCount = 0;
 
-		while (system->getTime() < endTime) {
+		while (getScaledTime() < endTime) {
 
-			if (system->getTime() < targetTime) {
+			if (getScaledTime() < targetTime) {
 				system->evolve();
 			}
 			else {
-				targetTime = system->getTime() + frameTime;
-				o << "i" << frameCount++ << ";t" << system->getTime();
+				targetTime = getScaledTime() + frameTime;
+				o << "i" << frameCount++ << ";t" << getScaledTime();
 				for (int i = 0; i < system->numberOfParticles(); i++) {
 					Particle& p = system->getParticle(i);
-					vec3 position = p.getPosition();
+					vec3 position = getScaledPosition(p.getPosition());
 					o << ";" << "p" << i << "," << position.x << "," << position.y << "," << position.z;
 				}
 				o << ";\n";
 			}
 		}
 
-		o << "i" << frameCount++ << ";t" << system->getTime();
+		o << "i" << frameCount++ << ";t" << getScaledTime();
 		for (int i = 0; i < system->numberOfParticles(); i++) {
 			Particle& p = system->getParticle(i);
-			vec3 position = p.getPosition();
+			vec3 position = getScaledPosition(p.getPosition());
 			o << ";" << "p" << i << "," << position.x << "," << position.y << "," << position.z;
 		}
 		o << ";\n";
@@ -67,26 +67,36 @@ public:
 		std::getline(in, line);
 		line = trim(line);
 		
-		iteration = std::stoi(extract_between(line, "i", ";"));
+		if (!line.empty()) {
+			iteration = std::stoi(extract_between(line, "i", ";"));
 
-		system->setTime(std::stold(extract_between(line, "t", ";")));
+			system->setTime(std::stold(extract_between(line, "t", ";")));
 
-		for (int i = 0; i < system->numberOfParticles(); i++) {
-			Particle& particle = system->getParticle(i);
+			for (int i = 0; i < system->numberOfParticles(); i++) {
+				Particle& particle = system->getParticle(i);
 
-			std::string part = extract_between(line, "p" + std::to_string(i) + ",", ";");
-			std::stringstream ss(part);
+				std::string part = extract_between(line, "p" + std::to_string(i) + ",", ";");
+				std::stringstream ss(part);
 
-			char discard;
+				char discard;
 
-			vec3 pos = vec3(0);
+				vec3 pos = vec3(0);
 
-			ss >> pos.x >> discard >> pos.y >> discard >> pos.z;
+				ss >> pos.x >> discard >> pos.y >> discard >> pos.z;
 
-			particle.setPosition(pos);
+				particle.setPosition(pos);
+			}
+		}
+		else {
+			iteration = std::numeric_limits<unsigned int>::max();
 		}
 
 		return iteration;
+	}
+
+	void resetIn() {
+		closeInput();
+		iteration = 0;
 	}
 
 	void openInput() {
@@ -99,10 +109,26 @@ public:
 			in.close();
 		}
 	}
+
+	~Simulation() {
+		closeInput();
+	}
 private:
 	System* system;
 	std::string file;
 
 	std::ifstream in;
 	unsigned iteration = 0;
+
+	// simulation_time * timeScale = output_time
+	// simulation_coordinate(x,y,z) * spaceScale = output_coordinate
+	long double timeScale = 1000;
+	long double spaceScale = 1e9;
+
+	long double getScaledTime() {
+		return system->getTime() * timeScale;
+	}
+	vec3 getScaledPosition(const vec3& position) {
+		return vec3(position.x * spaceScale, position.y * spaceScale, position.z * spaceScale);
+	}
 };

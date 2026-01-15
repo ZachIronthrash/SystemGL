@@ -71,8 +71,26 @@ bool KEY_N = false;
 bool PAUSE = true;
 
 int main() {
+    // variable initialization
+    // -----------------------
+
     long double renderTimeScale = 1000l;
     long double renderSpaceScale = 1e9;
+
+    int numParticles = 500;
+
+    // default to helium molar mass
+    long double molarMass = 0.004003l; // [kg / mol]
+
+    long double targetTemp = 100.0l / (renderTimeScale * renderSpaceScale);
+
+    long double systemMass = 0.5 * molarMass / (renderTimeScale * renderSpaceScale); // [kg]
+
+    long double dt = 0.001l / renderTimeScale;
+
+    int fidelity = 10;
+
+    vec3 boxSize = vec3(1.0l, 1.0l, 5.0l) / renderSpaceScale;
 
     cout << "Render defaults to " << renderTimeScale << "x speed and " << renderSpaceScale << "x \"zoom\"" << endl;
     cout << "  (1 sec render time = " << 1.0l / renderTimeScale << " sec simulation time)" << endl;
@@ -83,40 +101,23 @@ int main() {
 	cout << "Select render space scale (\"-\" for default): ";
 	getLongDoubleWithDefault(cin, renderSpaceScale);
 
-    // variable initialization
-    // -----------------------
-    int numParticles = 500;
-
     cout << "Select particle count (\"-\" for default: " << numParticles << "): ";
     getIntWithDefault(cin, numParticles);
-
-    // default to helium molar mass
-    long double molarMass = 0.004003l; // [kg / mol]
 
     cout << "Select molar mass of particle (default: helium molar mass 0.004003): ";
     getLongDoubleWithDefault(cin, molarMass);
 
-    long double targetTemp = 100.0l / (renderTimeScale * renderSpaceScale);
-
     cout << "Select target temperature (default: " << targetTemp << " K): ";
     getLongDoubleWithDefault(cin, targetTemp);
-
-    long double systemMass = 0.5 * molarMass / (renderTimeScale * renderSpaceScale); // [kg]
 
     cout << "Select total system mass (default: " << systemMass << " Kg): ";
     getLongDoubleWithDefault(cin, systemMass);
 
-    long double dt = 0.001l / renderTimeScale;
-
     cout << "Select simulation time step (default: " << dt << "): ";
     getLongDoubleWithDefault(cin, dt);
 
-    int fidelity = 10;
-
     cout << "Select render fidelity (default: every " << fidelity << "th particle): ";
     getIntWithDefault(cin, fidelity);
-
-    vec3 boxSize = vec3(1.0l, 1.0l, 5.0l) / renderSpaceScale;
 
     cout << "Select bounding box size (\"-\" for any default values: " << boxSize << "): ";
     getLongDoubleWithDefault(cin, boxSize.x);

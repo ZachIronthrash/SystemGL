@@ -58,7 +58,7 @@
               "RelativeDocumentMoniker": "SystemGL\\Source.cpp",
               "ToolTip": "C:\\Users\\chris\\source\\repos\\SystemGL\\SystemGL\\Source.cpp",
               "RelativeToolTip": "SystemGL\\Source.cpp",
-              "ViewState": "AgIAAFUAAAAAAAAAAAAQwGcAAABTAAAAAAAAAA==",
+              "ViewState": "AgIAAEYAAAAAAAAAAAAQwEwAAAAoAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
               "WhenOpened": "2025-11-12T23:40:33.167Z",
               "IsPinned": true,
@@ -75,8 +75,7 @@
               "ViewState": "AgIAAGUAAAAAAAAAAAAIwH0AAAAbAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
               "WhenOpened": "2025-12-25T21:25:38.67Z",
-              "IsPinned": true,
-              "EditorCaption": ""
+              "IsPinned": true
             },
             {
               "$type": "Document",
@@ -89,8 +88,7 @@
               "ViewState": "AgIAAMkBAAAAAAAAAAAkwAwCAAADAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
               "WhenOpened": "2025-11-11T21:33:00.652Z",
-              "IsPinned": true,
-              "EditorCaption": ""
+              "IsPinned": true
             },
             {
               "$type": "Document",
@@ -103,8 +101,7 @@
               "ViewState": "AgIAAMQAAAAAAAAAAAD4v9gAAAArAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
               "WhenOpened": "2025-11-23T04:26:33.194Z",
-              "IsPinned": true,
-              "EditorCaption": ""
+              "IsPinned": true
             }
           ]
         }

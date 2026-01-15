@@ -519,10 +519,10 @@ public:
 	* @ensures mesh.positions = #mesh.positions + offset
 	* @ensures mesh is drawn to screen at correct position with the supplied shader
 	*/
-	void drawSystemBounds(Shader& shader, vec3 offset = 0.0l);
+	//void drawSystemBounds(Shader& shader, vec3 offset = 0.0l);
 
 private:
-	Mesh boxMesh;
+	//Mesh boxMesh;
 
 	/*
 	* creates vertex and index data for the bounding box
@@ -537,30 +537,6 @@ private:
 	* @ensures vertices describe a square behind all particles in the system
 	* @ensures indices correctly order vertices to draw desired structure
 	*/
-	void createVertexAndIndexData(std::vector<float>& vertices, std::vector<unsigned int>& indices) {
-		float size[3] = { (float)boxSize.x, (float)boxSize.y, (float)boxSize.z };
-		float boundingBoxVert[] = {
-			// positions                                            // colors
-			 size[0],  size[1], -size[2],     0, 0, 0,    // Top right
-			 size[0], -size[1], -size[2],     0, 0, 0,    // Bottom right
-			-size[0],  size[1], -size[2],     0, 0, 0,    // Top left
-			-size[0], -size[1], -size[2],     0, 0, 0     // Bottom left
-		};
-		unsigned int boundingBoxInd[] = {
-			0, 1, 2,
-			2, 3, 1
-		};
-
-		vertices.clear();
-		indices.clear();
-
-		for (float f : boundingBoxVert) {
-			vertices.push_back(f);
-		}
-		for (unsigned int i : boundingBoxInd) {
-			indices.push_back(i);
-		}
-	}
 };
 
 // ARCHIVAL CODE

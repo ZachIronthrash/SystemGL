@@ -73,7 +73,6 @@ bool PAUSE = true;
 int main() {
     // variable initialization
     // -----------------------
-
     long double renderTimeScale = 1000l;
     long double renderSpaceScale = 1e9;
 
@@ -82,7 +81,7 @@ int main() {
     // default to helium molar mass
     long double molarMass = 0.004003l; // [kg / mol]
 
-    long double targetTemp = 100.0l / (renderTimeScale * renderSpaceScale);
+    long double targetTemp = 0.001l / (renderTimeScale * renderSpaceScale);
 
     long double systemMass = 0.5 * molarMass / (renderTimeScale * renderSpaceScale); // [kg]
 
@@ -95,34 +94,48 @@ int main() {
     cout << "Render defaults to " << renderTimeScale << "x speed and " << renderSpaceScale << "x \"zoom\"" << endl;
     cout << "  (1 sec render time = " << 1.0l / renderTimeScale << " sec simulation time)" << endl;
     cout << "  (1 unit render distance = " << 1.0l / renderSpaceScale << " m sim distance)" << endl;
-    cout << "Select render time scale (\"-\" for default): ";
-	getLongDoubleWithDefault(cin, renderTimeScale);
+    cout << endl << "To skip prompts and use defaults type \"SKIP\": ";
 
-	cout << "Select render space scale (\"-\" for default): ";
-	getLongDoubleWithDefault(cin, renderSpaceScale);
+    {
+        string input;
+        cin >> input;
+        if (input == "SKIP") {
+            cout << "Using default parameters.";
+        }
+        else {
+            cin.clear(); 
 
-    cout << "Select particle count (\"-\" for default: " << numParticles << "): ";
-    getIntWithDefault(cin, numParticles);
+            cout << "Select render time scale (\"-\" for default): ";
+            getLongDoubleWithDefault(cin, renderTimeScale);
 
-    cout << "Select molar mass of particle (default: helium molar mass 0.004003): ";
-    getLongDoubleWithDefault(cin, molarMass);
+            cout << "Select render space scale (\"-\" for default): ";
+            getLongDoubleWithDefault(cin, renderSpaceScale);
 
-    cout << "Select target temperature (default: " << targetTemp << " K): ";
-    getLongDoubleWithDefault(cin, targetTemp);
+            cout << "Select particle count (\"-\" for default: " << numParticles << "): ";
+            getIntWithDefault(cin, numParticles);
 
-    cout << "Select total system mass (default: " << systemMass << " Kg): ";
-    getLongDoubleWithDefault(cin, systemMass);
+            cout << "Select molar mass of particle (default: helium molar mass 0.004003): ";
+            getLongDoubleWithDefault(cin, molarMass);
 
-    cout << "Select simulation time step (default: " << dt << "): ";
-    getLongDoubleWithDefault(cin, dt);
+            cout << "Select target temperature (default: " << targetTemp << " K): ";
+            getLongDoubleWithDefault(cin, targetTemp);
 
-    cout << "Select render fidelity (default: every " << fidelity << "th particle): ";
-    getIntWithDefault(cin, fidelity);
+            cout << "Select total system mass (default: " << systemMass << " Kg): ";
+            getLongDoubleWithDefault(cin, systemMass);
 
-    cout << "Select bounding box size (\"-\" for any default values: " << boxSize << "): ";
-    getLongDoubleWithDefault(cin, boxSize.x);
-    getLongDoubleWithDefault(cin, boxSize.y);
-    getLongDoubleWithDefault(cin, boxSize.z);
+            cout << "Select simulation time step (default: " << dt << "): ";
+            getLongDoubleWithDefault(cin, dt);
+
+            cout << "Select render fidelity (default: every " << fidelity << "th particle): ";
+            getIntWithDefault(cin, fidelity);
+
+            cout << "Select bounding box size (\"-\" for any default values: " << boxSize << "): ";
+            getLongDoubleWithDefault(cin, boxSize.x);
+            getLongDoubleWithDefault(cin, boxSize.y);
+            getLongDoubleWithDefault(cin, boxSize.z);
+        }
+        cout << endl;
+	}
 
     // configure glfw
     // --------------
@@ -156,8 +169,8 @@ int main() {
 
     Mesh circleMesh(circleVert, circleInd);
 
-
-
+	// box mesh
+	// --------
     std::vector<float> boxVert;
     std::vector<unsigned int> boxInd;
 

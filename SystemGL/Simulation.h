@@ -163,10 +163,13 @@ public:
 				system->evolve();
 				vec3 totalStepImpulse = vec3(0);
 				for (int i = 0; i < system->numberOfParticles(); i++) {
+					// DOESN'T ACCOUNT FOR INTERACTIONS WITHIN THE SYSTEM
 					Particle& p = system->getParticle(i);
 					vec3 deltaV = p.getVelocity() - initVelocities[i];
 					vec3 impulse = deltaV * p.getMass();
-					totalStepImpulse += impulse;
+					totalStepImpulse.x += abs(impulse.x);
+					totalStepImpulse.y += abs(impulse.y);
+					totalStepImpulse.z += abs(impulse.z);
 				}
 				imp << "i" << frameCount << ";t" << getScaledTime() << ";J" << totalStepImpulse.x << "," << totalStepImpulse.y << "," << totalStepImpulse.z << ";\n";
 			}

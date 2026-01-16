@@ -340,7 +340,7 @@ public:
 	*/
 	long double calcKE();
 
-private:
+protected:
 	vec3 position = vec3(0); // [m]
 	vec3 velocity = vec3(0); // [m/s]
 	long double mass = 1.0l; // [kg]
@@ -453,7 +453,7 @@ public:
 	*/
 	virtual void drawSystemParticles(Shader& shader, Mesh& mesh, unsigned fidelity, vec3 offset = 0.0l);
 
-private:
+protected:
 	std::vector<Particle> particles;
 
 	long double boxSize[2] = { 1, 1 };

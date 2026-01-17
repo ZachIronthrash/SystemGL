@@ -73,7 +73,7 @@ bool PAUSE = true;
 int main() {
     // variable initialization
     // -----------------------
-    long double renderTimeScale = 1000l;
+    long double renderTimeScale = 100000l;
     long double renderSpaceScale = 1e9;
 
     int numParticles = 500;
@@ -81,13 +81,13 @@ int main() {
     // default to helium molar mass
     long double molarMass = 0.004003l; // [kg / mol]
 
-    long double targetTemp = 0.001l / (renderTimeScale * renderSpaceScale);
+    long double targetTemp = 100.0l / (renderTimeScale * renderSpaceScale);
 
     long double systemMass = 0.5 * molarMass / (renderTimeScale * renderSpaceScale); // [kg]
 
     long double dt = 0.001l / renderTimeScale;
 
-    int fidelity = 10;
+    int fidelity = 25;
 
     vec3 boxSize = vec3(1.0l, 1.0l, 5.0l) / renderSpaceScale;
 
@@ -137,47 +137,6 @@ int main() {
         cout << endl;
 	}
 
-    // configure glfw
-    // --------------
-    configureGLFW();
-
-    // glfw window creation
-    // --------------------
-    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "SystemGL by Christopher Hart", NULL, NULL);
-
-    bool retFlag;
-    int retVal = configureWindow(window, retFlag); // auto-gen: probably not ideal
-    if (retFlag) return retVal;
-
-    // glad: load all OpenGL function pointers
-    // ---------------------------------------
-    retVal = loadGLAD(retFlag); // auto-gen: probably not ideal
-    if (retFlag) return retVal;
-
-    // shader
-    // ------
-    Shader shader("C:/Users/chris/source/repos/SystemGL/SystemGL/vertex.glsl", "C:/Users/chris/source/repos/SystemGL/SystemGL/fragment.glsl");
-
-    // circle mesh
-    // -----------
-    vector<float> circleVert;
-    vector<unsigned int> circleInd;
-
-    float circleRadius = 0.01f;
-
-    circleZ(circleVert, circleInd, circleRadius, 6, { 1.0f, 0.0f, 0.0f });
-
-    Mesh circleMesh(circleVert, circleInd);
-
-	// box mesh
-	// --------
-    std::vector<float> boxVert;
-    std::vector<unsigned int> boxInd;
-
-    createVertexAndIndexData(boxSize * renderSpaceScale, boxVert, boxInd);
-
-    Mesh boxMesh(boxVert, boxInd);
-
     // init time tracking
     // ------------------
     //int iterations = 0;
@@ -199,9 +158,53 @@ int main() {
 
     PressureSystem system(numParticles, systemMass, molarMass, targetTemp, generator, boxSize, dt);
 
-    Simulation pressureSim(&system, "pressure_simulation.txt", renderTimeScale, renderSpaceScale);
+    PressureSimulation pressureSim(&system, "pressure_simulation.txt", "impulse_readout.txt", renderTimeScale, renderSpaceScale);
 
-    pressureSim.run((long double)FRAME_TIME, 1.0l); // run for 1 second
+    pressureSim.run((long double)FRAME_TIME, 100.0l, std::cout);
+
+	vec3 avgForce = vec3(0);
+	vec3 approximatedPressure = vec3(0);
+    {
+        bool f = false;
+        int impulseIterations = 1;
+        while (!f) {
+            vec3 impulse = pressureSim.readNextImpulse();
+            if (impulse == vec3(std::numeric_limits<long double>::min())) {
+				f = true;
+
+                approximatedPressure = {
+                        avgForce.x / (4.0l * boxSize.y * boxSize.z),
+                        avgForce.y / (4.0l * boxSize.x * boxSize.z),
+                        avgForce.z / (4.0l * boxSize.x * boxSize.y)
+                };
+
+                cout << approximatedPressure << endl;
+            }
+            else {
+                //    avgForce.x += (impulse.x / dt - avgForce.x) / simIterations;
+                        //    avgForce.y += (impulse.y / dt - avgForce.y) / simIterations;
+                        //    avgForce.z += (impulse.z / dt - avgForce.z) / simIterations;
+                // calcuate pressure approximation and output
+                        // ------------------------------------------
+                        //vec3 approximatedPressure = {
+                        //    avgForce.x / (4.0l * boxSize.y * boxSize.z),    
+                        //    avgForce.y / (4.0l * boxSize.x * boxSize.z),
+                        //    avgForce.z / (4.0l * boxSize.x * boxSize.y)
+                        //};
+
+                        //float avgApproxPressure = static_cast<float>(approximatedPressure.x);
+                        //avgApproxPressure += static_cast<float>(approximatedPressure.y);
+                        //avgApproxPressure += static_cast<float>(approximatedPressure.z);
+                        //avgApproxPressure /= 6.0f; // over six not three because we collate adjacent faces
+                        //// pressureX = |pressureTopX| + |pressureBottomX|
+                avgForce.x += (impulse.x / dt - avgForce.x) / impulseIterations;
+                avgForce.y += (impulse.y / dt - avgForce.y) / impulseIterations;
+                avgForce.z += (impulse.z / dt - avgForce.z) / impulseIterations;
+
+                impulseIterations++;
+            }
+        }
+    }
 
     /*while (pressureSim.readNext() != -1) {
         cout << system.getParticle(0).getPosition() << endl;
@@ -260,6 +263,10 @@ int main() {
 
     cout << "Predicted pressure: " << predictedPressure << endl;
 
+	cout << "Approximated pressure from simulation: " << (approximatedPressure.x + approximatedPressure.y + approximatedPressure.z) / 6.0l << endl;
+
+	cout << "Percent difference: " << abs((predictedPressure - ((approximatedPressure.x + approximatedPressure.y + approximatedPressure.z) / 6.0l)) / predictedPressure) * 100.0l << " %" << endl;
+
     //unsigned int simIterations = 0;
     unsigned int missedFrameIterations = 0;
 
@@ -268,12 +275,53 @@ int main() {
 
     // init pressure approximation arrays
     // ----------------------------------
-    /*std::array<long double, 6>*/ vec3 impulse;
+    ///*std::array<long double, 6>*/ vec3 impulse;
 
-    /*std::array<long double, 6>*/ vec3 avgForce = { 0L, 0L, 0L };
+    ///*std::array<long double, 6>*/ vec3 avgForce = { 0L, 0L, 0L };
 
     // window size to orthographic projection scaling factor
     float s = 0.002f;
+
+    // configure glfw
+    // --------------
+    configureGLFW();
+
+    // glfw window creation
+    // --------------------
+    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "SystemGL by Christopher Hart", NULL, NULL);
+
+    bool retFlag;
+    int retVal = configureWindow(window, retFlag); // auto-gen: probably not ideal
+    if (retFlag) return retVal;
+
+    // glad: load all OpenGL function pointers
+    // ---------------------------------------
+    retVal = loadGLAD(retFlag); // auto-gen: probably not ideal
+    if (retFlag) return retVal;
+
+    // shader
+    // ------
+    Shader shader("C:/Users/chris/source/repos/SystemGL/SystemGL/vertex.glsl", "C:/Users/chris/source/repos/SystemGL/SystemGL/fragment.glsl");
+
+    // circle mesh
+    // -----------
+    vector<float> circleVert;
+    vector<unsigned int> circleInd;
+
+    float circleRadius = 0.01f;
+
+    circleZ(circleVert, circleInd, circleRadius, 6, { 1.0f, 0.0f, 0.0f });
+
+    Mesh circleMesh(circleVert, circleInd);
+
+    // box mesh
+    // --------
+    std::vector<float> boxVert;
+    std::vector<unsigned int> boxInd;
+
+    createVertexAndIndexData(boxSize * renderSpaceScale, boxVert, boxInd);
+
+    Mesh boxMesh(boxVert, boxInd);
 
     // render loop
     // -----------

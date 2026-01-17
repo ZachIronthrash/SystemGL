@@ -5,7 +5,11 @@
 
 #include <sstream>
 
+#include <ios>
+
 #include "System.h"
+
+const long double PRINT_EPSILON = 1e-2; // for use in printing and other imprecise applications
 
 class Simulation {
 public:
@@ -15,7 +19,7 @@ public:
 		return system;
 	}
 
-	virtual void run(long double frameTime, long double endTime) {
+	virtual void run(long double frameTime, long double endTime, std::ostream& debug) {
 		std::ofstream o;
 		o.open(file);
 
@@ -36,6 +40,8 @@ public:
 					o << ";" << "p" << i << "," << position.x << "," << position.y << "," << position.z;
 				}
 				o << ";\n";
+
+				debug << "Simulation " << 100.0l - (endTime - getScaledTime()) * 100.0l / endTime << " % complete." << std::endl;
 			}
 		}
 
@@ -137,13 +143,16 @@ protected:
 	};
 };
 
-class PressureSimulation : private Simulation {
+class PressureSimulation : public Simulation {
 public:
-	PressureSimulation(System* s, std::string posFile, std::string impFile, long double ts, long double ss) : Simulation(s, posFile, ts, ss) {
-		
-	}
+	PressureSimulation(PressureSystem* s, std::string posFile, std::string impFile, long double ts, long double ss) : Simulation(s, posFile, ts, ss) {
+		impulseFile = impFile;
+	};
+	/*PressureSimulation(PressureSystem* s, std::string posFile, std::string impFile, long double ts, long double ss) : Simulation(s, posFile, ts, ss) {
 
-	void run(long double frameTime, long double endTime) override {
+	}*/
+
+	void run(long double frameTime, long double endTime, std::ostream& debug) override {
 		std::ofstream o;
 		std::ofstream imp;
 		o.open(file);
@@ -171,7 +180,7 @@ public:
 					totalStepImpulse.y += abs(impulse.y);
 					totalStepImpulse.z += abs(impulse.z);
 				}
-				imp << "i" << frameCount << ";t" << getScaledTime() << ";J" << totalStepImpulse.x << "," << totalStepImpulse.y << "," << totalStepImpulse.z << ";\n";
+				imp << "i" << frameCount << ";t" << system->getTime() << ";J" << totalStepImpulse.x << "," << totalStepImpulse.y << "," << totalStepImpulse.z << ";\n";
 			}
 			else {
 				targetTime = getScaledTime() + frameTime;
@@ -182,6 +191,15 @@ public:
 					o << ";" << "p" << i << "," << position.x << "," << position.y << "," << position.z;
 				}
 				o << ";\n";
+
+				if (std::fmod(100.0l - (endTime - getScaledTime()) * 100.0l / endTime, 10.0l) <= PRINT_EPSILON) {
+					std::ios oldState(nullptr);
+					oldState.copyfmt(debug);
+
+					debug << std::setprecision(0) << std::fixed << "Simulation " << 100.0l - (endTime - getScaledTime()) * 100.0l / endTime << " % complete." << std::endl;
+
+					debug.copyfmt(oldState);
+				}
 			}
 		}
 
@@ -195,6 +213,42 @@ public:
 
 		o.close();
 		imp.close();
+	}
+
+	vec3 readNextImpulse() {
+		openImpIn();
+
+		std::string line;
+		line = trim(line);
+
+		vec3 impulse = vec3(0);
+		
+		if (std::getline(impIn, line)) {
+			impulse.x = std::stold(extract_between(line, "J", ","));
+			impulse.y = std::stold(extract_between(line, ",", ","));
+			impulse.z = std::stold(extract_between(line, ",", ";"));
+		}
+		else {
+			impulse = vec3(std::numeric_limits<long double>::min());
+		}
+
+		return impulse;
+	}
+
+	void openImpIn() {
+		if (!impIn.is_open()) {
+			impIn.open(impulseFile);
+		}
+	}
+	void closeImpIn() {
+		if (impIn.is_open()) {
+			impIn.close();
+		}
+	}
+
+	~PressureSimulation () override {
+		closeImpIn();
+		closeIn();
 	}
 protected:
 	std::string impulseFile;

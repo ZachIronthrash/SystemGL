@@ -145,6 +145,10 @@ struct vec3 {
 		os << vec.x << ", " << vec.y << ", " << vec.z;
 		return os;
 	}
+
+	friend bool operator==(const vec3& a, const vec3& b) {
+		return (a.x == b.x && a.y == b.y && a.z == b.z);
+	}
 };
 
 /*

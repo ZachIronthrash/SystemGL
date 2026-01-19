@@ -147,6 +147,7 @@ class PressureSimulation : public Simulation {
 public:
 	PressureSimulation(PressureSystem* s, std::string posFile, std::string impFile, long double ts, long double ss) : Simulation(s, posFile, ts, ss) {
 		impulseFile = impFile;
+		pSystemPtr = s;
 	};
 	/*PressureSimulation(PressureSystem* s, std::string posFile, std::string impFile, long double ts, long double ss) : Simulation(s, posFile, ts, ss) {
 
@@ -164,23 +165,27 @@ public:
 		while (getScaledTime() < endTime) {
 			std::vector<vec3> initVelocities;
 			if (getScaledTime() < targetTime) {
-				initVelocities.clear();
-				for (int i = 0; i < system->numberOfParticles(); i++) {
-					Particle& p = system->getParticle(i);
-					initVelocities.push_back(p.getVelocity());
-				}
-				system->evolve();
-				vec3 totalStepImpulse = vec3(0);
-				for (int i = 0; i < system->numberOfParticles(); i++) {
-					// DOESN'T ACCOUNT FOR INTERACTIONS WITHIN THE SYSTEM
-					Particle& p = system->getParticle(i);
-					vec3 deltaV = p.getVelocity() - initVelocities[i];
-					vec3 impulse = deltaV * p.getMass();
-					totalStepImpulse.x += abs(impulse.x);
-					totalStepImpulse.y += abs(impulse.y);
-					totalStepImpulse.z += abs(impulse.z);
-				}
-				imp << "i" << frameCount << ";t" << system->getTime() << ";J" << totalStepImpulse.x << "," << totalStepImpulse.y << "," << totalStepImpulse.z << ";\n";
+				//initVelocities.clear();
+				//for (int i = 0; i < system->numberOfParticles(); i++) {
+				//	Particle& p = system->getParticle(i);
+				//	initVelocities.push_back(p.getVelocity());
+				//}
+				//system->evolve();
+				//vec3 totalStepImpulse = vec3(0);
+				//for (int i = 0; i < system->numberOfParticles(); i++) {
+				//	// DOESN'T ACCOUNT FOR INTERACTIONS WITHIN THE SYSTEM
+				//	Particle& p = system->getParticle(i);
+				//	vec3 deltaV = p.getVelocity() - initVelocities[i];
+				//	vec3 impulse = deltaV * p.getMass();
+				//	totalStepImpulse.x += abs(impulse.x);
+				//	totalStepImpulse.y += abs(impulse.y);
+				//	totalStepImpulse.z += abs(impulse.z);
+				//}
+				//imp << "i" << frameCount << ";t" << system->getTime() << ";J" << totalStepImpulse.x << "," << totalStepImpulse.y << "," << totalStepImpulse.z << ";\n";
+
+				vec3 impulse = pSystemPtr->impulseEvolve();
+
+				imp << "i" << frameCount << ";t" << system->getTime() << ";J," << impulse.x << "," << impulse.y << "," << impulse.z << ";\n";
 			}
 			else {
 				targetTime = getScaledTime() + frameTime;
@@ -192,7 +197,7 @@ public:
 				}
 				o << ";\n";
 
-				if (std::fmod(100.0l - (endTime - getScaledTime()) * 100.0l / endTime, 10.0l) <= PRINT_EPSILON) {
+				if (std::fmod(100.0l - (endTime - getScaledTime()) * 100.0l / endTime, 1.0l) <= PRINT_EPSILON) {
 					std::ios oldState(nullptr);
 					oldState.copyfmt(debug);
 
@@ -224,9 +229,16 @@ public:
 		vec3 impulse = vec3(0);
 		
 		if (std::getline(impIn, line)) {
-			impulse.x = std::stold(extract_between(line, "J", ","));
+			/*impulse.x = std::stold(extract_between(line, "J", ","));
 			impulse.y = std::stold(extract_between(line, ",", ","));
-			impulse.z = std::stold(extract_between(line, ",", ";"));
+			impulse.z = std::stold(extract_between(line, ",", ";"));*/
+
+			std::string part = extract_between(line, "J,", ";");
+			std::stringstream ss(part);
+
+			char discard;
+
+			ss >> impulse.x >> discard >> impulse.y >> discard >> impulse.z;
 		}
 		else {
 			impulse = vec3(std::numeric_limits<long double>::min());
@@ -254,4 +266,6 @@ protected:
 	std::string impulseFile;
 
 	std::ifstream impIn;
+
+	PressureSystem* pSystemPtr;
 };

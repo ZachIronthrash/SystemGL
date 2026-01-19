@@ -263,9 +263,9 @@ int main() {
 
     cout << "Predicted pressure: " << predictedPressure << endl;
 
-	cout << "Approximated pressure from simulation: " << (approximatedPressure.x + approximatedPressure.y + approximatedPressure.z) / 6.0l << endl;
+	cout << "Approximated pressure from simulation: " << approximatedPressure.dot(vec3(1.0l)) / 6.0l << endl;
 
-	cout << "Percent difference: " << abs((predictedPressure - ((approximatedPressure.x + approximatedPressure.y + approximatedPressure.z) / 6.0l)) / predictedPressure) * 100.0l << " %" << endl;
+	cout << "Percent difference: " << abs((predictedPressure - (approximatedPressure.dot(vec3(1.0l)) / 6.0l)) / predictedPressure) * 100.0l << " %" << endl;
 
     //unsigned int simIterations = 0;
     unsigned int missedFrameIterations = 0;
@@ -301,7 +301,7 @@ int main() {
 
     // shader
     // ------
-    Shader shader("C:/Users/chris/source/repos/SystemGL/SystemGL/vertex.glsl", "C:/Users/chris/source/repos/SystemGL/SystemGL/fragment.glsl");
+    Shader shader("vertex.glsl", "fragment.glsl");
 
     // circle mesh
     // -----------

@@ -1,33 +1,9 @@
 ﻿#pragma once
-
-#include "Shader.h"
 #include "Mesh.h"
-#include <fstream>
-#include <iostream>
-#include <vector>
-#include <string>
-#include <array>
-#include <map>
-
-#include <memory>
-
-#include <utility> // <--- add this for std::move
+#include "Shader.h"
+#include <ostream>
 #include <random>
-
-#include <chrono>
-#include <cassert>
-
-#include <sstream>
-#include <algorithm>
-#include <cctype>
-
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
-
-#include <cmath>
+#include <vector>
 
 /*
 * constants
@@ -47,70 +23,70 @@ struct vec3 {
 
 	/*
 	* default constructor
-	* 
+	*
 	* @ensures this.x = 0, this.y = 0, this.z = 0
 	*/
 	vec3();
 	/*
 	* constant constructor
-	* 
+	*
 	* @param val - initial value to set all components to
-	* 
+	*
 	* @ensures this.x = val, this.y = val, this.z = val
 	*/
 	vec3(long double val);
 	/*
 	* component constructor
-	* 
+	*
 	* @param x - initial x component
 	* @param y - initial y component
 	* @param z - initial z component
-	* 
+	*
 	* @ensures this.x = x, this.y = y, this.z = z
 	*/
 	vec3(long double x, long double y, long double z);
 
 	/*
 	* reverse the direction of the vector
-	* 
+	*
 	* @returns a new vec3 s.t. result = -this
 	*/
 	vec3 operator-() const;
 
 	/*
 	* add other to this and return this
-	* 
+	*
 	* @param other - vec3 to add
-	* 
+	*
 	* @ensures this = #this + other
 	* @returns this
 	*/
 	vec3& operator+=(const vec3& other);
 	/*
 	* substract other from this and return this
-	* 
+	*
 	* @param other - vec3 to subtract
-	* 
+	*
 	* @ensures this = #this - other
 	* @returns this
 	*/
 	vec3& operator-=(const vec3& other);
 	/*
 	* multiply this by scalar and return this
-	* 
+	*
 	* @param scalar - scalar to multiply by
-	* 
+	*
 	* @ensures this = #this * scalar
 	* @returns this
 	*/
 	vec3& operator*=(long double scalar);
 	/*
 	* divide this by scalar and return this
-	* 
+	*
 	* @param scalar - scalar to divide by
-	* 
+	*
 	* @requires scalar != 0
-	* 
+	*
 	* @ensures this = #this / scalar
 	* @returns this
 	*/
@@ -118,9 +94,9 @@ struct vec3 {
 
 	/*
 	* scales vector to unit length and returns the result
-	* 
+	*
 	* @restores this
-	* 
+	*
 	* @ensures result has length 1, unless this has length 0, in which case result is vec3(0)
 	* @returns normalized vector
 	*/
@@ -134,10 +110,10 @@ struct vec3 {
 	* helper function for printing vec3's
 	* outputs in the format "x, y, z"
 	* does not add an endl
-	* 
+	*
 	* @param os - output stream to write to
 	* @param vec - vec3 to output
-	* 
+	*
 	* @ensures os contains the string representation of vec
 	* @returns os
 	*/
@@ -157,20 +133,20 @@ struct vec3 {
 
 /*
 * adds two vec3's component-wise
-* 
+*
 * @param a - first vec3
 * @param b - second vec3
-* 
+*
 * @ensures result = a + b
 * @returns result
 */
 vec3 operator+(vec3 a, vec3 b);
 /*
 * subtracts two vec3's component-wise
-* 
+*
 * @param a - first vec3
 * @param b - second vec3
-* 
+*
 * @ensures result = a - b
 * @returns result
 */
@@ -178,10 +154,10 @@ vec3 operator-(vec3 a, vec3 b);
 /*
 * multiplies vec3 by scalar component-wise
 * this method handles the vec3 * constant case
-* 
+*
 * @param lhs - vec3
 * @param rhs - scalar
-* 
+*
 * @ensures result = lhs * rhs
 * @returns result
 */
@@ -189,7 +165,7 @@ vec3 operator*(vec3 lhs, long double rhs);
 /*
 * multiplies vec3 by scalar component-wise
 * this method handles the constant * vec3 case
-* 
+*
 * @param lhs - scalar
 * @param rhs - vec3
 *
@@ -200,12 +176,12 @@ vec3 operator*(long double lhs, vec3 rhs);
 /*
 * divides vec3 by scalar component-wise
 * this method handles the vec3 / constant case
-* 
+*
 * @param lhs - vec3
 * @param rhs - scalar
-* 
+*
 * @requires rhs != 0
-* 
+*
 * @ensures result = lhs / rhs
 * @returns result
 */
@@ -213,12 +189,12 @@ vec3 operator/(vec3 lhs, long double rhs);
 /*
 * divides vec3 by scalar component-wise
 * this method handles the constant / vec3 case
-* 
+*
 * @param lhs - scalar
 * @param rhs - vec3
-* 
+*
 * @requires rhs.x, rhs.y, rhs.z != 0
-* 
+*
 * @ensures result = lhs / rhs
 * @returns result
 */
@@ -229,9 +205,9 @@ vec3 operator/(long double lhs, vec3 rhs);
 /*
 * A simple particle class representing a point mass in 3D space
 * Particles are the only objects in this model with mass, position, and velocity
-* 
+*
 * Currently time is handled at the System level, not the Particle level but this is non-physical
-* Special relativity makes implementing time at the particle level difficult, so for now we will ignore 
+* Special relativity makes implementing time at the particle level difficult, so for now we will ignore
 * relativistic effects and assume all particles share the same universal time under a given system
 * Similarly, all systems should use the same time until properly handled, but this is not enforced
 */
@@ -239,17 +215,17 @@ class Particle {
 public:
 	/*
 	* default constructor
-	* 
+	*
 	* @ensures position = vec3(0), velocity = vec3(0), mass = 1.0
 	*/
 	Particle();
 	/*
 	* initital conditions constructor
-	* 
+	*
 	* @param position - initial position of the particle
 	* @param velocity - initial velocity of the particle
 	* @param mass - mass of the particle
-	* 
+	*
 	* @ensures this->position = position, this->velocity = velocity, this->mass = mass
 	*/
 	Particle(vec3 position, vec3 velocity, long double mass/*, long double dt = 0.001*/);
@@ -257,25 +233,25 @@ public:
 	// setters
 	/*
 	* sets the position of the particle
-	* 
+	*
 	* @param newPosition - new position of the particle
-	* 
+	*
 	* @ensures position = newPosition
 	*/
 	void setPosition(vec3 newPosition);
 	/*
 	* sets the velocity of the particle
-	* 
+	*
 	* @param newVelocity - new velocity of the particle
-	* 
+	*
 	* @ensures velocity = newVelocity
 	*/
 	void setVelocity(vec3 newVelocity);
 	/*
 	* sets the mass of the particle
-	* 
+	*
 	* @param newMass - new mass of the particle
-	* 
+	*
 	* @ensures mass = newMass
 	*/
 	void setMass(long double newMass);
@@ -283,19 +259,19 @@ public:
 	// getters
 	/*
 	* fetches the position of the particle
-	* 
+	*
 	* @return position
 	*/
 	vec3 getPosition();
 	/*
 	* fetches the velocity of the particle
-	* 
+	*
 	* @return velocity
 	*/
 	vec3 getVelocity();
 	/*
 	* fetches the mass of the particle
-	* 
+	*
 	* @return mass
 	*/
 	long double getMass();
@@ -315,17 +291,17 @@ public:
 	// transformations
 	/*
 	* translates the particle by delta
-	* 
+	*
 	* @param delta - translation vector
-	* 
+	*
 	* @ensures position = #position + delta
 	*/
 	void translateBy(vec3 delta);
 	/*
 	* accelerates the particle by delta
-	* 
+	*
 	* @param delta - acceleration vector
-	* 
+	*
 	* @ensures velocity = #velocity + delta
 	*/
 	void accelerateBy(vec3 delta);
@@ -339,7 +315,7 @@ public:
 
 	/*
 	* calculates the KE from velocity and mass
-	* 
+	*
 	* @return 0.5 * MASS * |VELOCITY| * |VELOCITY|
 	*/
 	long double calcKE();
@@ -362,74 +338,74 @@ public:
 
 	/*
 	* default constructor
-	* 
+	*
 	* @param dt - initial value of dt
-	* 
+	*
 	* @ensures this->dt = dt
 	*/
 	System(long double dt = 0.001);
 
 	/*
 	* appends particle to particles
-	* 
+	*
 	* @param particle - the particle to append
-	* 
+	*
 	* @ensures particles = #particle.push_back(particle)
 	*/
 	virtual void addParticle(Particle& particle);
 	/*
 	* returns the number of particles in particles
-	* 
+	*
 	* @return particles.size()
 	*/
 	virtual size_t numberOfParticles();
 	/*
 	* returns a reference to particles
-	* 
+	*
 	* @return &particles
 	*/
 	virtual std::vector<Particle>& getParticles();
 
 	/*
 	* returns a reference to the i'th particle
-	* 
+	*
 	* @param i - the particle to fetch
-	* 
+	*
 	* @return &particle[i]
 	*/
 	virtual Particle& getParticle(int i);
 	/*
 	* returns the current time
-	* 
+	*
 	* @return time
 	*/
 	virtual long double getTime();
 	/* returns the current delta-time
-	* 
+	*
 	* @return dt
 	*/
 	virtual long double getDt();
 
 	/*
 	* sets time to given value
-	* 
+	*
 	* @param time - the time to set
-	* 
+	*
 	* @ensures this->time = time
 	*/
 	virtual void setTime(long double time);
 	/*
 	* sets dt to given value
-	* 
+	*
 	* @param dt - the dt to set
-	* 
+	*
 	* @ensures this->dt = dt
 	*/
 	virtual void setDt(long double dt);
 
 	/*
 	* pushes time foward by dt
-	* 
+	*
 	* @ensures time = #time + dt
 	*/
 	virtual void timeStep();
@@ -437,7 +413,7 @@ public:
 	/*
 	* follows a simple kinematics scheme to evolve the particles in the system
 	* no acceleration handling for now
-	* 
+	*
 	* @ensures timeStep()
 	* @ensures particles.position = #particles.position + particles.velocity * dt
 	*/
@@ -445,12 +421,12 @@ public:
 
 	/*
 	* draws every particle in the system to the screen
-	* 
+	*
 	* @param shader		- the shader to use when drawing
 	* @param mesh		- the mesh to draw for each particle
 	* @param fidelity	- draw only particles for which index is a multiple of fidelity
 	* @param offset		- a vector describing the offset to apply to the mesh before drawing
-	* 
+	*
 	* @ensures mesh.positions = #mesh.positions + offset
 	* @ensures mesh is drawn to screen at correct position with the supplied shader
 	* @ensures particle is only drawn if particle.index % fidelity = 0
@@ -473,7 +449,7 @@ public:
 
 	/*
 	* default constructor
-	* 
+	*
 	* @param numParticles	- the number of particles in the system
 	* @param sysmass		- the total mass of the particles to approximate
 	* @param molarMass		- the molar mass of the particles to approximate
@@ -481,18 +457,18 @@ public:
 	* @param generator		- the rng to sample
 	* @param boxSize		- the size of the bounding box
 	* @param dt				- initial value of dt for the system
-	* 
+	*
 	* @ensures for all particles mass = sysmass / numParticles
 	* @ensures this->dt = dt
 	* @ensures particle velocities are randomly assigned using generator and the correct distribution is used for supplied targetTemp & molarMass
 	* @ensures this->boxSize = boxSize
 	* @ensures a working mesh is created for the system boundaries with vertices according to boxSize
 	*/
-	PressureSystem(int numParticles, long double sysmass, long double molarMass, long double targetTemp, std::mt19937& generator, vec3 boxSize = vec3( 1, 1, 1 ), long double dt = 0.001l);
+	PressureSystem(int numParticles, long double sysmass, long double molarMass, long double targetTemp, std::mt19937& generator, vec3 boxSize = vec3(1, 1, 1), long double dt = 0.001l);
 
 	/*
 	* reflects the particles which exited the box and returns the total change in impulse
-	* 
+	*
 	* @ensures |particle.position| < boxSize
 	*	|particle.position.x| = 2 * boxSize.x - |#particle.position.x| if |particle.position.x| > boxSize
 	*	|particle.position.y| = 2 * boxSize.y - |#particle.position.y| if |particle.position.y| > boxSize
@@ -505,7 +481,7 @@ public:
 
 	/*
 	* calls System::evolve() then reflectParticles() returning the impulses
-	* 
+	*
 	* @return reflectParticles()
 	*/
 	vec3 impulseEvolve();
@@ -516,10 +492,10 @@ public:
 
 	/*
 	* draws boxMesh to screen with the supplied shader and offset
-	* 
+	*
 	* @param shader		- the shader to use when drawing
 	* @param offset		- a vector describing the offset to apply to the mesh before drawing
-	* 
+	*
 	* @ensures mesh.positions = #mesh.positions + offset
 	* @ensures mesh is drawn to screen at correct position with the supplied shader
 	*/
@@ -530,18 +506,19 @@ private:
 
 	/*
 	* creates vertex and index data for the bounding box
-	* 
+	*
 	* @param vertices	- the container for the vertex data
 	* @param indices	- the container for the index data
-	* 
+	*
 	* @updates vertices and indices with data for the bounding box of the system
 	* @clears vertices
 	* @clears indices
-	* 
+	*
 	* @ensures vertices describe a square behind all particles in the system
 	* @ensures indices correctly order vertices to draw desired structure
 	*/
 };
+
 
 // ARCHIVAL CODE
 // -------------

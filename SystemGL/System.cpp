@@ -1,4 +1,14 @@
+#include "Mesh.h"
+#include "Shader.h"
 #include "System.h"
+
+#include <cassert>
+#include <cmath>
+#include <cstdlib>
+#include <glm/ext/matrix_transform.inl>
+#include <glm/fwd.hpp>
+#include <random>
+#include <vector>
 
 vec3::vec3() : x(0), y(0), z(0) {};
 vec3::vec3(long double val) : x(val), y(val), z(val) {}

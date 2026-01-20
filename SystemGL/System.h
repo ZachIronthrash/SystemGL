@@ -519,6 +519,13 @@ private:
 	*/
 };
 
+class PressureSystemData {
+public:
+
+protected:
+	PressureSystem& PressureSystem;
+};
+
 
 // ARCHIVAL CODE
 // -------------

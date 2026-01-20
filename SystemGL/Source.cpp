@@ -61,7 +61,7 @@ bool PAUSE = true;
 int main() {
 	// variable initialization
 	// -----------------------
-	long double renderTimeScale = 100000l;
+	long double renderTimeScale = 10000l;
 	long double renderSpaceScale = 1e9;
 
 	int numParticles = 500;

@@ -10,10 +10,10 @@
 #include <string>
 #include <vector>
 
-Simulation::Simulation(System* s, std::string f, long double ts, long double ss) : system(s), file(f), timeScale(ts), spaceScale(ss) {}
+Simulation::Simulation(System* s, std::string f, long double ts, long double ss) : systemPtr(s), file(f), timeScale(ts), spaceScale(ss) {}
 
-System* Simulation::systemPtr() {
-	return system;
+System* Simulation::getSystemPtr() {
+	return systemPtr;
 }
 
 void Simulation::run(long double frameTime, long double endTime, std::ostream& debug) {
@@ -26,7 +26,7 @@ void Simulation::run(long double frameTime, long double endTime, std::ostream& d
 	while (getScaledTime() < endTime) {
 
 		if (getScaledTime() < targetTime) {
-			system->evolve();
+			systemPtr->evolve();
 		}
 		else {
 			targetTime = getScaledTime() + frameTime;
@@ -71,10 +71,10 @@ unsigned Simulation::readNext() {
 	if (!line.empty()) {
 		iteration = std::stoi(extract_between(line, "i:", ";"));
 
-		system->setTime(std::stold(extract_between(line, "t:", ";")));
+		systemPtr->setTime(std::stold(extract_between(line, "t:", ";")));
 
-		for (int i = 0; i < system->numberOfParticles(); i++) {
-			Particle& particle = system->getParticle(i);
+		for (int i = 0; i < systemPtr->numberOfParticles(); i++) {
+			Particle& particle = systemPtr->getParticle(i);
 
 			std::string part = extract_between(line, "p" + std::to_string(i) + ":", ";");
 			std::stringstream ss(part);
@@ -116,7 +116,7 @@ Simulation::~Simulation() {
 }
 
 long double Simulation::getScaledTime() {
-	return system->getTime() * timeScale;
+	return systemPtr->getTime() * timeScale;
 }
 vec3 Simulation::getScaledPosition(const vec3& position) {
 	return vec3(position.x * spaceScale, position.y * spaceScale, position.z * spaceScale);
@@ -141,8 +141,8 @@ void Simulation::printFrameTime(std::ostream& o) {
 	o << "t:" << getScaledTime() << ";";
 }
 void Simulation::printParticlePositions(std::ostream& o) {
-	for (int i = 0; i < system->numberOfParticles(); i++) {
-		Particle& p = system->getParticle(i);
+	for (int i = 0; i < systemPtr->numberOfParticles(); i++) {
+		Particle& p = systemPtr->getParticle(i);
 		vec3 position = getScaledPosition(p.getPosition());
 		o << "p" << i << ":" << position.x << "," << position.y << "," << position.z << ";";
 	}
@@ -200,7 +200,7 @@ void PressureSimulation::run(long double frameTime, long double endTime, std::os
 
 			vec3 impulse = pSystemPtr->impulseEvolve();
 
-			imp << "i:" << frameCount << ";t:" << system->getTime() << ";J:" << impulse.x << "," << impulse.y << "," << impulse.z << ";\n";
+			imp << "i:" << frameCount << ";t:" << systemPtr->getTime() << ";J:" << impulse.x << "," << impulse.y << "," << impulse.z << ";\n";
 		}
 		else {
 			targetTime = getScaledTime() + frameTime;
@@ -290,6 +290,6 @@ void PressureSimulation::closeImpIn() {
 }
 
 PressureSimulation::~PressureSimulation() {
+	Simulation::~Simulation();
 	closeImpIn();
-	closeIn();
 }

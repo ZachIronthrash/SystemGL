@@ -8,7 +8,7 @@ class Simulation {
 public:
 	Simulation(System* s, std::string f, long double ts, long double ss);
 
-	System* systemPtr();
+	System* getSystemPtr();
 
 	virtual void run(long double frameTime, long double endTime, std::ostream& debug);
 
@@ -22,7 +22,7 @@ public:
 	virtual ~Simulation();
 
 protected:
-	System* system;
+	System* systemPtr;
 	std::string file;
 
 	std::ifstream in;

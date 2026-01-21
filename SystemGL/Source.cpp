@@ -61,7 +61,7 @@ bool PAUSE = true;
 int main() {
 	// variable initialization
 	// -----------------------
-	long double renderTimeScale = 10000l;
+	long double renderTimeScale = 1000l;
 	long double renderSpaceScale = 1e9;
 
 	int numParticles = 500;
@@ -69,11 +69,11 @@ int main() {
 	// default to helium molar mass
 	long double molarMass = 0.004003l; // [kg / mol]
 
-	long double targetTemp = 100.0l / (renderTimeScale * renderSpaceScale);
+	long double targetTemp = 1e-12l;
 
-	long double systemMass = 0.5 * molarMass / (renderTimeScale * renderSpaceScale); // [kg]
+	long double systemMass = 5e-15l * molarMass; // [kg]
 
-	long double dt = 0.001l / renderTimeScale;
+	long double dt = 1e-8l;
 
 	int fidelity = 25;
 

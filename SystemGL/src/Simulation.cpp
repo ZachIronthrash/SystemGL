@@ -10,14 +10,30 @@
 #include <string>
 #include <vector>
 
-Simulation::Simulation(System* s, std::string f, long double ts, long double ss) : systemPtr(s), file(f), timeScale(ts), spaceScale(ss) {}
+using namespace std;
+
+string trim(string s) {
+	s.erase(s.begin(), find_if(s.begin(), s.end(), [](unsigned char c) { return !isspace(c); }));
+	s.erase(find_if(s.rbegin(), s.rend(), [](unsigned char c) { return !isspace(c); }).base(), s.end());
+	return s;
+}
+string extract_between(const string& s, const string& open, const string& close) {
+	size_t a = s.find(open);
+	if (a == string::npos) return "";
+	a += open.size();
+	size_t b = s.find(close, a);
+	if (b == string::npos) return "";
+	return s.substr(a, b - a);
+}
+
+Simulation::Simulation(System* s, string f, long double ts, long double ss) : systemPtr(s), file(f), timeScale(ts), spaceScale(ss) {}
 
 System* Simulation::getSystemPtr() {
 	return systemPtr;
 }
 
-void Simulation::run(long double frameTime, long double endTime, std::ostream& debug) {
-	std::ofstream o;
+void Simulation::run(long double frameTime, long double endTime, ostream& debug) {
+	ofstream o;
 	o.open(file);
 
 	long double targetTime = getScaledTime()/* + frameTime*/;
@@ -35,7 +51,7 @@ void Simulation::run(long double frameTime, long double endTime, std::ostream& d
 			/*printFrameCount(frameCount, o);
 			printFrameTime(o);
 			printParticlePositions(o);
-			o << std::endl;*/
+			o << endl;*/
 			printLine2File(frameCount, o);
 
 			int percentComplete = (int)(100.0l - (endTime - getScaledTime()) * 100.0l / endTime);
@@ -43,7 +59,7 @@ void Simulation::run(long double frameTime, long double endTime, std::ostream& d
 			if (percentComplete > 100) percentComplete = 100;
 			else if (percentComplete < 0) percentComplete = 0;
 
-			if (std::fmod(percentComplete, 1.0l) < frameTime || std::fmod(percentComplete, 1.0l) > 1.0l - frameTime) {
+			if (fmod(percentComplete, 1.0l) < frameTime || fmod(percentComplete, 1.0l) > 1.0l - frameTime) {
 				debug << "\r|";
 				for (int i = 0; i < percentComplete; i++) {
 					debug << "*";
@@ -64,20 +80,20 @@ void Simulation::run(long double frameTime, long double endTime, std::ostream& d
 unsigned Simulation::readNext() {
 	openIn();
 
-	std::string line;
-	std::getline(in, line);
+	string line;
+	getline(in, line);
 	line = trim(line);
 
 	if (!line.empty()) {
-		iteration = std::stoi(extract_between(line, "i:", ";"));
+		iteration = stoi(extract_between(line, "i:", ";"));
 
-		systemPtr->setTime(std::stold(extract_between(line, "t:", ";")));
+		systemPtr->setTime(stold(extract_between(line, "t:", ";")));
 
 		for (int i = 0; i < systemPtr->numberOfParticles(); i++) {
 			Particle& particle = systemPtr->getParticle(i);
 
-			std::string part = extract_between(line, "p" + std::to_string(i) + ":", ";");
-			std::stringstream ss(part);
+			string part = extract_between(line, "p" + to_string(i) + ":", ";");
+			stringstream ss(part);
 
 			char discard;
 
@@ -89,7 +105,7 @@ unsigned Simulation::readNext() {
 		}
 	}
 	else {
-		iteration = std::numeric_limits<unsigned int>::max();
+		iteration = numeric_limits<unsigned int>::max();
 	}
 
 	return iteration;
@@ -121,48 +137,59 @@ long double Simulation::getScaledTime() {
 vec3 Simulation::getScaledPosition(const vec3& position) {
 	return vec3(position.x * spaceScale, position.y * spaceScale, position.z * spaceScale);
 }
-std::string Simulation::trim(std::string s) {
-	s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](unsigned char c) { return !std::isspace(c); }));
-	s.erase(std::find_if(s.rbegin(), s.rend(), [](unsigned char c) { return !std::isspace(c); }).base(), s.end());
-	return s;
-};
-std::string Simulation::extract_between(const std::string& s, const std::string& open, const std::string& close) {
-	size_t a = s.find(open);
-	if (a == std::string::npos) return "";
-	a += open.size();
-	size_t b = s.find(close, a);
-	if (b == std::string::npos) return "";
-	return s.substr(a, b - a);
-};
-void Simulation::printFrameCount(unsigned& i, std::ostream& o) {
-	o << "i:" << i++ << ";";
+//void Simulation::printFrameCount(unsigned& i, ostream& o) {
+//	o << "i:" << i++ << ";";
+//}
+//void Simulation::printFrameTime(ostream& o) {
+//	o << "t:" << getScaledTime() << ";";
+//}
+//void Simulation::printParticlePositions(ostream& o) {
+//	for (int i = 0; i < systemPtr->numberOfParticles(); i++) {
+//		Particle& p = systemPtr->getParticle(i);
+//		vec3 position = getScaledPosition(p.getPosition());
+//		o << "p" << i << ":" << position.x << "," << position.y << "," << position.z << ";";
+//	}
+//}
+void Simulation::printIntToFile(string prefix, unsigned i, string suffix, ostream& o) {
+	o << prefix << i << suffix;
 }
-void Simulation::printFrameTime(std::ostream& o) {
-	o << "t:" << getScaledTime() << ";";
+void Simulation::printLongDoubleToFile(string prefix, long double ld, string suffix, ostream& o) {
+	o << prefix << ld << suffix;
 }
-void Simulation::printParticlePositions(std::ostream& o) {
+void Simulation::printVec3ToFile(string prefix, vec3 v, string suffix, ostream& o) {
+	o << prefix << v.x << "," << v.y << "," << v.z << suffix;
+}
+
+void Simulation::printParticlePositions(ostream& o) {
 	for (int i = 0; i < systemPtr->numberOfParticles(); i++) {
 		Particle& p = systemPtr->getParticle(i);
 		vec3 position = getScaledPosition(p.getPosition());
-		o << "p" << i << ":" << position.x << "," << position.y << "," << position.z << ";";
+		printVec3ToFile("p" + to_string(i) + ":", position, ";", o);
 	}
 }
-void Simulation::printLine2File(unsigned& i, std::ostream& o) {
-	printFrameCount(i, o);
+
+void Simulation::printLine2File(unsigned& i, ostream& o) {
+	/*printFrameCount(i, o);
 	printFrameTime(o);
+	printParticlePositions(o);*/
+
+	printIntToFile("i:", i, ";", o);
+	i++;
+	printLongDoubleToFile("t:", getScaledTime(), ";", o);
 	printParticlePositions(o);
-	o << std::endl;
+
+	o << endl;
 }
 
 
-PressureSimulation::PressureSimulation(PressureSystem* s, std::string posFile, std::string impFile, long double ts, long double ss) : Simulation(s, posFile, ts, ss) {
+PressureSimulation::PressureSimulation(PressureSystem* s, string posFile, string impFile, long double ts, long double ss) : Simulation(s, posFile, ts, ss) {
 	impulseFile = impFile;
 	pSystemPtr = s;
 }
 
-void PressureSimulation::run(long double frameTime, long double endTime, std::ostream& debug) {
-	std::ofstream o;
-	std::ofstream imp;
+void PressureSimulation::run(long double frameTime, long double endTime, ostream& debug) {
+	ofstream o;
+	ofstream imp;
 	o.open(file);
 	imp.open(impulseFile);
 
@@ -178,7 +205,7 @@ void PressureSimulation::run(long double frameTime, long double endTime, std::os
 	debug << "| 0 %";*/
 
 	while (getScaledTime() < endTime) {
-		std::vector<vec3> initVelocities;
+		vector<vec3> initVelocities;
 		if (getScaledTime() < targetTime) {
 			//initVelocities.clear();
 			//for (int i = 0; i < system->numberOfParticles(); i++) {
@@ -209,7 +236,7 @@ void PressureSimulation::run(long double frameTime, long double endTime, std::os
 
 			int percentComplete = (int)(100.0l - (endTime - getScaledTime()) * 100.0l / endTime);
 
-			if (std::fmod(percentComplete, 1.0l) < frameTime || std::fmod(percentComplete, 1.0l) > 1.0l - frameTime) {
+			if (fmod(percentComplete, 1.0l) < frameTime || fmod(percentComplete, 1.0l) > 1.0l - frameTime) {
 				debug << "\r|";
 				for (int i = 0; i < percentComplete; i++) {
 					debug << "*";
@@ -220,11 +247,11 @@ void PressureSimulation::run(long double frameTime, long double endTime, std::os
 				debug << "| " << percentComplete << " %";
 			}
 
-			/*if (std::fmod(100.0l - (endTime - getScaledTime()) * 100.0l / endTime, 1.0l) < frameTime) {
-				std::ios oldState(nullptr);
+			/*if (fmod(100.0l - (endTime - getScaledTime()) * 100.0l / endTime, 1.0l) < frameTime) {
+				ios oldState(nullptr);
 				oldState.copyfmt(debug);
 
-				debug << std::setprecision(0) << std::fixed << "Simulation " << 100.0l - (endTime - getScaledTime()) * 100.0l / endTime << " % complete." << std::endl;
+				debug << setprecision(0) << fixed << "Simulation " << 100.0l - (endTime - getScaledTime()) * 100.0l / endTime << " % complete." << endl;
 
 				debug.copyfmt(oldState);
 			}*/
@@ -237,7 +264,7 @@ void PressureSimulation::run(long double frameTime, long double endTime, std::os
 	}
 	debug << "| " << 100 << " %";
 
-	debug << std::endl;
+	debug << endl;
 
 	printLine2File(frameCount, o);
 
@@ -248,18 +275,18 @@ void PressureSimulation::run(long double frameTime, long double endTime, std::os
 vec3 PressureSimulation::readNextImpulse(long double& time) {
 	openImpIn();
 
-	std::string line;
+	string line;
 	line = trim(line);
 
 	vec3 impulse = vec3(0);
 
-	if (std::getline(impIn, line)) {
-		/*impulse.x = std::stold(extract_between(line, "J", ","));
-		impulse.y = std::stold(extract_between(line, ",", ","));
-		impulse.z = std::stold(extract_between(line, ",", ";"));*/
+	if (getline(impIn, line)) {
+		/*impulse.x = stold(extract_between(line, "J", ","));
+		impulse.y = stold(extract_between(line, ",", ","));
+		impulse.z = stold(extract_between(line, ",", ";"));*/
 
-		std::string part = extract_between(line, "J:", ";");
-		std::stringstream ss0(part);
+		string part = extract_between(line, "J:", ";");
+		stringstream ss0(part);
 
 		char discard;
 
@@ -267,12 +294,12 @@ vec3 PressureSimulation::readNextImpulse(long double& time) {
 
 		part = extract_between(line, "t:", ";");
 
-		std::stringstream ss1(part);
+		stringstream ss1(part);
 
 		ss1 >> time;
 	}
 	else {
-		impulse = vec3(std::numeric_limits<long double>::min());
+		impulse = vec3(numeric_limits<long double>::min());
 	}
 
 	return impulse;

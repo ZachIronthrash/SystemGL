@@ -23,6 +23,7 @@ public:
 
 protected:
 	System* systemPtr;
+
 	std::string file;
 
 	std::ifstream in;

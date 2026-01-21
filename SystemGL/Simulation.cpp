@@ -155,7 +155,7 @@ void Simulation::printLine2File(unsigned& i, std::ostream& o) {
 }
 
 
-PressureSimulation::PressureSimulation::PressureSimulation(PressureSystem* s, std::string posFile, std::string impFile, long double ts, long double ss) : Simulation(s, posFile, ts, ss) {
+PressureSimulation::PressureSimulation(PressureSystem* s, std::string posFile, std::string impFile, long double ts, long double ss) : Simulation(s, posFile, ts, ss) {
 	impulseFile = impFile;
 	pSystemPtr = s;
 }

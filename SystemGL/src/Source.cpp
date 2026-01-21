@@ -152,7 +152,7 @@ int main() {
 
 	PressureSystem system(numParticles, systemMass, molarMass, targetTemp, generator, boxSize, dt);
 
-	PressureSimulation pressureSim(&system, "pressure_simulation.txt", "impulse_readout.txt", renderTimeScale, renderSpaceScale);
+	PressureSimulation pressureSim(&system, "data/pressure_simulation.txt", "data/impulse_readout.txt", renderTimeScale, renderSpaceScale);
 
 	pressureSim.run((long double)FRAME_TIME, renderDuration, cout);
 

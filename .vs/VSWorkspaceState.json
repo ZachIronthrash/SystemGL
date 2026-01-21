@@ -1,8 +1,9 @@
 {
   "ExpandedNodes": [
     "",
-    "\\SystemGL"
+    "\\SystemGL",
+    "\\SystemGL\\src"
   ],
-  "SelectedNode": "\\SystemGL.sln",
+  "SelectedNode": "\\SystemGL\\src\\Source.cpp",
   "PreviewInSolutionExplorer": false
 }

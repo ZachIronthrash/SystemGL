@@ -1,5 +1,8 @@
-﻿  Simulation.cpp
+﻿  Mesh.cpp
+  Shader.cpp
+  Simulation.cpp
   Source.cpp
+  System.cpp
   Generating Code...
 LINK : warning LNK4098: defaultlib 'MSVCRT' conflicts with use of other libs; use /NODEFAULTLIB:library
   SystemGL.vcxproj -> C:\Users\chris\Documents\GitHub\SystemGL\x64\Debug\SystemGL.exe

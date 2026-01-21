@@ -2,8 +2,9 @@
   "ExpandedNodes": [
     "",
     "\\SystemGL",
+    "\\SystemGL\\include",
     "\\SystemGL\\src"
   ],
-  "SelectedNode": "\\SystemGL\\src\\Source.cpp",
+  "SelectedNode": "\\SystemGL\\include\\Simulation.h",
   "PreviewInSolutionExplorer": false
 }

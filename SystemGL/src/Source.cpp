@@ -99,7 +99,7 @@ int main() {
 			cout << "Select render time scale (\"-\" for default): ";
 			getLongDoubleWithDefault(cin, renderTimeScale);
 
-			cout << "Select render space scale (default): ";
+			cout << "Select render space scale (\"-\" for default): ";
 			getLongDoubleWithDefault(cin, renderSpaceScale);
 
 			cout << "Select particle count (default: " << numParticles << "): ";

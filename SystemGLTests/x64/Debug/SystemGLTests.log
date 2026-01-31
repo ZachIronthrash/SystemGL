@@ -1,0 +1,5 @@
+﻿  pch.cpp
+  glad.c
+  SystemGLTests.cpp
+     Creating library C:\Users\chris\source\repos\SystemGL\x64\Debug\SystemGLTests.lib and object C:\Users\chris\source\repos\SystemGL\x64\Debug\SystemGLTests.exp
+  SystemGLTests.vcxproj -> C:\Users\chris\source\repos\SystemGL\x64\Debug\SystemGLTests.dll

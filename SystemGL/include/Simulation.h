@@ -61,6 +61,10 @@ public:
 		map<string, vec3> vStates = map<string, vec3>()) : states(stateData(uStates, ldStates, vStates)) {
 	}
 
+	stateData getStates() {
+		return states;
+	}
+
 	void addUnsignedState(string name, unsigned value) {
 		states.uState[name] = value;
 	}
@@ -81,17 +85,23 @@ public:
 		return states.vState[name];
 	}
 
-	void removeUnsignedState(string name) {
+	unsigned removeUnsignedState(string name) {
+		unsigned state = states.uState[name];
 		states.uState.erase(name);
+		return state;
 	}
-	void removeLongDoubleState(string name) {
+	long double removeLongDoubleState(string name) {
+		long double state = states.ldState[name];
 		states.ldState.erase(name);
+		return state;
 	}
-	void removeVec3State(string name) {
+	vec3 removeVec3State(string name) {
+		vec3 state = states.vState[name];
 		states.vState.erase(name);
+		return state;
 	}
 
-	void outputStates() {
+	void outputStatesToFile() {
 		ofstream o(file);
 
 		for (const auto& [key, value] : states.uState) {

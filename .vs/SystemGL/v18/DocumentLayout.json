@@ -83,8 +83,7 @@
               "ViewState": "AgIAAFAAAAAAAAAAAAAQwGoAAAACAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
               "WhenOpened": "2026-02-17T01:20:14.774Z",
-              "IsPinned": true,
-              "EditorCaption": ""
+              "IsPinned": true
             },
             {
               "$type": "Document",
@@ -97,8 +96,7 @@
               "ViewState": "AgIAAL0BAAAAAAAAAAAAAC0AAAADAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
               "WhenOpened": "2026-02-17T01:50:06.828Z",
-              "IsPinned": true,
-              "EditorCaption": ""
+              "IsPinned": true
             },
             {
               "$type": "Document",
@@ -111,8 +109,7 @@
               "ViewState": "AgIAADkAAAAAAAAAAAAowEUAAAADAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
               "WhenOpened": "2026-02-17T01:39:43.301Z",
-              "IsPinned": true,
-              "EditorCaption": ""
+              "IsPinned": true
             },
             {
               "$type": "Document",
@@ -124,8 +121,7 @@
               "RelativeToolTip": "SystemGLCore\\src\\Simulation.cpp",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAAAoAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
-              "WhenOpened": "2026-02-18T01:41:13.724Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-18T01:41:13.724Z"
             },
             {
               "$type": "Document",
@@ -137,8 +133,7 @@
               "RelativeToolTip": "SystemGLCore\\include\\Simulation.h",
               "ViewState": "AgIAAAQAAAAAAAAAAAAzwBAAAAAWAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
-              "WhenOpened": "2026-02-17T01:53:49.077Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-17T01:53:49.077Z"
             }
           ]
         }

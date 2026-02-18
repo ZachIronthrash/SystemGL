@@ -333,5 +333,4 @@
   Note: including file:  C:\Users\chris\source\repos\SystemGL\SystemGLCore\include\System.h
   Note: including file:   C:\Users\chris\source\repos\SystemGL\SystemGLCore\include\Interaction.h
 C:\Users\chris\source\repos\SystemGL\Softbody\src.cpp(70,24): warning C4244: 'initializing': conversion from 'double' to 'unsigned int', possible loss of data
-LINK : warning LNK4098: defaultlib 'MSVCRT' conflicts with use of other libs; use /NODEFAULTLIB:library
   Softbody.vcxproj -> C:\Users\chris\source\repos\SystemGL\x64\Debug\Softbody.exe

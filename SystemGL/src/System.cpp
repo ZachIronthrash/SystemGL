@@ -1,125 +1,52 @@
+
 #include "Mesh.h"
+#include "Particle.h"
 #include "Shader.h"
 #include "System.h"
-
-#include <cassert>
-#include <cmath>
-#include <cstdlib>
+#include "SystemGLMath.h"
+#include <exception>
+#include <functional>
 #include <glm/ext/matrix_transform.inl>
 #include <glm/fwd.hpp>
-#include <random>
+#include <iostream>
+#include <memory>
+#include <utility>
 #include <vector>
-
-vec3::vec3() : x(0), y(0), z(0) {};
-vec3::vec3(long double val) : x(val), y(val), z(val) {}
-vec3::vec3(long double x, long double y, long double z) : x(x), y(y), z(z) {}
-
-vec3 vec3::operator-() const {
-	return vec3(-x, -y, -z);
-}
-
-vec3& vec3::operator+=(const vec3& other) {
-	x += other.x; y += other.y; z += other.z;
-	return *this;
-}
-vec3& vec3::operator-=(const vec3& other) {
-	x -= other.x; y -= other.y; z -= other.z;
-	return *this;
-}
-vec3& vec3::operator*=(long double scalar) {
-	x *= scalar; y *= scalar; z *= scalar;
-	return *this;
-}
-vec3& vec3::operator/=(long double scalar) {
-	assert(scalar != 0/*, "division by zero"*/);
-
-	x /= scalar; y /= scalar; z /= scalar;
-	return *this;
-}
-
-vec3 vec3::normalized() const {
-	long double mag = sqrt(x * x + y * y + z * z);
-	if (mag == 0) return vec3(0.0f);
-	else return vec3(x / mag, y / mag, z / mag);
-}
-
-vec3 operator+(vec3 a, vec3 b) {
-	return vec3(a.x + b.x, a.y + b.y, a.z + b.z);
-}
-vec3 operator-(vec3 a, vec3 b) {
-	return vec3(a.x - b.x, a.y - b.y, a.z - b.z);
-}
-vec3 operator*(vec3 lhs, long double rhs) {
-	return vec3(lhs.x * rhs, lhs.y * rhs, lhs.z * rhs);
-}
-vec3 operator*(long double lhs, vec3 rhs) {
-	return vec3(lhs * rhs.x, lhs * rhs.y, lhs * rhs.z);
-}
-vec3 operator/(vec3 lhs, long double rhs) {
-	assert(rhs != 0/*, "division by zero"*/);
-
-	return vec3(lhs.x / rhs, lhs.y / rhs, lhs.z / rhs);
-}
-vec3 operator/(long double lhs, vec3 rhs) {
-	assert(rhs.x != 0 && rhs.y != 0 && rhs.z != 0/*, "division by zero"*/);
-
-	return vec3(lhs / rhs.x, lhs / rhs.y, lhs / rhs.z);
-}
-
-Particle::Particle() {}
-Particle::Particle(vec3 position, vec3 velocity, long double mass/*, long double dt*/) : position(position), velocity(velocity), mass(mass)/*, dt(dt)*/ {}
-
-// setters
-void Particle::setPosition(vec3 newPosition) {
-	this->position = newPosition;
-}
-void Particle::setVelocity(vec3 newVelocity) {
-	this->velocity = newVelocity;
-}
-void Particle::setMass(long double newMass) {
-	this->mass = newMass;
-}
-
-// getters
-vec3 Particle::getPosition() {
-	return this->position;
-}
-vec3 Particle::getVelocity() {
-	return this->velocity;
-}
-long double Particle::getMass() {
-	return this->mass;
-}
-
-// transformations
-void Particle::translateBy(vec3 delta) {
-	this->position += delta;
-}
-void Particle::accelerateBy(vec3 delta) {
-	this->velocity += delta;
-}
-
-long double Particle::calcKE() {
-	return 0.5 * mass * velocity.dot(velocity);
-};
 
 System::System(long double dt) : dt(dt) {}
 
 // particles
 void System::addParticle(Particle& particle) {
+	// copy particle into owned storage, then store a stable reference
+	//particles.push_back(std::make_unique<Particle>(particle));
+	//particles.push_back(std::ref(*ownedParticles.back()));
 	particles.push_back(particle);
 }
+
+//void System::addParticle(std::unique_ptr<Particle> particle) {
+//	// transfer ownership into owned storage, then store a stable reference
+//	particles.push_back(std::move(particle));
+//	//particles.push_back(std::ref(*ownedParticles.back()));
+//}
+
 size_t System::numberOfParticles() {
 	return particles.size();
 }
-std::vector<Particle>& System::getParticles() {
+//std::vector<std::unique_ptr<Particle>>& System::getParticles() {
+//	return particles;
+//}
+std::vector<std::reference_wrapper<Particle>> System::getParticles() {
 	return particles;
 }
 
 // getters
 Particle& System::getParticle(int i) {
+	//return std::ref(*particles[i]);
 	return particles[i];
 }
+//std::unique_ptr<Particle> System::getParticlePtr(int i) {
+//	return std::move(particles[i]);
+//}
 long double System::getTime() {
 	return time;
 }
@@ -142,8 +69,16 @@ void System::timeStep() {
 
 void System::evolve() {
 	// Evolve particles
-	for (Particle& particle : particles) {
-		particle.translateBy(dt * particle.getVelocity());
+	try {
+		//for (/*std::unique_ptr<Particle>*/Particle& particle : particles) {
+		//	particle.get().translateBy(dt * particle.get().getVelocity());
+		//}
+		for (size_t i = 0; i < particles.size(); i++) {
+			particles[i].get().translateBy(dt * particles[i].get().getVelocity());
+		}
+	}
+	catch (std::exception& e) {
+		std::cerr << "Error during particle evolution: " << e.what() << std::endl;
 	}
 
 	// step time once after all evolutions are complete
@@ -152,10 +87,11 @@ void System::evolve() {
 
 void System::drawSystemParticles(Shader& shader, Mesh& mesh, unsigned fidelity, vec3 offset) {
 	int i = 0;
-	for (Particle particle : particles) {
+	/*for (Particle particle : particles) {*/
+	for (size_t i = 0; i < particles.size(); i++) {
 		if (i % fidelity == 0) {
 			glm::mat4 model = glm::mat4(1.0f);
-			vec3 particlePos = particle.getPosition();
+			vec3 particlePos = particles[i].get().getPosition();
 			model = glm::translate(model, glm::vec3(particlePos.x + offset.x, particlePos.y + offset.y, particlePos.z + offset.z));
 			shader.setMat4("model", model);
 			mesh.draw(shader);
@@ -164,159 +100,83 @@ void System::drawSystemParticles(Shader& shader, Mesh& mesh, unsigned fidelity, 
 	}
 }
 
-PressureSystem::PressureSystem(int numParticles, long double sysmass, long double molarMass, long double targetTemp, std::mt19937& generator, vec3 boxSize, long double dt) : boxSize(boxSize) {
-	setDt(dt);
-
-	//long double temp = 292l;
-
-	//double moles = sysmass / molarMass; 
-
-	long double scale_parameter = BOLTZMANN * targetTemp * MOLE / molarMass;
-
-	std::gamma_distribution<long double> maxwell_dist(3.0 / 2.0, scale_parameter);
-
-	std::uniform_real_distribution<long double> uniform_dist(-1.0, 1.0);
-
-	for (int i = 0; i < numParticles; i++) {
-		vec3 randomPos(
-			uniform_dist(generator) * boxSize.x,
-			uniform_dist(generator) * boxSize.y,
-			uniform_dist(generator) * boxSize.z
-		);
-		long double randomSpeed = std::sqrt(2.0l * maxwell_dist(generator));
-
-		vec3 randomVel(
-			uniform_dist(generator),
-			uniform_dist(generator),
-			uniform_dist(generator)
-		);
-
-		randomVel = randomSpeed * randomVel.normalized();
-
-		/*long double scalingFactor = 0;
-		bool correction = false;
-		if (randomVel.x > 2 * boxSize.x / dt) {
-			double scale = boxSize.x / (randomVel.x * dt);
-			scalingFactor = scale;
-			correction = true;
-		}
-		if (randomVel.y > 2 * boxSize.y / dt) {
-			double scale = boxSize.y / (randomVel.y * dt);
-			scalingFactor = (scale < scalingFactor) ? scale : scalingFactor;
-			correction = true;
-		}
-		if (randomVel.z > 2 * boxSize.z / dt) {
-			double scale = boxSize.z / (randomVel.z * dt);
-			scalingFactor = (scale < scalingFactor) ? scale : scalingFactor;
-			correction = true;
-		}
-
-		if (correction) {
-			randomVel *= scalingFactor;
-		}*/
-
-		Particle particle(randomPos, randomVel, sysmass / numParticles);
-		addParticle(particle);
-	}
-
-	/*std::vector<float> vertices;
-	std::vector<unsigned int> indices;
-
-	createVertexAndIndexData(vertices, indices);
-
-	this->boxMesh = Mesh(vertices, indices);*/
-
-	/*vec3 systemVel = vec3(0);
-	long double massSum = 0l;
-	for (Particle& particle : getParticles()) {
-		massSum += particle.getMass();
-		systemVel += particle.getVelocity() * particle.getMass();
-	}
-	systemVel /= massSum;
-
-	for (Particle& particle : getParticles()) {
-		particle.accelerateBy(-systemVel);
-	}*/
-}
-
-/*
-* @returns a 6 element array with the impulse on each wall of the box: +x, -x, +y, -y, +z, -z
-*/
-/*std::array<long double, 6>*/ vec3 PressureSystem::reflectParticles() {
-	/*long double impPlusX = 0;
-	long double impMinusX = 0;
-	long double impPlusY = 0;
-	long double impMinusY = 0;
-	long double impPlusZ = 0;
-	long double impMinusZ = 0;*/
-	long double impX = 0l;
-	long double impY = 0l;
-	long double impZ = 0l;
-
-	for (Particle& particle : getParticles()) {
-		vec3 position = particle.getPosition();
-		long double mass = particle.getMass();
-
-		vec3 newP = position;
-		vec3 newV = particle.getVelocity();
-
-		if (position.x > boxSize.x) {
-			long double difference = position.x - boxSize.x;
-
-			newP.x = boxSize.x - difference;
-			newV.x = -newV.x;
-			impX += abs(2 * newV.x * mass);
-		}
-		else if (position.x < -boxSize.x) {
-			long double difference = -position.x - boxSize.x;
-
-			newP.x = -boxSize.x + difference;
-			newV.x = -newV.x;
-			impX += abs(2 * newV.x * mass);
-		}
-
-		if (position.y > boxSize.y) {
-			long double difference = position.y - boxSize.y;
-
-			newP.y = boxSize.y - difference;
-			newV.y = -newV.y;
-			impY += abs(2 * newV.y * mass);
-		}
-		else if (position.y < -boxSize.y) {
-			long double difference = -position.y - boxSize.y;
-
-			newP.y = -boxSize.y + difference;
-			newV.y = -newV.y;
-			impY += abs(2 * newV.y * mass);
-		}
-
-		if (position.z > boxSize.z) {
-			long double difference = position.z - boxSize.z;
-
-			newP.z = boxSize.z - difference;
-			newV.z = -newV.z;
-			impZ += abs(2 * newV.z * mass);
-		}
-		else if (position.z < -boxSize.z) {
-			long double difference = -position.z - boxSize.z;
-
-			newP.z = -boxSize.z + difference;
-			newV.z = -newV.z;
-			impZ += abs(2 * newV.z * mass);
-		}
-
-		particle.setPosition(newP);
-		particle.setVelocity(newV);
-	}
-
-	return { impX, impY, impZ };
-}
-
-/*std::array<long double, 6>*/ vec3 PressureSystem::impulseEvolve() {
-	System::evolve();
-
-	return reflectParticles();
-}
+//#include "Mesh.h"
+//#include "Particle.h"
+//#include "Shader.h"
+//#include "System.h"
+//#include "SystemGLMath.h"
+//#include <glm/ext/matrix_transform.inl>
+//#include <glm/fwd.hpp>
+//#include <vector>
+//#include <exception>
+//#include <functional>
+//#include <iostream>
+//
+//System::System(long double dt) : dt(dt) {}
+//
+//// particles
+//void System::addParticle(Particle& particle) {
+//	particles.push_back(particle);
+//}
+//size_t System::numberOfParticles() {
+//	return particles.size();
+//}
+//std::vector<std::reference_wrapper<Particle>>& System::getParticles() {
+//	return particles;
+//}
+//
+//// getters
+//Particle& System::getParticle(int i) {
+//	return particles[i];
+//}
+//long double System::getTime() {
+//	return time;
+//}
+//long double System::getDt() {
+//	return dt;
+//}
+//
+//// setters
+//void System::setTime(long double time) {
+//	time = time;
+//}
+//void System::setDt(long double dt) {
+//	this->dt = dt;
+//}
+//
+//void System::timeStep() {
+//	step++;
+//	time += dt;
+//};
+//
+//void System::evolve() {
+//	// Evolve particles
+//	try {
+//		for (std::reference_wrapper<Particle> particle : particles) {
+//			particle.get().translateBy(dt * particle.get().getVelocity());
+//		}
+//	}
+//	catch (std::exception& e) {
+//		std::cerr << "Error during particle evolution: " << e.what() << std::endl;
+//	}
+//
+//	// step time once after all evolutions are complete
+//	timeStep();
+//}
+//
+//void System::drawSystemParticles(Shader& shader, Mesh& mesh, unsigned fidelity, vec3 offset) {
+//	int i = 0;
+//	for (Particle particle : particles) {
+//		if (i % fidelity == 0) {
+//			glm::mat4 model = glm::mat4(1.0f);
+//			vec3 particlePos = particle.getPosition();
+//			model = glm::translate(model, glm::vec3(particlePos.x + offset.x, particlePos.y + offset.y, particlePos.z + offset.z));
+//			shader.setMat4("model", model);
+//			mesh.draw(shader);
+//		}
+//		i++;
+//	}
+//}
 
 // ARCHIVAL CODE
 // -------------

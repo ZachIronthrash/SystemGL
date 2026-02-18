@@ -1,0 +1,1515 @@
+#include "../SystemGLCore/include/Mesh.h"
+#include "../SystemGLCore/include/Shader.h"
+#include "../SystemGLCore/include/StateIO.h"
+#include "../SystemGLCore/include/SystemGLMath.h"
+#include <chrono>
+#include <cmath>
+#include <exception>
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
+#include <glm/ext/matrix_clip_space.inl>
+#include <glm/ext/matrix_transform.inl>
+#include <glm/fwd.hpp>
+#include <iostream>
+#include <istream>
+#include <limits>
+#include <ostream>
+#include <Particle.h>
+#include <random>
+#include <Simulation.h>
+#include <sstream>
+#include <string>
+#include <System.h>
+#include <vector>
+
+/* TODO:
+*  - UI elements for setting system parameters
+*  - Camera controls
+*  ~ Render-to-simulation time scaling as well as space scaling
+*/
+
+using namespace std;
+
+void framebuffer_size_callback(GLFWwindow* window, int width, int height);
+void processInput(GLFWwindow* window);
+
+void configureGLFW();
+
+int configureWindow(GLFWwindow* window, bool& retFlag);
+
+int loadGLAD(bool& retFlag);
+
+void getUnsignedWithDefault(istream& in, unsigned& v);
+
+void getLongDoubleWithDefault(istream& in, long double& v);
+
+void drawSystemBounds(Mesh boxMesh, Shader& shader, vec3 offset);
+
+void createVertexAndIndexData(vec3 boxSize, std::vector<float>& vertices, std::vector<unsigned int>& indices);
+
+// settings
+unsigned int SCR_WIDTH = 800;
+unsigned int SCR_HEIGHT = 600;
+
+chrono::milliseconds FRAME_DURATION(16); // Approx. 60 FPS
+float FRAME_TIME = FRAME_DURATION.count() / 1000.0f; // in seconds
+
+// keyboard input processing
+bool KEY_E = false;
+bool KEY_SPACE = false;
+bool KEY_N = false;
+
+bool PAUSE = true;
+
+int main() {
+	// variable initialization
+	// -----------------------
+	long double renderTimeScale = 1.0l;
+	long double renderSpaceScale = 1.0l;
+
+	unsigned numParticles = pow(4,3);
+
+	long double pointSeparation = 0.1l;
+	long double connectionThreshold = 1.01l * pointSeparation * sqrt(3);
+
+	long double springConstant = 500.0l;
+	long double dampingConstant = 0.0001l;
+
+	vec3 gravitationalAcceleration = vec3(0.0l, -10.0l, 0.0l);
+
+	//// default to helium molar mass
+	//long double molarMass = 0.004003l; // [kg / mol]
+
+	//long double targetTemp = 1e-12l;
+
+	//long double systemMass = 5e-15l * molarMass; // [kg]
+
+	long double dt = 1e-4l;
+
+	//unsigned fidelity = 25;
+
+	vec3 boxSize = vec3(1.0l, 1.0l, 5.0l) / renderSpaceScale;
+
+	long double renderDuration = 15.0l; // [s]
+
+	bool runSim = true;
+	string input;
+
+	cout << "Run simulation? (Y/N): ";
+	while (getline(cin, input) && input != "Y" && input != "N") {
+		cout << "invalid input.\n";
+	}
+
+	if (input == "N") {
+		runSim = false;
+		cout << "Loading last simulation...\n";
+	}
+	input = "";
+
+	bool usePrevious = true;
+
+	if (runSim == true) {
+		cout << "Load previous parameters? (Y/N): ";
+		while (getline(cin, input) && input != "Y" && input != "N") {
+			cout << "invalid input.\n";
+		}
+
+		if (input == "N") {
+			usePrevious = false;
+		}
+	}
+
+	StateIO stateFile("data/simulation_states.txt");
+
+	if (runSim && !usePrevious) {
+		cout << "Render defaults to " << renderTimeScale << "x speed and " << renderSpaceScale << "x \"zoom\"" << endl;
+		cout << "  (1 sec render time = " << 1.0l / renderTimeScale << " sec simulation time)" << endl;
+		cout << "  (1 unit render distance = " << 1.0l / renderSpaceScale << " m sim distance)" << endl;
+		cout << endl << "To skip prompts and use defaults type \"SKIP\": ";
+
+		string input;
+		getline(cin, input);
+
+		if (input == "SKIP") {
+			cout << "Using default parameters.";
+		}
+		else {
+			cout << "Select render time scale (\"-\" for default): ";
+			getLongDoubleWithDefault(cin, renderTimeScale);
+
+			cout << "Select render space scale (\"-\" for default): ";
+			getLongDoubleWithDefault(cin, renderSpaceScale);
+
+			cout << "Select particle count (default: " << numParticles << "): ";
+			getUnsignedWithDefault(cin, numParticles);
+
+			/*cout << "Select molar mass of particle (default: helium molar mass 0.004003): ";
+			getLongDoubleWithDefault(cin, molarMass);
+
+			cout << "Select target temperature (default: " << targetTemp << " K): ";
+			getLongDoubleWithDefault(cin, targetTemp);
+
+			cout << "Select total system mass (default: " << systemMass << " Kg): ";
+			getLongDoubleWithDefault(cin, systemMass);
+
+			cout << "Select render fidelity (default: every " << fidelity << "th particle): ";
+			getUnsignedWithDefault(cin, fidelity);*/
+
+			cout << "Select the separation of the points (default: " << pointSeparation << "): ";
+			getLongDoubleWithDefault(cin, pointSeparation);
+
+			cout << "Select the separation of the connections (default: " << connectionThreshold << "): ";
+			getLongDoubleWithDefault(cin, connectionThreshold);
+
+			cout << "Select the strength of the springs (default: " << springConstant << "): ";
+			getLongDoubleWithDefault(cin, springConstant);
+
+			cout << "Select the strength of the damping (default: " << dampingConstant << "): ";
+			getLongDoubleWithDefault(cin, dampingConstant);
+
+			cout << "Select simulation time step (default: " << dt << "): ";
+			getLongDoubleWithDefault(cin, dt);
+
+			cout << "Select the direction and strength of gravity (default: " << gravitationalAcceleration << "\n    \"-\" for any defaults, enter each component on separate lines): ";
+			getLongDoubleWithDefault(cin, gravitationalAcceleration.x);
+			getLongDoubleWithDefault(cin, gravitationalAcceleration.y);
+			getLongDoubleWithDefault(cin, gravitationalAcceleration.z);
+
+			cout << "Select bounding box size (\"-\" for any default values, enter each component on separate lines: " << boxSize << "): ";
+			getLongDoubleWithDefault(cin, boxSize.x);
+			getLongDoubleWithDefault(cin, boxSize.y);
+			getLongDoubleWithDefault(cin, boxSize.z);
+		}
+		cout << endl;
+
+		cout << "Select render duration in seconds (\"-\" for default: " << renderDuration << "s): ";
+		getLongDoubleWithDefault(cin, renderDuration);
+
+		stateFile.states.add("render_time_scale", renderTimeScale);
+		stateFile.states.add("render_space_scale", renderSpaceScale);
+		stateFile.states.add("particle_number", numParticles);
+		/*stateFile.states.add("molar_mass", molarMass);
+		stateFile.states.add("target_temperature", targetTemp);
+		stateFile.states.add("system_mass", systemMass);
+		stateFile.states.add("render_particle_fidelity", fidelity);*/
+		stateFile.states.add("point_separation", pointSeparation);
+		stateFile.states.add("connection_threshold", connectionThreshold);
+		stateFile.states.add("spring_constant", springConstant);
+		stateFile.states.add("damping_constant", dampingConstant);
+		stateFile.states.add("gravitational_acceleration", gravitationalAcceleration);
+		stateFile.states.add("delta_time", dt);
+		stateFile.states.add("box_size", boxSize);
+		stateFile.states.add("render_duration", renderDuration);
+		stateFile.outputStatesToFile();
+	}
+	else if (usePrevious) {
+		stateFile.readStatesFromFile();
+		renderTimeScale = stateFile.states.fetchLD("render_time_scale");
+		renderSpaceScale = stateFile.states.fetchLD("render_space_scale");
+		numParticles = stateFile.states.fetchU("particle_number");
+		/*molarMass = stateFile.states.fetchLD("molar_mass");
+		targetTemp = stateFile.states.fetchLD("target_temperature");
+		systemMass = stateFile.states.fetchLD("system_mass");
+		fidelity = stateFile.states.fetchU("render_particle_fidelity");*/
+		pointSeparation = stateFile.states.fetchLD("point_separation");
+		connectionThreshold = stateFile.states.fetchLD("connection_threshold");
+		springConstant = stateFile.states.fetchLD("spring_constant");
+		dampingConstant = stateFile.states.fetchLD("damping_constant");
+		gravitationalAcceleration = stateFile.states.fetchV("gravitational_acceleration");
+		dt = stateFile.states.fetchLD("delta_time");
+		boxSize = stateFile.states.fetchV("box_size");
+		renderDuration = stateFile.states.fetchLD("render_duration");
+	}
+
+	// init time tracking
+	// ------------------
+	//int iterations = 0;
+
+	float targetTime = FRAME_TIME;
+
+	chrono::high_resolution_clock::time_point lastFrameTime = chrono::high_resolution_clock::now();
+	chrono::high_resolution_clock::time_point prevSpacePressedTime = chrono::high_resolution_clock::now();
+
+	chrono::high_resolution_clock::time_point totalRenderTime = chrono::high_resolution_clock::now();
+
+	chrono::milliseconds spaceBuffer(250);
+
+	// init simulation
+	// ---------------
+	unsigned seed = (int)std::chrono::system_clock::now().time_since_epoch().count();
+
+	mt19937 generator(seed);
+
+	/*PressureSystem system(numParticles, systemMass, molarMass, targetTemp, generator, boxSize, dt);
+
+	PressureSimulation pressureSim(system, "data/pressure_simulation.txt", "data/impulse_readout.txt", renderTimeScale, renderSpaceScale);*/
+
+	//auto pot = std::make_shared<ElasticPotential>(springConstant, pointSeparation);
+	SoftBoxInBox system(numParticles, pointSeparation, connectionThreshold, springConstant, dampingConstant, 0.1l, gravitationalAcceleration, boxSize, dt);
+
+	for (Particle& p : system.getParticles()) {
+		p.translateBy(vec3(0, -boxSize.y * 0.0l, 0));
+	}
+
+	Simulation simulation(system, "data/softbody_simulation.txt", renderTimeScale, renderSpaceScale);
+
+	/*if (runSim) {
+		pressureSim.run((long double)FRAME_TIME, renderDuration, std::cout);
+	}*/
+
+	if (runSim) {
+		simulation.run((long double)FRAME_TIME, renderDuration, std::cout);
+	}
+
+	//vec3 avgForce = vec3(0);
+	//vec3 approximatedPressure = vec3(0);
+	//{
+	//	long double simTime = 0.0;
+	//	cout << "\nCalculation progress:\n";
+
+	//	bool f = false;
+	//	int impulseIterations = 1;
+
+	//	int pastPercentComplete = 0;
+
+	//	while (!f) {
+	//		vec3 impulse = pressureSim.readNextImpulse(simTime);
+
+	//		int percentComplete = (int)(simTime * renderTimeScale * 100.0l / renderDuration);
+
+	//		if (percentComplete > 100) percentComplete = 100;
+	//		else if (percentComplete < 0) percentComplete = 0;
+
+	//		if (pastPercentComplete != percentComplete) {
+	//			pastPercentComplete = percentComplete;
+
+	//			cout << "\r|";
+	//			for (int i = 0; i < percentComplete; i++) {
+	//				cout << "*";
+	//			}
+	//			for (int i = 0; i < 100 - percentComplete; i++) {
+	//				cout << "-";
+	//			}
+	//			cout << "| " << percentComplete << " %";
+	//		}
+
+	//		if (impulse == vec3(std::numeric_limits<long double>::min())) {
+	//			cout << "\r|";
+	//			for (int i = 0; i < 100; i++) {
+	//				cout << "*";
+	//			}
+	//			cout << "| " << 100.0l << " %";
+	//			cout << endl;
+
+	//			f = true;
+
+	//			approximatedPressure = {
+	//					avgForce.x / (4.0l * boxSize.y * boxSize.z),
+	//					avgForce.y / (4.0l * boxSize.x * boxSize.z),
+	//					avgForce.z / (4.0l * boxSize.x * boxSize.y)
+	//			};
+
+	//			cout << approximatedPressure << endl;
+	//		}
+	//		else {
+	//			//    avgForce.x += (impulse.x / dt - avgForce.x) / simIterations;
+	//					//    avgForce.y += (impulse.y / dt - avgForce.y) / simIterations;
+	//					//    avgForce.z += (impulse.z / dt - avgForce.z) / simIterations;
+	//			// calcuate pressure approximation and output
+	//					// ------------------------------------------
+	//					//vec3 approximatedPressure = {
+	//					//    avgForce.x / (4.0l * boxSize.y * boxSize.z),    
+	//					//    avgForce.y / (4.0l * boxSize.x * boxSize.z),
+	//					//    avgForce.z / (4.0l * boxSize.x * boxSize.y)
+	//					//};
+
+	//					//float avgApproxPressure = static_cast<float>(approximatedPressure.x);
+	//					//avgApproxPressure += static_cast<float>(approximatedPressure.y);
+	//					//avgApproxPressure += static_cast<float>(approximatedPressure.z);
+	//					//avgApproxPressure /= 6.0f; // over six not three because we collate adjacent faces
+	//					//// pressureX = |pressureTopX| + |pressureBottomX|
+	//			avgForce.x += (impulse.x / dt - avgForce.x) / impulseIterations;
+	//			avgForce.y += (impulse.y / dt - avgForce.y) / impulseIterations;
+	//			avgForce.z += (impulse.z / dt - avgForce.z) / impulseIterations;
+
+	//			impulseIterations++;
+	//		}
+	//	}
+	//}
+
+	/*while (pressureSim.readNext() != -1) {
+		cout << system.getParticle(0).getPosition() << endl;
+	}*/
+
+	//// calculate predicted values
+	//// --------------------------
+	//vec3 systemPos = vec3(0);
+	//long double massSum = 0l;
+	//for (Particle& particle : system.getParticles()) {
+	//	massSum += particle.getMass();
+	//	systemPos += particle.getPosition() * particle.getMass();
+	//}
+
+	//systemPos /= massSum;
+
+	//cout << "System position: " << systemPos << endl;
+
+	//vec3 systemVel = vec3(0);
+	//massSum = 0l;
+	//for (Particle& particle : system.getParticles()) {
+	//	massSum += particle.getMass();
+	//	systemVel += particle.getVelocity() * particle.getMass();
+	//}
+
+	//systemVel /= massSum;
+
+	//cout << "System velocity: " << systemVel << endl;
+
+	//long double systemKE = 0l; // this calculation will be within a few orders of magnitude of 0
+	////  my source is an extremely small amount of desmos graphing so take it with salt
+
+	//for (Particle& particle : system.getParticles()) {
+	//	systemKE += particle.calcKE();
+	//}
+
+	//// the traditional formula relating temperature and kinetic energy is:
+	////      <KE> = (3/2) * BOLTZMANN * TEMPERATURE
+	////      where <KE> = sum(KE) / NUMBER_OF_PARTICLES
+	////      and NUMBER_OF_PARTICLES is the number of gas molecules being modeled
+	////      not the number of particles being simulated
+	//// an equivalent formula can be obtained for the systemKE:
+	////      sum(KE) = (3 * SYSTEM_MASS * R_GAS * TEMPERATURE) / (2 * MOLAR_MASS)
+	////      from the definitions of the above equations:
+	////          NUMBER_OF_PARTICLES = SYSTEM_MASS * MOLE / MOLAR_MASS
+	////          BOLTZMANN = R_GAS / MOLE
+	//// we use this new formula because the kinetic energies of the tiny particles
+	////      we are simulating are super small so the sum remains in accurate limits     
+	//long double temperature = (2 * systemKE * molarMass) / (3 * R_GAS * systemMass);
+	//cout << "System temperature: " << temperature << " vs. Target temperature: " << targetTemp << endl;
+
+	//long double molesOfGasParticles = systemMass / molarMass;
+
+	//// PV = nRT
+	//long double predictedPressure = molesOfGasParticles * R_GAS * temperature / (8.0l * boxSize.volume());
+
+	//cout << "Predicted pressure: " << predictedPressure << endl;
+
+	//cout << "Approximated pressure from simulation: " << approximatedPressure.dot(vec3(1.0l)) / 6.0l << endl;
+
+	//cout << "Percent difference: " << abs((predictedPressure - (approximatedPressure.dot(vec3(1.0l)) / 6.0l)) / predictedPressure) * 100.0l << " %" << endl;
+
+	//unsigned int simIterations = 0;
+	unsigned int missedFrameIterations = 0;
+
+	unsigned int renderIterations = simulation.readNext();
+	unsigned int targetRenderIteration = 1;
+
+	// init pressure approximation arrays
+	// ----------------------------------
+	///*std::array<long double, 6>*/ vec3 impulse;
+
+	///*std::array<long double, 6>*/ vec3 avgForce = { 0L, 0L, 0L };
+
+	// window size to orthographic projection scaling factor
+	float s = 0.002f;
+
+	// configure glfw
+	// --------------
+	configureGLFW();
+
+	// glfw window creation
+	// --------------------
+	GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "SystemGL by Christopher Hart", NULL, NULL);
+
+	bool retFlag;
+	int retVal = configureWindow(window, retFlag); // auto-gen: probably not ideal
+	if (retFlag) return retVal;
+
+	// glad: load all OpenGL function pointers
+	// ---------------------------------------
+	retVal = loadGLAD(retFlag); // auto-gen: probably not ideal
+	if (retFlag) return retVal;
+
+	// shader
+	// ------
+	Shader shader("vertex.glsl", "fragment.glsl");
+
+	// circle mesh
+	// -----------
+	vector<float> circleVert;
+	vector<unsigned int> circleInd;
+
+	float circleRadius = 0.01f;
+
+	circleZ(circleVert, circleInd, circleRadius, 6, { 1.0f, 0.0f, 0.0f });
+
+	Mesh circleMesh(circleVert, circleInd);
+
+	// box mesh
+	// --------
+	std::vector<float> boxVert;
+	std::vector<unsigned int> boxInd;
+
+	createVertexAndIndexData(boxSize * renderSpaceScale, boxVert, boxInd);
+
+	Mesh boxMesh(boxVert, boxInd);
+
+	// render loop
+	// -----------
+	try {
+		while (!glfwWindowShouldClose(window))
+		{
+			// input
+			// -----
+			if (KEY_N) {
+				KEY_N = false;
+			}
+
+			processInput(window);
+
+			//if (KEY_E) {
+			//    //resetSystem(pressureApproximationSystem, 10);
+
+			//    //// Execute the loaded simulation and re-open the created simulation file
+			//    //inputData.close();
+			//    ////simpleGravitationalOrbitSim(simpleSystem, ofstream());
+			//    //pressureApproximation(pressureApproximationSystem, 10.0, ofstream());
+			//    //inputData.open("simulation.txt");
+
+			//    //updateSystemFromFile(pressureApproximationSystem, inputData, zero, foundTarget);
+
+
+			//    targetTime = FRAME_TIME;
+
+			//    PAUSE = true;
+			//}
+			if (KEY_SPACE && chrono::high_resolution_clock::now() - prevSpacePressedTime > spaceBuffer) {
+				if (PAUSE == true) {
+					totalRenderTime = chrono::high_resolution_clock::now();
+				}
+
+				PAUSE = !PAUSE;
+				KEY_SPACE = false;
+				prevSpacePressedTime = chrono::high_resolution_clock::now();
+			}
+
+			KEY_SPACE = false;
+			KEY_E = false;
+
+			// render
+			// ------
+			glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+			// activate shader
+			shader.use();
+
+			// update projection matrix each frame in case user changes window size
+			glm::mat4 projection = glm::mat4(1.0f);
+
+			// switch comments for projection matrix
+			//projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+			projection = glm::ortho(-(float)SCR_WIDTH * s, (float)SCR_WIDTH * s, -(float)SCR_HEIGHT * s, (float)SCR_HEIGHT * s, -10.0f, 10.0f);
+
+			shader.setMat4("projection", projection);
+
+			// view transformation
+			glm::mat4 view = glm::mat4(1.0f);
+
+			// uncomment for projection matrix
+			//view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+
+			shader.setMat4("view", view);
+
+			// Draw bounding box before particles
+			drawSystemBounds(boxMesh, shader, vec3(0));
+
+			// draw particles
+			system.drawSystemParticles(shader, circleMesh);
+
+			bool foundTargetTime = false;
+
+			// glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
+			// -------------------------------------------------------------------------------
+			glfwSwapBuffers(window);
+			glfwPollEvents();
+
+			// Wait for frame time to elapse (16ms for ~60FPS)
+			while (chrono::high_resolution_clock::now() - lastFrameTime < FRAME_DURATION) {
+				/* wait */
+
+				// Iteratively evolve the system until we reach the target time for this frame
+				// Temp solution until better file I/O or in-memory simulation data management is implemented
+				//if (system.getTime() < targetTime && (!PAUSE || KEY_N)) {
+				//    //system.evolve();
+				//    impulse = system.impulseEvolve(); 
+
+				//    double dt = system.getDt();
+
+				//    simIterations++;
+
+				//    avgForce.x += (impulse.x / dt - avgForce.x) / simIterations;
+				//    avgForce.y += (impulse.y / dt - avgForce.y) / simIterations;
+				//    avgForce.z += (impulse.z / dt - avgForce.z) / simIterations;
+				//}
+
+				// Instead of solving at render-time we instead pre-run the sim and read in positions from a file
+				if (!PAUSE || KEY_N) {
+					while (!PAUSE && renderIterations < targetRenderIteration && renderIterations != std::numeric_limits<unsigned int>::max()) {
+						renderIterations = simulation.readNext();
+						//cout << renderIterations << endl;
+					}
+					if (renderIterations == std::numeric_limits<unsigned int>::max()) {
+						PAUSE = true;
+						simulation.resetIn();
+						targetRenderIteration = 0;
+						cout << "Total render time: " << chrono::duration_cast<chrono::milliseconds>(chrono::high_resolution_clock::now() - totalRenderTime).count() << " ms" << endl;
+						totalRenderTime = chrono::high_resolution_clock::now();
+						renderIterations = 0;
+					}
+				}
+			}
+
+			//cout << chrono::high_resolution_clock::now() - lastFrameTime << endl;
+
+			//if (system.getTime() >= targetTime) {
+
+			//    //cout << setfill(' ') << setw(15) << fixed << setprecision(10) << "Average force: " << avgForce[0] << ", " << avgForce[1] << ", " << avgForce[2] << ", " << avgForce[3] << ", " << avgForce[4] << ", " << avgForce[5] << endl;
+			//    
+			//    /*systemPos = vec3(0);
+			//    massSum = 0;
+			//    for (Particle& particle : system.getParticles()) {
+			//        massSum += particle.getMass();
+			//        systemPos += (particle.getPosition() - systemPos) / massSum;
+			//    }
+			//    cout << setw(20) << fixed << setprecision(5) << "System position: " << systemPos << endl;*/
+
+			//    //targetTime += FRAME_TIME;
+			//    //cout << basicSystem.getTime() << endl;
+			//}
+			//else if (!PAUSE || KEY_N) {
+			//    cout << "** Skipped iteration at time " << targetTime << " seconds" << endl;
+			//    cout << "     Iterations skipped: " << ++missedFrameIterations << endl;
+			//}
+
+			if (!PAUSE) {
+				targetRenderIteration++;
+
+				// calcuate pressure approximation and output
+				// ------------------------------------------
+				//vec3 approximatedPressure = {
+				//    avgForce.x / (4.0l * boxSize.y * boxSize.z),    
+				//    avgForce.y / (4.0l * boxSize.x * boxSize.z),
+				//    avgForce.z / (4.0l * boxSize.x * boxSize.y)
+				//};
+
+				//float avgApproxPressure = static_cast<float>(approximatedPressure.x);
+				//avgApproxPressure += static_cast<float>(approximatedPressure.y);
+				//avgApproxPressure += static_cast<float>(approximatedPressure.z);
+				//avgApproxPressure /= 6.0f; // over six not three because we collate adjacent faces
+				//// pressureX = |pressureTopX| + |pressureBottomX|
+
+				//cout << setfill(' ') << setw(15) << fixed << setprecision(10) << "Pressure approximation: " << avgApproxPressure;
+				//cout << fixed << setprecision(5) << ", % error: " << 100 * (avgApproxPressure - predictedPressure) / predictedPressure << endl;
+
+				/*cout << fixed << setprecision(5) << approximatedPressure << endl;*/
+			}
+
+
+			// Swapping frame time calculation after waiting to avoid time spent in file I/O or rendering
+			lastFrameTime = chrono::high_resolution_clock::now();
+
+			//iterations++; // dont think this is used rn
+		}
+	}
+	catch (const std::exception& e) {
+		std::cerr << "An error occurred during the render loop: " << e.what() << std::endl;
+	}
+
+	// glfw: terminate, clearing all previously allocated GLFW resources.
+	// ------------------------------------------------------------------
+	glfwTerminate();
+
+	return 0;
+}
+
+void getUnsignedWithDefault(istream& in, unsigned& v)
+{
+	string str;
+
+	getline(in, str);
+
+	while (str.empty()) {
+		cout << "Invalid entry. Enter again: ";
+		getline(in, str);
+	}
+	{
+		int i;
+		stringstream ss(str);
+
+		if (!(ss >> i)) {
+			i = v;
+		}
+
+		v = i;
+	}
+}
+
+void getLongDoubleWithDefault(istream& in, long double& v)
+{
+	string str;
+
+	getline(in, str);
+
+	while (str.empty()) {
+		cout << "Invalid entry. Enter again: ";
+		getline(in, str);
+	}
+	{
+		long double l;
+		stringstream ss(str);
+
+		if (ss >> l) {
+			v = l;
+		}
+	}
+}
+
+void drawSystemBounds(Mesh boxMesh, Shader& shader, vec3 offset) {
+	glm::mat4 model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(offset.x, offset.y, offset.z));
+	shader.setMat4("model", model);
+	boxMesh.draw(shader);
+}
+
+void createVertexAndIndexData(vec3 boxSize, std::vector<float>& vertices, std::vector<unsigned int>& indices) {
+	float size[3] = { (float)boxSize.x, (float)boxSize.y, (float)boxSize.z };
+	float boundingBoxVert[] = {
+		// positions                                            // colors
+		 size[0],  size[1], -size[2],     0, 0, 0,    // Top right
+		 size[0], -size[1], -size[2],     0, 0, 0,    // Bottom right
+		-size[0],  size[1], -size[2],     0, 0, 0,    // Top left
+		-size[0], -size[1], -size[2],     0, 0, 0     // Bottom left
+	};
+	unsigned int boundingBoxInd[] = {
+		0, 1, 2,
+		2, 3, 1
+	};
+
+	vertices.clear();
+	indices.clear();
+
+	for (float f : boundingBoxVert) {
+		vertices.push_back(f);
+	}
+	for (unsigned int i : boundingBoxInd) {
+		indices.push_back(i);
+	}
+}
+
+int loadGLAD(bool& retFlag)
+{
+	retFlag = true;
+	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+	{
+		cout << "Failed to initialize GLAD" << std::endl;
+		return -1;
+	}
+	retFlag = false;
+	return {};
+}
+
+int configureWindow(GLFWwindow* window, bool& retFlag)
+{
+	retFlag = true;
+	if (window == NULL)
+	{
+		cout << "Failed to create GLFW window" << std::endl;
+		glfwTerminate();
+		return -1;
+	}
+	glfwMakeContextCurrent(window);
+	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+	retFlag = false;
+	return {};
+}
+
+void configureGLFW()
+{
+	// glfw: initialize and configure
+	// ------------------------------
+	glfwInit();
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+#ifdef __APPLE__
+	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+#endif
+}
+
+// process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
+// ---------------------------------------------------------------------------------------------------------
+void processInput(GLFWwindow* window)
+{
+	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+		glfwSetWindowShouldClose(window, true);
+	if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
+	{
+		// Execute the loaded simulation and render the created simulation file
+		KEY_E = true;
+	}
+	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+	{
+		// Pause functionality can be implemented here
+		KEY_SPACE = true;
+	}
+	if (glfwGetKey(window, GLFW_KEY_N) == GLFW_PRESS) {
+		KEY_N = true;
+	}
+}
+
+// glfw: whenever the window size changed (by OS or user resize) this callback function executes
+// ---------------------------------------------------------------------------------------------
+void framebuffer_size_callback(GLFWwindow* window, int width, int height)
+{
+	SCR_WIDTH = width;
+	SCR_HEIGHT = height;
+	// make sure the viewport matches the new window dimensions; note that width and 
+	// height will be significantly larger than specified on retina displays.
+	glViewport(0, 0, width, height);
+}
+
+//#include "Mesh.h"
+//#include "Particle.h"
+//#include "PressureSimulation.h"
+//#include "PressureSystem.h"
+//#include "Shader.h"
+//#include "StateIO.h"
+//#include "SystemGLMath.h"
+//#include <chrono>
+//#include <cstdlib>
+//#include <exception>
+//#include <glad/glad.h>
+//#include <GLFW/glfw3.h>
+//#include <glm/ext/matrix_clip_space.inl>
+//#include <glm/ext/matrix_transform.inl>
+//#include <glm/fwd.hpp>
+//#include <iostream>
+//#include <istream>
+//#include <limits>
+//#include <ostream>
+//#include <random>
+//#include <sstream>
+//#include <string>
+//#include <vector>
+//
+///* TODO:
+//*  - UI elements for setting system parameters
+//*  - Camera controls
+//*  ~ Render-to-simulation time scaling as well as space scaling
+//*/
+//
+//using namespace std;
+//
+//void framebuffer_size_callback(GLFWwindow* window, int width, int height);
+//void processInput(GLFWwindow* window);
+//
+//void configureGLFW();
+//
+//int configureWindow(GLFWwindow* window, bool& retFlag);
+//
+//int loadGLAD(bool& retFlag);
+//
+//void getUnsignedWithDefault(istream& in, unsigned& v);
+//
+//void getLongDoubleWithDefault(istream& in, long double& v);
+//
+//void drawSystemBounds(Mesh boxMesh, Shader& shader, vec3 offset);
+//
+//void createVertexAndIndexData(vec3 boxSize, std::vector<float>& vertices, std::vector<unsigned int>& indices);
+//
+//// settings
+//unsigned int SCR_WIDTH = 800;
+//unsigned int SCR_HEIGHT = 600;
+//
+//chrono::milliseconds FRAME_DURATION(16); // Approx. 60 FPS
+//float FRAME_TIME = FRAME_DURATION.count() / 1000.0f; // in seconds
+//
+//// keyboard input processing
+//bool KEY_E = false;
+//bool KEY_SPACE = false;
+//bool KEY_N = false;
+//
+//bool PAUSE = true;
+//
+//int main() {
+//	// variable initialization
+//	// -----------------------
+//	long double renderTimeScale = 1000l;
+//	long double renderSpaceScale = 1e9;
+//
+//	unsigned numParticles = 500;
+//
+//	// default to helium molar mass
+//	long double molarMass = 0.004003l; // [kg / mol]
+//
+//	long double targetTemp = 1e-12l;
+//
+//	long double systemMass = 5e-15l * molarMass; // [kg]
+//
+//	long double dt = 1e-8l;
+//
+//	unsigned fidelity = 25;
+//
+//	vec3 boxSize = vec3(1.0l, 1.0l, 5.0l) / renderSpaceScale;
+//
+//	long double renderDuration = 60.0l; // [s]
+//
+//	bool runSim = true;
+//	string input;
+//
+//	cout << "Run simulation? (Y/N): ";
+//	while (getline(cin, input) && input != "Y" && input != "N") {
+//		cout << "invalid input.\n";
+//	}
+//
+//	if (input == "N") {
+//		runSim = false;
+//		cout << "Loading last simulation...\n";
+//	}
+//	input = "";
+//
+//	bool usePrevious = true;
+//
+//	if (runSim == true) {
+//		cout << "Load previous parameters? (Y/N): ";
+//		while (getline(cin, input) && input != "Y" && input != "N") {
+//			cout << "invalid input.\n";
+//		}
+//
+//		if (input == "N") {
+//			usePrevious = false;
+//		}
+//	}
+//
+//	StateIO stateFile("data/simulation_states.txt");
+//
+//	if (runSim && !usePrevious) {
+//		cout << "Render defaults to " << renderTimeScale << "x speed and " << renderSpaceScale << "x \"zoom\"" << endl;
+//		cout << "  (1 sec render time = " << 1.0l / renderTimeScale << " sec simulation time)" << endl;
+//		cout << "  (1 unit render distance = " << 1.0l / renderSpaceScale << " m sim distance)" << endl;
+//		cout << endl << "To skip prompts and use defaults type \"SKIP\": ";
+//
+//		string input;
+//		getline(cin, input);
+//
+//		if (input == "SKIP") {
+//			cout << "Using default parameters.";
+//		}
+//		else {
+//			cout << "Select render time scale (\"-\" for default): ";
+//			getLongDoubleWithDefault(cin, renderTimeScale);
+//
+//			cout << "Select render space scale (\"-\" for default): ";
+//			getLongDoubleWithDefault(cin, renderSpaceScale);
+//
+//			cout << "Select particle count (default: " << numParticles << "): ";
+//			getUnsignedWithDefault(cin, numParticles);
+//
+//			cout << "Select molar mass of particle (default: helium molar mass 0.004003): ";
+//			getLongDoubleWithDefault(cin, molarMass);
+//
+//			cout << "Select target temperature (default: " << targetTemp << " K): ";
+//			getLongDoubleWithDefault(cin, targetTemp);
+//
+//			cout << "Select total system mass (default: " << systemMass << " Kg): ";
+//			getLongDoubleWithDefault(cin, systemMass);
+//
+//			cout << "Select simulation time step (default: " << dt << "): ";
+//			getLongDoubleWithDefault(cin, dt);
+//
+//			cout << "Select render fidelity (default: every " << fidelity << "th particle): ";
+//			getUnsignedWithDefault(cin, fidelity);
+//
+//			cout << "Select bounding box size (\"-\" for any default values, enter each component on separate lines: " << boxSize << "): ";
+//			getLongDoubleWithDefault(cin, boxSize.x);
+//			getLongDoubleWithDefault(cin, boxSize.y);
+//			getLongDoubleWithDefault(cin, boxSize.z);
+//		}
+//		cout << endl;
+//
+//		cout << "Select render duration in seconds (\"-\" for default: " << renderDuration << "s): ";
+//		getLongDoubleWithDefault(cin, renderDuration);
+//
+//		stateFile.states.add("render_time_scale", renderTimeScale);
+//		stateFile.states.add("render_space_scale", renderSpaceScale);
+//		stateFile.states.add("particle_number", numParticles);
+//		stateFile.states.add("molar_mass", molarMass);
+//		stateFile.states.add("target_temperature", targetTemp);
+//		stateFile.states.add("system_mass", systemMass);
+//		stateFile.states.add("delta_time", dt);
+//		stateFile.states.add("render_particle_fidelity", fidelity);
+//		stateFile.states.add("box_size", boxSize);
+//		stateFile.states.add("render_duration", renderDuration);
+//		stateFile.outputStatesToFile();
+//	}
+//	else if (usePrevious) {
+//		stateFile.readStatesFromFile();
+//		renderTimeScale = stateFile.states.fetchLD("render_time_scale");
+//		renderSpaceScale = stateFile.states.fetchLD("render_space_scale");
+//		numParticles = stateFile.states.fetchU("particle_number");
+//		molarMass = stateFile.states.fetchLD("molar_mass");
+//		targetTemp = stateFile.states.fetchLD("target_temperature");
+//		systemMass = stateFile.states.fetchLD("system_mass");
+//		dt = stateFile.states.fetchLD("delta_time");
+//		fidelity = stateFile.states.fetchU("render_particle_fidelity");
+//		boxSize = stateFile.states.fetchV("box_size");
+//		renderDuration = stateFile.states.fetchLD("render_duration");
+//	}
+//
+//	// init time tracking
+//	// ------------------
+//	//int iterations = 0;
+//
+//	float targetTime = FRAME_TIME;
+//
+//	chrono::high_resolution_clock::time_point lastFrameTime = chrono::high_resolution_clock::now();
+//	chrono::high_resolution_clock::time_point prevSpacePressedTime = chrono::high_resolution_clock::now();
+//
+//	chrono::high_resolution_clock::time_point totalRenderTime = chrono::high_resolution_clock::now();
+//
+//	chrono::milliseconds spaceBuffer(250);
+//
+//	// init simulation
+//	// ---------------
+//	unsigned seed = (int)std::chrono::system_clock::now().time_since_epoch().count();
+//
+//	mt19937 generator(seed);
+//
+//	PressureSystem system(numParticles, systemMass, molarMass, targetTemp, generator, boxSize, dt);
+//
+//	PressureSimulation pressureSim(system, "data/pressure_simulation.txt", "data/impulse_readout.txt", renderTimeScale, renderSpaceScale);
+//
+//	if (runSim) {
+//		pressureSim.run((long double)FRAME_TIME, renderDuration, std::cout);
+//	}
+//
+//	vec3 avgForce = vec3(0);
+//	vec3 approximatedPressure = vec3(0);
+//	{
+//		long double simTime = 0.0;
+//		cout << "\nCalculation progress:\n";
+//
+//		bool f = false;
+//		int impulseIterations = 1;
+//
+//		int pastPercentComplete = 0;
+//
+//		while (!f) {
+//			vec3 impulse = pressureSim.readNextImpulse(simTime);
+//
+//			int percentComplete = (int)(simTime * renderTimeScale * 100.0l / renderDuration);
+//
+//			if (percentComplete > 100) percentComplete = 100;
+//			else if (percentComplete < 0) percentComplete = 0;
+//
+//			if (pastPercentComplete != percentComplete) {
+//				pastPercentComplete = percentComplete;
+//
+//				cout << "\r|";
+//				for (int i = 0; i < percentComplete; i++) {
+//					cout << "*";
+//				}
+//				for (int i = 0; i < 100 - percentComplete; i++) {
+//					cout << "-";
+//				}
+//				cout << "| " << percentComplete << " %";
+//			}
+//
+//			if (impulse == vec3(std::numeric_limits<long double>::min())) {
+//				cout << "\r|";
+//				for (int i = 0; i < 100; i++) {
+//					cout << "*";
+//				}
+//				cout << "| " << 100.0l << " %";
+//				cout << endl;
+//
+//				f = true;
+//
+//				approximatedPressure = {
+//						avgForce.x / (4.0l * boxSize.y * boxSize.z),
+//						avgForce.y / (4.0l * boxSize.x * boxSize.z),
+//						avgForce.z / (4.0l * boxSize.x * boxSize.y)
+//				};
+//
+//				cout << approximatedPressure << endl;
+//			}
+//			else {
+//				//    avgForce.x += (impulse.x / dt - avgForce.x) / simIterations;
+//						//    avgForce.y += (impulse.y / dt - avgForce.y) / simIterations;
+//						//    avgForce.z += (impulse.z / dt - avgForce.z) / simIterations;
+//				// calcuate pressure approximation and output
+//						// ------------------------------------------
+//						//vec3 approximatedPressure = {
+//						//    avgForce.x / (4.0l * boxSize.y * boxSize.z),    
+//						//    avgForce.y / (4.0l * boxSize.x * boxSize.z),
+//						//    avgForce.z / (4.0l * boxSize.x * boxSize.y)
+//						//};
+//
+//						//float avgApproxPressure = static_cast<float>(approximatedPressure.x);
+//						//avgApproxPressure += static_cast<float>(approximatedPressure.y);
+//						//avgApproxPressure += static_cast<float>(approximatedPressure.z);
+//						//avgApproxPressure /= 6.0f; // over six not three because we collate adjacent faces
+//						//// pressureX = |pressureTopX| + |pressureBottomX|
+//				avgForce.x += (impulse.x / dt - avgForce.x) / impulseIterations;
+//				avgForce.y += (impulse.y / dt - avgForce.y) / impulseIterations;
+//				avgForce.z += (impulse.z / dt - avgForce.z) / impulseIterations;
+//
+//				impulseIterations++;
+//			}
+//		}
+//	}
+//
+//	/*while (pressureSim.readNext() != -1) {
+//		cout << system.getParticle(0).getPosition() << endl;
+//	}*/
+//
+//	// calculate predicted values
+//	// --------------------------
+//	vec3 systemPos = vec3(0);
+//	long double massSum = 0l;
+//	for (Particle& particle : system.getParticles()) {
+//		massSum += particle.getMass();
+//		systemPos += particle.getPosition() * particle.getMass();
+//	}
+//
+//	systemPos /= massSum;
+//
+//	cout << "System position: " << systemPos << endl;
+//
+//	vec3 systemVel = vec3(0);
+//	massSum = 0l;
+//	for (Particle& particle : system.getParticles()) {
+//		massSum += particle.getMass();
+//		systemVel += particle.getVelocity() * particle.getMass();
+//	}
+//
+//	systemVel /= massSum;
+//
+//	cout << "System velocity: " << systemVel << endl;
+//
+//	long double systemKE = 0l; // this calculation will be within a few orders of magnitude of 0
+//	//  my source is an extremely small amount of desmos graphing so take it with salt
+//
+//	for (Particle& particle : system.getParticles()) {
+//		systemKE += particle.calcKE();
+//	}
+//
+//	// the traditional formula relating temperature and kinetic energy is:
+//	//      <KE> = (3/2) * BOLTZMANN * TEMPERATURE
+//	//      where <KE> = sum(KE) / NUMBER_OF_PARTICLES
+//	//      and NUMBER_OF_PARTICLES is the number of gas molecules being modeled
+//	//      not the number of particles being simulated
+//	// an equivalent formula can be obtained for the systemKE:
+//	//      sum(KE) = (3 * SYSTEM_MASS * R_GAS * TEMPERATURE) / (2 * MOLAR_MASS)
+//	//      from the definitions of the above equations:
+//	//          NUMBER_OF_PARTICLES = SYSTEM_MASS * MOLE / MOLAR_MASS
+//	//          BOLTZMANN = R_GAS / MOLE
+//	// we use this new formula because the kinetic energies of the tiny particles
+//	//      we are simulating are super small so the sum remains in accurate limits     
+//	long double temperature = (2 * systemKE * molarMass) / (3 * R_GAS * systemMass);
+//	cout << "System temperature: " << temperature << " vs. Target temperature: " << targetTemp << endl;
+//
+//	long double molesOfGasParticles = systemMass / molarMass;
+//
+//	// PV = nRT
+//	long double predictedPressure = molesOfGasParticles * R_GAS * temperature / (8.0l * boxSize.volume());
+//
+//	cout << "Predicted pressure: " << predictedPressure << endl;
+//
+//	cout << "Approximated pressure from simulation: " << approximatedPressure.dot(vec3(1.0l)) / 6.0l << endl;
+//
+//	cout << "Percent difference: " << abs((predictedPressure - (approximatedPressure.dot(vec3(1.0l)) / 6.0l)) / predictedPressure) * 100.0l << " %" << endl;
+//
+//	//unsigned int simIterations = 0;
+//	unsigned int missedFrameIterations = 0;
+//
+//	unsigned int renderIterations = pressureSim.readNext();
+//	unsigned int targetRenderIteration = 1;
+//
+//	// init pressure approximation arrays
+//	// ----------------------------------
+//	///*std::array<long double, 6>*/ vec3 impulse;
+//
+//	///*std::array<long double, 6>*/ vec3 avgForce = { 0L, 0L, 0L };
+//
+//	// window size to orthographic projection scaling factor
+//	float s = 0.002f;
+//
+//	// configure glfw
+//	// --------------
+//	configureGLFW();
+//
+//	// glfw window creation
+//	// --------------------
+//	GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "SystemGL by Christopher Hart", NULL, NULL);
+//
+//	bool retFlag;
+//	int retVal = configureWindow(window, retFlag); // auto-gen: probably not ideal
+//	if (retFlag) return retVal;
+//
+//	// glad: load all OpenGL function pointers
+//	// ---------------------------------------
+//	retVal = loadGLAD(retFlag); // auto-gen: probably not ideal
+//	if (retFlag) return retVal;
+//
+//	// shader
+//	// ------
+//	Shader shader("vertex.glsl", "fragment.glsl");
+//
+//	// circle mesh
+//	// -----------
+//	vector<float> circleVert;
+//	vector<unsigned int> circleInd;
+//
+//	float circleRadius = 0.01f;
+//
+//	circleZ(circleVert, circleInd, circleRadius, 6, { 1.0f, 0.0f, 0.0f });
+//
+//	Mesh circleMesh(circleVert, circleInd);
+//
+//	// box mesh
+//	// --------
+//	std::vector<float> boxVert;
+//	std::vector<unsigned int> boxInd;
+//
+//	createVertexAndIndexData(boxSize * renderSpaceScale, boxVert, boxInd);
+//
+//	Mesh boxMesh(boxVert, boxInd);
+//
+//	// render loop
+//	// -----------
+//	try {
+//		while (!glfwWindowShouldClose(window))
+//		{
+//			// input
+//			// -----
+//			if (KEY_N) {
+//				KEY_N = false;
+//			}
+//
+//			processInput(window);
+//
+//			//if (KEY_E) {
+//			//    //resetSystem(pressureApproximationSystem, 10);
+//
+//			//    //// Execute the loaded simulation and re-open the created simulation file
+//			//    //inputData.close();
+//			//    ////simpleGravitationalOrbitSim(simpleSystem, ofstream());
+//			//    //pressureApproximation(pressureApproximationSystem, 10.0, ofstream());
+//			//    //inputData.open("simulation.txt");
+//
+//			//    //updateSystemFromFile(pressureApproximationSystem, inputData, zero, foundTarget);
+//
+//
+//			//    targetTime = FRAME_TIME;
+//
+//			//    PAUSE = true;
+//			//}
+//			if (KEY_SPACE && chrono::high_resolution_clock::now() - prevSpacePressedTime > spaceBuffer) {
+//				if (PAUSE == true) {
+//					totalRenderTime = chrono::high_resolution_clock::now();
+//				}
+//
+//				PAUSE = !PAUSE;
+//				KEY_SPACE = false;
+//				prevSpacePressedTime = chrono::high_resolution_clock::now();
+//			}
+//
+//			KEY_SPACE = false;
+//			KEY_E = false;
+//
+//			// render
+//			// ------
+//			glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+//			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+//
+//			// activate shader
+//			shader.use();
+//
+//			// update projection matrix each frame in case user changes window size
+//			glm::mat4 projection = glm::mat4(1.0f);
+//
+//			// switch comments for projection matrix
+//			//projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+//			projection = glm::ortho(-(float)SCR_WIDTH * s, (float)SCR_WIDTH * s, -(float)SCR_HEIGHT * s, (float)SCR_HEIGHT * s, -10.0f, 10.0f);
+//
+//			shader.setMat4("projection", projection);
+//
+//			// view transformation
+//			glm::mat4 view = glm::mat4(1.0f);
+//
+//			// uncomment for projection matrix
+//			//view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+//
+//			shader.setMat4("view", view);
+//
+//			// Draw bounding box before particles
+//			drawSystemBounds(boxMesh, shader, vec3(0));
+//
+//			// draw particles
+//			system.drawSystemParticles(shader, circleMesh, fidelity);
+//
+//			bool foundTargetTime = false;
+//
+//			// glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
+//			// -------------------------------------------------------------------------------
+//			glfwSwapBuffers(window);
+//			glfwPollEvents();
+//
+//			// Wait for frame time to elapse (16ms for ~60FPS)
+//			while (chrono::high_resolution_clock::now() - lastFrameTime < FRAME_DURATION) {
+//				/* wait */
+//
+//				// Iteratively evolve the system until we reach the target time for this frame
+//				// Temp solution until better file I/O or in-memory simulation data management is implemented
+//				//if (system.getTime() < targetTime && (!PAUSE || KEY_N)) {
+//				//    //system.evolve();
+//				//    impulse = system.impulseEvolve(); 
+//
+//				//    double dt = system.getDt();
+//
+//				//    simIterations++;
+//
+//				//    avgForce.x += (impulse.x / dt - avgForce.x) / simIterations;
+//				//    avgForce.y += (impulse.y / dt - avgForce.y) / simIterations;
+//				//    avgForce.z += (impulse.z / dt - avgForce.z) / simIterations;
+//				//}
+//
+//				// Instead of solving at render-time we instead pre-run the sim and read in positions from a file
+//				if (!PAUSE || KEY_N) {
+//					while (renderIterations < targetRenderIteration && renderIterations != std::numeric_limits<unsigned int>::max()) {
+//						renderIterations = pressureSim.readNext();
+//						//cout << renderIterations << endl;
+//					}
+//					if (renderIterations == std::numeric_limits<unsigned int>::max()) {
+//						PAUSE = true;
+//						pressureSim.resetIn();
+//						targetRenderIteration = 0;
+//						cout << "Total render time: " << chrono::duration_cast<chrono::milliseconds>(chrono::high_resolution_clock::now() - totalRenderTime).count() << " ms" << endl;
+//						totalRenderTime = chrono::high_resolution_clock::now();
+//						renderIterations = 0;
+//					}
+//				}
+//			}
+//
+//			//cout << chrono::high_resolution_clock::now() - lastFrameTime << endl;
+//
+//			//if (system.getTime() >= targetTime) {
+//
+//			//    //cout << setfill(' ') << setw(15) << fixed << setprecision(10) << "Average force: " << avgForce[0] << ", " << avgForce[1] << ", " << avgForce[2] << ", " << avgForce[3] << ", " << avgForce[4] << ", " << avgForce[5] << endl;
+//			//    
+//			//    /*systemPos = vec3(0);
+//			//    massSum = 0;
+//			//    for (Particle& particle : system.getParticles()) {
+//			//        massSum += particle.getMass();
+//			//        systemPos += (particle.getPosition() - systemPos) / massSum;
+//			//    }
+//			//    cout << setw(20) << fixed << setprecision(5) << "System position: " << systemPos << endl;*/
+//
+//			//    //targetTime += FRAME_TIME;
+//			//    //cout << basicSystem.getTime() << endl;
+//			//}
+//			//else if (!PAUSE || KEY_N) {
+//			//    cout << "** Skipped iteration at time " << targetTime << " seconds" << endl;
+//			//    cout << "     Iterations skipped: " << ++missedFrameIterations << endl;
+//			//}
+//
+//			if (!PAUSE) {
+//				targetRenderIteration++;
+//
+//				// calcuate pressure approximation and output
+//				// ------------------------------------------
+//				//vec3 approximatedPressure = {
+//				//    avgForce.x / (4.0l * boxSize.y * boxSize.z),    
+//				//    avgForce.y / (4.0l * boxSize.x * boxSize.z),
+//				//    avgForce.z / (4.0l * boxSize.x * boxSize.y)
+//				//};
+//
+//				//float avgApproxPressure = static_cast<float>(approximatedPressure.x);
+//				//avgApproxPressure += static_cast<float>(approximatedPressure.y);
+//				//avgApproxPressure += static_cast<float>(approximatedPressure.z);
+//				//avgApproxPressure /= 6.0f; // over six not three because we collate adjacent faces
+//				//// pressureX = |pressureTopX| + |pressureBottomX|
+//
+//				//cout << setfill(' ') << setw(15) << fixed << setprecision(10) << "Pressure approximation: " << avgApproxPressure;
+//				//cout << fixed << setprecision(5) << ", % error: " << 100 * (avgApproxPressure - predictedPressure) / predictedPressure << endl;
+//
+//				/*cout << fixed << setprecision(5) << approximatedPressure << endl;*/
+//			}
+//
+//
+//			// Swapping frame time calculation after waiting to avoid time spent in file I/O or rendering
+//			lastFrameTime = chrono::high_resolution_clock::now();
+//
+//			//iterations++; // dont think this is used rn
+//		}
+//	}
+//	catch (const std::exception& e) {
+//		std::cerr << "An error occurred during the render loop: " << e.what() << std::endl;
+//	}
+//
+//	// glfw: terminate, clearing all previously allocated GLFW resources.
+//	// ------------------------------------------------------------------
+//	glfwTerminate();
+//
+//	return 0;
+//}
+//
+//void getUnsignedWithDefault(istream& in, unsigned& v)
+//{
+//	string str;
+//
+//	getline(in, str);
+//
+//	while (str.empty()) {
+//		cout << "Invalid entry. Enter again: ";
+//		getline(in, str);
+//	}
+//	{
+//		int i;
+//		stringstream ss(str);
+//
+//		if (!(ss >> i)) {
+//			i = v;
+//		}
+//
+//		v = i;
+//	}
+//}
+//
+//void getLongDoubleWithDefault(istream& in, long double& v)
+//{
+//	string str;
+//
+//	getline(in, str);
+//
+//	while (str.empty()) {
+//		cout << "Invalid entry. Enter again: ";
+//		getline(in, str);
+//	}
+//	{
+//		long double l;
+//		stringstream ss(str);
+//
+//		if (ss >> l) {
+//			v = l;
+//		}
+//	}
+//}
+//
+//void drawSystemBounds(Mesh boxMesh, Shader& shader, vec3 offset) {
+//	glm::mat4 model = glm::mat4(1.0f);
+//	model = glm::translate(model, glm::vec3(offset.x, offset.y, offset.z));
+//	shader.setMat4("model", model);
+//	boxMesh.draw(shader);
+//}
+//
+//void createVertexAndIndexData(vec3 boxSize, std::vector<float>& vertices, std::vector<unsigned int>& indices) {
+//	float size[3] = { (float)boxSize.x, (float)boxSize.y, (float)boxSize.z };
+//	float boundingBoxVert[] = {
+//		// positions                                            // colors
+//		 size[0],  size[1], -size[2],     0, 0, 0,    // Top right
+//		 size[0], -size[1], -size[2],     0, 0, 0,    // Bottom right
+//		-size[0],  size[1], -size[2],     0, 0, 0,    // Top left
+//		-size[0], -size[1], -size[2],     0, 0, 0     // Bottom left
+//	};
+//	unsigned int boundingBoxInd[] = {
+//		0, 1, 2,
+//		2, 3, 1
+//	};
+//
+//	vertices.clear();
+//	indices.clear();
+//
+//	for (float f : boundingBoxVert) {
+//		vertices.push_back(f);
+//	}
+//	for (unsigned int i : boundingBoxInd) {
+//		indices.push_back(i);
+//	}
+//}
+//
+//int loadGLAD(bool& retFlag)
+//{
+//	retFlag = true;
+//	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+//	{
+//		cout << "Failed to initialize GLAD" << std::endl;
+//		return -1;
+//	}
+//	retFlag = false;
+//	return {};
+//}
+//
+//int configureWindow(GLFWwindow* window, bool& retFlag)
+//{
+//	retFlag = true;
+//	if (window == NULL)
+//	{
+//		cout << "Failed to create GLFW window" << std::endl;
+//		glfwTerminate();
+//		return -1;
+//	}
+//	glfwMakeContextCurrent(window);
+//	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+//	retFlag = false;
+//	return {};
+//}
+//
+//void configureGLFW()
+//{
+//	// glfw: initialize and configure
+//	// ------------------------------
+//	glfwInit();
+//	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+//	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+//	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+//
+//#ifdef __APPLE__
+//	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+//#endif
+//}
+//
+//// process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
+//// ---------------------------------------------------------------------------------------------------------
+//void processInput(GLFWwindow* window)
+//{
+//	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+//		glfwSetWindowShouldClose(window, true);
+//	if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
+//	{
+//		// Execute the loaded simulation and render the created simulation file
+//		KEY_E = true;
+//	}
+//	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+//	{
+//		// Pause functionality can be implemented here
+//		KEY_SPACE = true;
+//	}
+//	if (glfwGetKey(window, GLFW_KEY_N) == GLFW_PRESS) {
+//		KEY_N = true;
+//	}
+//}
+//
+//// glfw: whenever the window size changed (by OS or user resize) this callback function executes
+//// ---------------------------------------------------------------------------------------------
+//void framebuffer_size_callback(GLFWwindow* window, int width, int height)
+//{
+//	SCR_WIDTH = width;
+//	SCR_HEIGHT = height;
+//	// make sure the viewport matches the new window dimensions; note that width and 
+//	// height will be significantly larger than specified on retina displays.
+//	glViewport(0, 0, width, height);
+//}

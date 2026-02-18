@@ -5,7 +5,7 @@
 
 // #include <glm/fwd.hpp> breaks things here for some reason
 // something to do with foward declaration, google it later
-#include <glm/glm.hpp>
+#include <glm/fwd.hpp>
 #include <string>
 
 

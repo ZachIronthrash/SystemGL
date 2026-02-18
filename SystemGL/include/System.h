@@ -1,333 +1,16 @@
-﻿#pragma once
+﻿
+#pragma once
+#include "Interaction.h"
 #include "Mesh.h"
+#include "Particle.h"
 #include "Shader.h"
+#include "SystemGLMath.h"
+#include <exception>
+#include <functional>
+#include <iostream>
 #include <ostream>
-#include <random>
+#include <stdexcept>
 #include <vector>
-
-/*
-* constants
-*/
-// const long double BIG_G = 1; //6.67430e-11; <-- Gravitational constant is one for simplicity
-const long double BOLTZMANN = 1.380649e-23l;
-const long double PI = 3.14159265358979323846l;
-const long double MOLE = 6.02214076e23;
-const long double R_GAS = 8.314462618l; // universal: other one will be added when needed
-
-/*
-* A simple 3D vector class for basic vector operations
-* Technically obselete due to glm::vec3, but used to learn about structs and operator overloading
-*/
-struct vec3 {
-	long double x, y, z;
-
-	/*
-	* default constructor
-	*
-	* @ensures this.x = 0, this.y = 0, this.z = 0
-	*/
-	vec3();
-	/*
-	* constant constructor
-	*
-	* @param val - initial value to set all components to
-	*
-	* @ensures this.x = val, this.y = val, this.z = val
-	*/
-	vec3(long double val);
-	/*
-	* component constructor
-	*
-	* @param x - initial x component
-	* @param y - initial y component
-	* @param z - initial z component
-	*
-	* @ensures this.x = x, this.y = y, this.z = z
-	*/
-	vec3(long double x, long double y, long double z);
-
-	/*
-	* reverse the direction of the vector
-	*
-	* @returns a new vec3 s.t. result = -this
-	*/
-	vec3 operator-() const;
-
-	/*
-	* add other to this and return this
-	*
-	* @param other - vec3 to add
-	*
-	* @ensures this = #this + other
-	* @returns this
-	*/
-	vec3& operator+=(const vec3& other);
-	/*
-	* substract other from this and return this
-	*
-	* @param other - vec3 to subtract
-	*
-	* @ensures this = #this - other
-	* @returns this
-	*/
-	vec3& operator-=(const vec3& other);
-	/*
-	* multiply this by scalar and return this
-	*
-	* @param scalar - scalar to multiply by
-	*
-	* @ensures this = #this * scalar
-	* @returns this
-	*/
-	vec3& operator*=(long double scalar);
-	/*
-	* divide this by scalar and return this
-	*
-	* @param scalar - scalar to divide by
-	*
-	* @requires scalar != 0
-	*
-	* @ensures this = #this / scalar
-	* @returns this
-	*/
-	vec3& operator/=(long double scalar);
-
-	/*
-	* scales vector to unit length and returns the result
-	*
-	* @restores this
-	*
-	* @ensures result has length 1, unless this has length 0, in which case result is vec3(0)
-	* @returns normalized vector
-	*/
-	vec3 normalized() const;
-
-	long double dot(vec3 avec) const { return x * avec.x + y * avec.y + z * avec.z; };
-
-	long double volume() const { return x * y * z; };
-
-	/*
-	* helper function for printing vec3's
-	* outputs in the format "x, y, z"
-	* does not add an endl
-	*
-	* @param os - output stream to write to
-	* @param vec - vec3 to output
-	*
-	* @ensures os contains the string representation of vec
-	* @returns os
-	*/
-	friend std::ostream& operator<<(std::ostream& os, vec3 vec) {
-		os << vec.x << ", " << vec.y << ", " << vec.z;
-		return os;
-	}
-
-	friend bool operator==(const vec3& a, const vec3& b) {
-		return (a.x == b.x && a.y == b.y && a.z == b.z);
-	}
-};
-
-/*
-* vec3 operator overloads for basic vector arithmetic
-*/
-
-/*
-* adds two vec3's component-wise
-*
-* @param a - first vec3
-* @param b - second vec3
-*
-* @ensures result = a + b
-* @returns result
-*/
-vec3 operator+(vec3 a, vec3 b);
-/*
-* subtracts two vec3's component-wise
-*
-* @param a - first vec3
-* @param b - second vec3
-*
-* @ensures result = a - b
-* @returns result
-*/
-vec3 operator-(vec3 a, vec3 b);
-/*
-* multiplies vec3 by scalar component-wise
-* this method handles the vec3 * constant case
-*
-* @param lhs - vec3
-* @param rhs - scalar
-*
-* @ensures result = lhs * rhs
-* @returns result
-*/
-vec3 operator*(vec3 lhs, long double rhs);
-/*
-* multiplies vec3 by scalar component-wise
-* this method handles the constant * vec3 case
-*
-* @param lhs - scalar
-* @param rhs - vec3
-*
-* @ensures result = lhs * rhs
-* @returns result
-*/
-vec3 operator*(long double lhs, vec3 rhs);
-/*
-* divides vec3 by scalar component-wise
-* this method handles the vec3 / constant case
-*
-* @param lhs - vec3
-* @param rhs - scalar
-*
-* @requires rhs != 0
-*
-* @ensures result = lhs / rhs
-* @returns result
-*/
-vec3 operator/(vec3 lhs, long double rhs);
-/*
-* divides vec3 by scalar component-wise
-* this method handles the constant / vec3 case
-*
-* @param lhs - scalar
-* @param rhs - vec3
-*
-* @requires rhs.x, rhs.y, rhs.z != 0
-*
-* @ensures result = lhs / rhs
-* @returns result
-*/
-vec3 operator/(long double lhs, vec3 rhs);
-
-// LAGRANGIAN SOLVER DEFINITIONS ---------------
-
-/*
-* A simple particle class representing a point mass in 3D space
-* Particles are the only objects in this model with mass, position, and velocity
-*
-* Currently time is handled at the System level, not the Particle level but this is non-physical
-* Special relativity makes implementing time at the particle level difficult, so for now we will ignore
-* relativistic effects and assume all particles share the same universal time under a given system
-* Similarly, all systems should use the same time until properly handled, but this is not enforced
-*/
-class Particle {
-public:
-	/*
-	* default constructor
-	*
-	* @ensures position = vec3(0), velocity = vec3(0), mass = 1.0
-	*/
-	Particle();
-	/*
-	* initital conditions constructor
-	*
-	* @param position - initial position of the particle
-	* @param velocity - initial velocity of the particle
-	* @param mass - mass of the particle
-	*
-	* @ensures this->position = position, this->velocity = velocity, this->mass = mass
-	*/
-	Particle(vec3 position, vec3 velocity, long double mass/*, long double dt = 0.001*/);
-
-	// setters
-	/*
-	* sets the position of the particle
-	*
-	* @param newPosition - new position of the particle
-	*
-	* @ensures position = newPosition
-	*/
-	void setPosition(vec3 newPosition);
-	/*
-	* sets the velocity of the particle
-	*
-	* @param newVelocity - new velocity of the particle
-	*
-	* @ensures velocity = newVelocity
-	*/
-	void setVelocity(vec3 newVelocity);
-	/*
-	* sets the mass of the particle
-	*
-	* @param newMass - new mass of the particle
-	*
-	* @ensures mass = newMass
-	*/
-	void setMass(long double newMass);
-
-	// getters
-	/*
-	* fetches the position of the particle
-	*
-	* @return position
-	*/
-	vec3 getPosition();
-	/*
-	* fetches the velocity of the particle
-	*
-	* @return velocity
-	*/
-	vec3 getVelocity();
-	/*
-	* fetches the mass of the particle
-	*
-	* @return mass
-	*/
-	long double getMass();
-	///*
-	//* fetches the time of the particle
-	//* 
-	//* @return time
-	//*/
-	//long double getTime() { return time; };
-	///*
-	//* fetches the dt of the particle
-	//* 
-	//* return dt
-	//*/
-	//long double getDt() { return dt; };
-
-	// transformations
-	/*
-	* translates the particle by delta
-	*
-	* @param delta - translation vector
-	*
-	* @ensures position = #position + delta
-	*/
-	void translateBy(vec3 delta);
-	/*
-	* accelerates the particle by delta
-	*
-	* @param delta - acceleration vector
-	*
-	* @ensures velocity = #velocity + delta
-	*/
-	void accelerateBy(vec3 delta);
-
-	///*
-	//* iterates time by dt
-	//* 
-	//* @ensures time = #time + dt
-	//*/
-	//void pushTime() { time += dt; };
-
-	/*
-	* calculates the KE from velocity and mass
-	*
-	* @return 0.5 * MASS * |VELOCITY| * |VELOCITY|
-	*/
-	long double calcKE();
-
-protected:
-	vec3 position = vec3(0); // [m]
-	vec3 velocity = vec3(0); // [m/s]
-	long double mass = 1.0l; // [kg]
-
-	//long double time = 0; // [s]
-	//const long double dt; // [s]
-};
 
 /*
 * template class for various models
@@ -351,8 +34,19 @@ public:
 	* @param particle - the particle to append
 	*
 	* @ensures particles = #particle.push_back(particle)
+	*
+	* Notes:
+	* - The System now owns stored Particles. addParticle(const Particle&)
+	*   copies the supplied particle into owned storage and stores a stable reference.
+	* - For callers that want to transfer ownership use addParticle(std::unique_ptr<Particle>).
 	*/
 	virtual void addParticle(Particle& particle);
+
+	virtual void newParticle(vec3 position, vec3 velocity, long double mass, long double t = 0.0l, long double dt = 0.001l) {
+		particles.push_back(*new Particle(position, velocity, mass, t, dt));
+	}
+	//virtual void addParticle(std::unique_ptr<Particle> particle);
+
 	/*
 	* returns the number of particles in particles
 	*
@@ -364,7 +58,8 @@ public:
 	*
 	* @return &particles
 	*/
-	virtual std::vector<Particle>& getParticles();
+	//virtual std::vector<std::unique_ptr<Particle>>& getParticles();
+	std::vector<std::reference_wrapper<Particle>> getParticles();
 
 	/*
 	* returns a reference to the i'th particle
@@ -374,6 +69,7 @@ public:
 	* @return &particle[i]
 	*/
 	virtual Particle& getParticle(int i);
+	//virtual std::unique_ptr<Particle> getParticlePtr(int i);
 	/*
 	* returns the current time
 	*
@@ -433,98 +129,298 @@ public:
 	*/
 	virtual void drawSystemParticles(Shader& shader, Mesh& mesh, unsigned fidelity, vec3 offset = 0.0l);
 
+	virtual void createInteraction(Potential V, Particle& p1, Particle& p2) {
+		if (interactionExists(V, p1, p2)) {
+			throw std::invalid_argument("Interaction with particle pair already exists");
+		}
+
+		interactions.push_back(Interaction(p1, p2, V));
+	}
+	virtual void createUniversalInteraction(Potential V) {
+		universalInteractions.push_back(UniversalInteraction(particles, V));
+		/*for (size_t i = 0; i < particles.size(); i++) {
+			universalInteractions.push_back(std::ref(*particles.back()[i]));
+		}*/
+	}
+
+	virtual bool interactionExists(Potential V, Particle& p1, Particle& p2) {
+		for (Interaction interaction : interactions) {
+			if (interaction.isInteraction(V, p1, p2)) {
+				return true;
+			}
+		}
+		return false;
+	}
+	virtual bool universalInteractionExists(Potential V) {
+		for (UniversalInteraction interaction : universalInteractions) {
+			if (interaction.hasPotential(V)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	virtual void interconnectWithPotential(Potential V) {
+		for (size_t i = 0; i < particles.size(); i++) {
+			for (size_t j = i + 1; j < particles.size(); j++) {
+				createInteraction(V, particles[i], particles[j]);
+			}
+		}
+	}
+
+	virtual void addParticle2Universal(int uIndex, int pIndex) {
+		universalInteractions[uIndex].addPart(particles[pIndex]);
+	}
+
 protected:
-	std::vector<Particle> particles;
+	// Owned storage for particles — guarantees lifetime.
+	//std::vector<std::unique_ptr<Particle>> particles;
+
+	// Stable, non-owning references used by existing code and interactions.
+	std::vector<std::reference_wrapper<Particle>> particles;
+	std::vector<Interaction> interactions;
+	std::vector<UniversalInteraction> universalInteractions;
 
 	long double boxSize[2] = { 1, 1 };
 
-	unsigned int step = 0; // redundant but will be used later when particles have their own time
+	unsigned step = 0; // redundant but will be used later when particles have their own time
 	long double time = 0;
 	long double dt = 0.001;
 };
 
-class PressureSystem : public System {
+class SoftBoxInBox : public System {
 public:
-	vec3 boxSize; // [m] : halfwidth, halfheight
+	SoftBoxInBox(unsigned particleCount, long double separation, Potential interconnectingPotential, vec3 g, long double dt = 0.001) : System(dt) {
+		createUniversalInteraction(PlanetaryGravitationalPotential(g, vec3(0)));
 
-	/*
-	* default constructor
-	*
-	* @param numParticles	- the number of particles in the system
-	* @param sysmass		- the total mass of the particles to approximate
-	* @param molarMass		- the molar mass of the particles to approximate
-	* @param targetTemp		- the target temperature of the randomly generated system
-	* @param generator		- the rng to sample
-	* @param boxSize		- the size of the bounding box
-	* @param dt				- initial value of dt for the system
-	*
-	* @ensures for all particles mass = sysmass / numParticles
-	* @ensures this->dt = dt
-	* @ensures particle velocities are randomly assigned using generator and the correct distribution is used for supplied targetTemp & molarMass
-	* @ensures this->boxSize = boxSize
-	* @ensures a working mesh is created for the system boundaries with vertices according to boxSize
-	*/
-	PressureSystem(int numParticles, long double sysmass, long double molarMass, long double targetTemp, std::mt19937& generator, vec3 boxSize = vec3(1, 1, 1), long double dt = 0.001l);
+		for (unsigned i = 0; i < particleCount; i++) {
+			vec3 position = vec3(
+				((i % 2) * 2 - 1) * separation,
+				(((i / 2) % 2) * 2 - 1) * separation,
+				(((i / 4) % 2) * 2 - 1) * separation
+			);
 
-	/*
-	* reflects the particles which exited the box and returns the total change in impulse
-	*
-	* @ensures |particle.position| < boxSize
-	*	|particle.position.x| = 2 * boxSize.x - |#particle.position.x| if |particle.position.x| > boxSize
-	*	|particle.position.y| = 2 * boxSize.y - |#particle.position.y| if |particle.position.y| > boxSize
-	*	|particle.position.z| = 2 * boxSize.z - |#particle.position.z| if |particle.position.z| > boxSize
-	* @ensures |DISTANCE_TRAVELED| = |#DISTANCE_TRAVELED| for each particle
-	* @ensures particle.velocity is flipped according to reflection direction for each particle
-	* @return sum(MASS * ΔVELOCITY for each particle)
-	*/
-	vec3 reflectParticles();
+			Particle p = Particle(position, vec3(0), 1.0l, time, dt);
+			addParticle(p);
+			addParticle2Universal(0, i);
+		}
 
-	/*
-	* calls System::evolve() then reflectParticles() returning the impulses
-	*
-	* @return reflectParticles()
-	*/
-	vec3 impulseEvolve();
+		interconnectWithPotential(interconnectingPotential);
 
-	void evolve() override {
-		impulseEvolve();
 	}
+	void evolve() override {
+		for (Interaction i : interactions) {
+			i.apply();
+		}
+		for (UniversalInteraction u : universalInteractions) {
+			u.apply();
+		}
 
-	/*
-	* draws boxMesh to screen with the supplied shader and offset
-	*
-	* @param shader		- the shader to use when drawing
-	* @param offset		- a vector describing the offset to apply to the mesh before drawing
-	*
-	* @ensures mesh.positions = #mesh.positions + offset
-	* @ensures mesh is drawn to screen at correct position with the supplied shader
-	*/
-	//void drawSystemBounds(Shader& shader, vec3 offset = 0.0l);
+		// Evolve particles
+		try {
+			//for (/*std::unique_ptr<Particle>*/Particle& particle : particles) {
+			//	particle.get().translateBy(dt * particle.get().getVelocity());
+			//}
+			for (size_t i = 0; i < particles.size(); i++) {
+				particles[i].get().translateBy(dt * particles[i].get().getVelocity());
+			}
+		}
+		catch (std::exception& e) {
+			std::cerr << "Error during particle evolution: " << e.what() << std::endl;
+		}
 
-private:
-	//Mesh boxMesh;
-
-	/*
-	* creates vertex and index data for the bounding box
-	*
-	* @param vertices	- the container for the vertex data
-	* @param indices	- the container for the index data
-	*
-	* @updates vertices and indices with data for the bounding box of the system
-	* @clears vertices
-	* @clears indices
-	*
-	* @ensures vertices describe a square behind all particles in the system
-	* @ensures indices correctly order vertices to draw desired structure
-	*/
+		// step time once after all evolutions are complete
+		timeStep();
+	}
 };
 
-class PressureSystemData {
-public:
+//#pragma once
+//#include "Interaction.h"
+//#include "Mesh.h"
+//#include "Particle.h"
+//#include "Shader.h"
+//#include "SystemGLMath.h"
+//#include <functional>
+//#include <stdexcept>
+//#include <vector>
+//
+///*
+//* template class for various models
+//* currently lacks any subsystem handling
+//*/
+//class System {
+//public:
+//
+//	/*
+//	* default constructor
+//	*
+//	* @param dt - initial value of dt
+//	*
+//	* @ensures this->dt = dt
+//	*/
+//	System(long double dt = 0.001);
+//
+//	/*
+//	* appends particle to particles
+//	*
+//	* @param particle - the particle to append
+//	*
+//	* @ensures particles = #particle.push_back(particle)
+//	*/
+//	virtual void addParticle(Particle& particle);
+//	/*
+//	* returns the number of particles in particles
+//	*
+//	* @return particles.size()
+//	*/
+//	virtual size_t numberOfParticles();
+//	/*
+//	* returns a reference to particles
+//	*
+//	* @return &particles
+//	*/
+//	virtual std::vector<std::reference_wrapper<Particle>>& getParticles();
+//
+//	/*
+//	* returns a reference to the i'th particle
+//	*
+//	* @param i - the particle to fetch
+//	*
+//	* @return &particle[i]
+//	*/
+//	virtual Particle& getParticle(int i);
+//	/*
+//	* returns the current time
+//	*
+//	* @return time
+//	*/
+//	virtual long double getTime();
+//	/* returns the current delta-time
+//	*
+//	* @return dt
+//	*/
+//	virtual long double getDt();
+//
+//	/*
+//	* sets time to given value
+//	*
+//	* @param time - the time to set
+//	*
+//	* @ensures this->time = time
+//	*/
+//	virtual void setTime(long double time);
+//	/*
+//	* sets dt to given value
+//	*
+//	* @param dt - the dt to set
+//	*
+//	* @ensures this->dt = dt
+//	*/
+//	virtual void setDt(long double dt);
+//
+//	/*
+//	* pushes time foward by dt
+//	*
+//	* @ensures time = #time + dt
+//	*/
+//	virtual void timeStep();
+//
+//	/*
+//	* follows a simple kinematics scheme to evolve the particles in the system
+//	* no acceleration handling for now
+//	*
+//	* @ensures timeStep()
+//	* @ensures particles.position = #particles.position + particles.velocity * dt
+//	*/
+//	virtual void evolve();
+//
+//	/*
+//	* draws every particle in the system to the screen
+//	*
+//	* @param shader		- the shader to use when drawing
+//	* @param mesh		- the mesh to draw for each particle
+//	* @param fidelity	- draw only particles for which index is a multiple of fidelity
+//	* @param offset		- a vector describing the offset to apply to the mesh before drawing
+//	*
+//	* @ensures mesh.positions = #mesh.positions + offset
+//	* @ensures mesh is drawn to screen at correct position with the supplied shader
+//	* @ensures particle is only drawn if particle.index % fidelity = 0
+//	*/
+//	virtual void drawSystemParticles(Shader& shader, Mesh& mesh, unsigned fidelity, vec3 offset = 0.0l);
+//
+//	virtual void createInteraction(Potential V, Particle& p1, Particle& p2) {
+//		if (interactionExists(V, p1, p2)) {
+//			throw std::invalid_argument("Interaction with particle pair already exists");
+//		}
+//
+//		interactions.push_back(Interaction(p1, p2, V));
+//	}
+//	virtual void createUniversalInteraction(Potential V) {
+//		universalInteractions.push_back(UniversalInteraction(particles, V));
+//	}
+//
+//	virtual bool interactionExists(Potential V, Particle& p1, Particle& p2) {
+//		for (Interaction interaction : interactions) {
+//			if (interaction.isInteraction(V, p1, p2)) {
+//				return true;
+//			}
+//		}
+//		return false;
+//	}
+//	virtual bool universalInteractionExists(Potential V) {
+//		for (UniversalInteraction interaction : universalInteractions) {
+//			if (interaction.hasPotential(V)) {
+//				return true;
+//			}
+//		}
+//		return false;
+//	}
+//
+//	virtual void interconnectWithPotential(Potential V) {
+//		for (size_t i = 0; i < particles.size(); i++) {
+//			for (size_t j = i + 1; j < particles.size(); j++) {
+//				createInteraction(V, particles[i], particles[j]);
+//			}
+//		}
+//	}
+//
+//protected:
+//	std::vector<std::reference_wrapper<Particle>> particles;
+//	std::vector<Interaction> interactions;
+//	std::vector<UniversalInteraction> universalInteractions;
+//
+//	long double boxSize[2] = { 1, 1 };
+//
+//	unsigned step = 0; // redundant but will be used later when particles have their own time
+//	long double time = 0;
+//	long double dt = 0.001;
+//};
+//
+//class SoftBoxInBox : public System {
+//public:
+//	SoftBoxInBox(unsigned particleCount, long double separation, Potential interconnectingPotential, long double dt = 0.001) : System(dt) {
+//		for (unsigned i = 0; i < particleCount; i++) {
+//			vec3 position = vec3(
+//				((i % 2) * 2 - 1) * separation,
+//				(((i / 2) % 2) * 2 - 1) * separation,
+//				(((i / 4) % 2) * 2 - 1) * separation
+//			);
+//
+//			Particle p = Particle(position, vec3(0), 1.0l, time, dt);
+//			addParticle(p);
+//		}
+//
+//		interconnectWithPotential(interconnectingPotential);
+//	}
+//	void evolve() override {}
+//};
 
-protected:
-	PressureSystem& PressureSystem;
-};
+//class PressureSystemData {
+//public:
+//
+//protected:
+//	PressureSystem& PressureSystem;
+//};
 
 
 // ARCHIVAL CODE

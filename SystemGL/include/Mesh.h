@@ -1,14 +1,11 @@
 #pragma once
 
-#include <vector>
-
-#include <cmath>
-
-#include <glad/glad.h> // ensure OpenGL symbols are visible when this header is parsed
-
 #include "Shader.h"
 #include <cassert>
-#include <glm/fwd.hpp>
+#include <cmath>
+#include <glad/glad.h> // ensure OpenGL symbols are visible when this header is parsed
+#include <glm/glm.hpp>
+#include <vector>
 
 const float pi = 2 * acos(0.0f);
 

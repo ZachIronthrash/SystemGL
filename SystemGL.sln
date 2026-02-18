@@ -4,10 +4,17 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 18.2.11415.280
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SystemGL", "SystemGL\SystemGL.vcxproj", "{E1A3E90A-0F25-44D5-A5E3-4476F44B9C4D}"
+	ProjectSection(ProjectDependencies) = postProject
+		{8E183FF4-09C2-4DCC-A6F6-A26376C5551E} = {8E183FF4-09C2-4DCC-A6F6-A26376C5551E}
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{00FB6707-ADAF-44A2-9B7F-4782251D8738}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SystemGLTests", "SystemGLTests\SystemGLTests.vcxproj", "{3D89EC3A-970C-ACAF-3171-B5649D46E1A4}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SystemGLCore", "SystemGLCore\SystemGLCore.vcxproj", "{8E183FF4-09C2-4DCC-A6F6-A26376C5551E}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Softbody", "Softbody\Softbody.vcxproj", "{CA21375F-C287-49EB-BB10-EC9F542B9867}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +40,22 @@ Global
 		{3D89EC3A-970C-ACAF-3171-B5649D46E1A4}.Release|x64.Build.0 = Release|x64
 		{3D89EC3A-970C-ACAF-3171-B5649D46E1A4}.Release|x86.ActiveCfg = Release|Win32
 		{3D89EC3A-970C-ACAF-3171-B5649D46E1A4}.Release|x86.Build.0 = Release|Win32
+		{8E183FF4-09C2-4DCC-A6F6-A26376C5551E}.Debug|x64.ActiveCfg = Debug|x64
+		{8E183FF4-09C2-4DCC-A6F6-A26376C5551E}.Debug|x64.Build.0 = Debug|x64
+		{8E183FF4-09C2-4DCC-A6F6-A26376C5551E}.Debug|x86.ActiveCfg = Debug|Win32
+		{8E183FF4-09C2-4DCC-A6F6-A26376C5551E}.Debug|x86.Build.0 = Debug|Win32
+		{8E183FF4-09C2-4DCC-A6F6-A26376C5551E}.Release|x64.ActiveCfg = Release|x64
+		{8E183FF4-09C2-4DCC-A6F6-A26376C5551E}.Release|x64.Build.0 = Release|x64
+		{8E183FF4-09C2-4DCC-A6F6-A26376C5551E}.Release|x86.ActiveCfg = Release|Win32
+		{8E183FF4-09C2-4DCC-A6F6-A26376C5551E}.Release|x86.Build.0 = Release|Win32
+		{CA21375F-C287-49EB-BB10-EC9F542B9867}.Debug|x64.ActiveCfg = Debug|x64
+		{CA21375F-C287-49EB-BB10-EC9F542B9867}.Debug|x64.Build.0 = Debug|x64
+		{CA21375F-C287-49EB-BB10-EC9F542B9867}.Debug|x86.ActiveCfg = Debug|Win32
+		{CA21375F-C287-49EB-BB10-EC9F542B9867}.Debug|x86.Build.0 = Debug|Win32
+		{CA21375F-C287-49EB-BB10-EC9F542B9867}.Release|x64.ActiveCfg = Release|x64
+		{CA21375F-C287-49EB-BB10-EC9F542B9867}.Release|x64.Build.0 = Release|x64
+		{CA21375F-C287-49EB-BB10-EC9F542B9867}.Release|x86.ActiveCfg = Release|Win32
+		{CA21375F-C287-49EB-BB10-EC9F542B9867}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

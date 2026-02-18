@@ -1,7 +1,10 @@
 #include "Mesh.h"
+#include "Particle.h"
+#include "PressureSimulation.h"
+#include "PressureSystem.h"
 #include "Shader.h"
-#include "Simulation.h"
-#include "System.h"
+#include "StateIO.h"
+#include "SystemGLMath.h"
 #include <chrono>
 #include <cstdlib>
 #include <exception>
@@ -36,7 +39,7 @@ int configureWindow(GLFWwindow* window, bool& retFlag);
 
 int loadGLAD(bool& retFlag);
 
-void getIntWithDefault(istream& in, int& v);
+void getUnsignedWithDefault(istream& in, unsigned& v);
 
 void getLongDoubleWithDefault(istream& in, long double& v);
 
@@ -64,7 +67,7 @@ int main() {
 	long double renderTimeScale = 1000l;
 	long double renderSpaceScale = 1e9;
 
-	int numParticles = 500;
+	unsigned numParticles = 500;
 
 	// default to helium molar mass
 	long double molarMass = 0.004003l; // [kg / mol]
@@ -75,15 +78,42 @@ int main() {
 
 	long double dt = 1e-8l;
 
-	int fidelity = 25;
+	unsigned fidelity = 25;
 
 	vec3 boxSize = vec3(1.0l, 1.0l, 5.0l) / renderSpaceScale;
 
 	long double renderDuration = 60.0l; // [s]
 
 	bool runSim = true;
+	string input;
 
-	{
+	cout << "Run simulation? (Y/N): ";
+	while (getline(cin, input) && input != "Y" && input != "N") {
+		cout << "invalid input.\n";
+	}
+
+	if (input == "N") {
+		runSim = false;
+		cout << "Loading last simulation...\n";
+	}
+	input = "";
+
+	bool usePrevious = true;
+
+	if (runSim == true) {
+		cout << "Load previous parameters? (Y/N): ";
+		while (getline(cin, input) && input != "Y" && input != "N") {
+			cout << "invalid input.\n";
+		}
+
+		if (input == "N") {
+			usePrevious = false;
+		}
+	}
+
+	StateIO stateFile("data/simulation_states.txt");
+
+	if (runSim && !usePrevious) {
 		cout << "Render defaults to " << renderTimeScale << "x speed and " << renderSpaceScale << "x \"zoom\"" << endl;
 		cout << "  (1 sec render time = " << 1.0l / renderTimeScale << " sec simulation time)" << endl;
 		cout << "  (1 unit render distance = " << 1.0l / renderSpaceScale << " m sim distance)" << endl;
@@ -103,7 +133,7 @@ int main() {
 			getLongDoubleWithDefault(cin, renderSpaceScale);
 
 			cout << "Select particle count (default: " << numParticles << "): ";
-			getIntWithDefault(cin, numParticles);
+			getUnsignedWithDefault(cin, numParticles);
 
 			cout << "Select molar mass of particle (default: helium molar mass 0.004003): ";
 			getLongDoubleWithDefault(cin, molarMass);
@@ -118,9 +148,9 @@ int main() {
 			getLongDoubleWithDefault(cin, dt);
 
 			cout << "Select render fidelity (default: every " << fidelity << "th particle): ";
-			getIntWithDefault(cin, fidelity);
+			getUnsignedWithDefault(cin, fidelity);
 
-			cout << "Select bounding box size (\"-\" for any default values, separate with commas: " << boxSize << "): ";
+			cout << "Select bounding box size (\"-\" for any default values, enter each component on separate lines: " << boxSize << "): ";
 			getLongDoubleWithDefault(cin, boxSize.x);
 			getLongDoubleWithDefault(cin, boxSize.y);
 			getLongDoubleWithDefault(cin, boxSize.z);
@@ -129,6 +159,31 @@ int main() {
 
 		cout << "Select render duration in seconds (\"-\" for default: " << renderDuration << "s): ";
 		getLongDoubleWithDefault(cin, renderDuration);
+
+		stateFile.states.add("render_time_scale", renderTimeScale);
+		stateFile.states.add("render_space_scale", renderSpaceScale);
+		stateFile.states.add("particle_number", numParticles);
+		stateFile.states.add("molar_mass", molarMass);
+		stateFile.states.add("target_temperature", targetTemp);
+		stateFile.states.add("system_mass", systemMass);
+		stateFile.states.add("delta_time", dt);
+		stateFile.states.add("render_particle_fidelity", fidelity);
+		stateFile.states.add("box_size", boxSize);
+		stateFile.states.add("render_duration", renderDuration);
+		stateFile.outputStatesToFile();
+	}
+	else if (usePrevious) {
+		stateFile.readStatesFromFile();
+		renderTimeScale = stateFile.states.fetchLD("render_time_scale");
+		renderSpaceScale = stateFile.states.fetchLD("render_space_scale");
+		numParticles = stateFile.states.fetchU("particle_number");
+		molarMass = stateFile.states.fetchLD("molar_mass");
+		targetTemp = stateFile.states.fetchLD("target_temperature");
+		systemMass = stateFile.states.fetchLD("system_mass");
+		dt = stateFile.states.fetchLD("delta_time");
+		fidelity = stateFile.states.fetchU("render_particle_fidelity");
+		boxSize = stateFile.states.fetchV("box_size");
+		renderDuration = stateFile.states.fetchLD("render_duration");
 	}
 
 	// init time tracking
@@ -152,9 +207,11 @@ int main() {
 
 	PressureSystem system(numParticles, systemMass, molarMass, targetTemp, generator, boxSize, dt);
 
-	PressureSimulation pressureSim(&system, "data/pressure_simulation.txt", "data/impulse_readout.txt", renderTimeScale, renderSpaceScale);
+	PressureSimulation pressureSim(system, "data/pressure_simulation.txt", "data/impulse_readout.txt", renderTimeScale, renderSpaceScale);
 
-	pressureSim.run((long double)FRAME_TIME, renderDuration, cout);
+	if (runSim) {
+		pressureSim.run((long double)FRAME_TIME, renderDuration, std::cout);
+	}
 
 	vec3 avgForce = vec3(0);
 	vec3 approximatedPressure = vec3(0);
@@ -528,7 +585,7 @@ int main() {
 	return 0;
 }
 
-void getIntWithDefault(istream& in, int& v)
+void getUnsignedWithDefault(istream& in, unsigned& v)
 {
 	string str;
 

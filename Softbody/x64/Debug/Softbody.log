@@ -1,0 +1,337 @@
+﻿  src.cpp
+  Note: including file: C:\Users\chris\source\repos\SystemGL\Softbody\../SystemGLCore/include/Mesh.h
+  Note: including file:  C:\Users\chris\source\repos\SystemGL\SystemGLCore\include\Shader.h
+  Note: including file:   C:\Users\chris\source\repos\SystemGL\external\glm\glm/fwd.hpp
+  Note: including file:    C:\Users\chris\source\repos\SystemGL\external\glm\glm\detail/qualifier.hpp
+  Note: including file:     C:\Users\chris\source\repos\SystemGL\external\glm\glm\detail\setup.hpp
+  Note: including file:      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\cassert
+  Note: including file:       C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\yvals_core.h
+  Note: including file:        C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\vcruntime.h
+  Note: including file:         C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\sal.h
+  Note: including file:          C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\concurrencysal.h
+  Note: including file:         C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\vadefs.h
+  Note: including file:        C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xkeycheck.h
+  Note: including file:       C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\ucrt\assert.h
+  Note: including file:        C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\ucrt\corecrt.h
+  Note: including file:      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\cstddef
+  Note: including file:       C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\ucrt\stddef.h
+  Note: including file:       C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xtr1common
+  Note: including file:      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\type_traits
+  Note: including file:       C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\cstdint
+  Note: including file:        C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\stdint.h
+  Note: including file:      C:\Users\chris\source\repos\SystemGL\external\glm\glm\detail\../simd/platform.h
+  Note: including file:   C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\string
+  Note: including file:    C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xstring
+  Note: including file:     C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_sanitizer_annotate_container.hpp
+  Note: including file:     C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_string_view.hpp
+  Note: including file:      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\iosfwd
+  Note: including file:       C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\yvals.h
+  Note: including file:        C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\ucrt\crtdbg.h
+  Note: including file:         C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\vcruntime_new_debug.h
+  Note: including file:          C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\vcruntime_new.h
+  Note: including file:        C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\crtdefs.h
+  Note: including file:        C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\use_ansi.h
+  Note: including file:       C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\cstdio
+  Note: including file:        C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\ucrt\stdio.h
+  Note: including file:         C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\ucrt\corecrt_wstdio.h
+  Note: including file:          C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\ucrt\corecrt_stdio_config.h
+  Note: including file:       C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\cstring
+  Note: including file:        C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\ucrt\string.h
+  Note: including file:         C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\ucrt\corecrt_memory.h
+  Note: including file:          C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\ucrt\corecrt_memcpy_s.h
+  Note: including file:           C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\ucrt\errno.h
+  Note: including file:           C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\vcruntime_string.h
+  Note: including file:         C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\ucrt\corecrt_wstring.h
+  Note: including file:       C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\cwchar
+  Note: including file:        C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\ucrt\wchar.h
+  Note: including file:         C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\ucrt\corecrt_wconio.h
+  Note: including file:         C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\ucrt\corecrt_wctype.h
+  Note: including file:         C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\ucrt\corecrt_wdirect.h
+  Note: including file:         C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\ucrt\corecrt_wio.h
+  Note: including file:          C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\ucrt\corecrt_share.h
+  Note: including file:         C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\ucrt\corecrt_wprocess.h
+  Note: including file:         C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\ucrt\corecrt_wstdlib.h
+  Note: including file:         C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\ucrt\corecrt_wtime.h
+  Note: including file:         C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\ucrt\sys/stat.h
+  Note: including file:          C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\ucrt\sys/types.h
+  Note: including file:         C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\intrin.h
+  Note: including file:          C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\intrin0.inl.h
+  Note: including file:          C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\setjmp.h
+  Note: including file:          C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\immintrin.h
+  Note: including file:           C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\wmmintrin.h
+  Note: including file:            C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\nmmintrin.h
+  Note: including file:             C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\smmintrin.h
+  Note: including file:              C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\tmmintrin.h
+  Note: including file:               C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\pmmintrin.h
+  Note: including file:                C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\emmintrin.h
+  Note: including file:                 C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xmmintrin.h
+  Note: including file:                  C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\mmintrin.h
+  Note: including file:                  C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\ucrt\malloc.h
+  Note: including file:                   C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\ucrt\corecrt_malloc.h
+  Note: including file:           C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\zmmintrin.h
+  Note: including file:          C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\ammintrin.h
+  Note: including file:      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility
+  Note: including file:       C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp
+  Note: including file:        C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\utility
+  Note: including file:         C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\initializer_list
+  Note: including file:         C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\compare
+  Note: including file:          C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\concepts
+  Note: including file:       C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\climits
+  Note: including file:        C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\limits.h
+  Note: including file:       C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\cstdlib
+  Note: including file:        C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\ucrt\math.h
+  Note: including file:         C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\ucrt\corecrt_math.h
+  Note: including file:        C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\ucrt\stdlib.h
+  Note: including file:         C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\ucrt\corecrt_search.h
+  Note: including file:     C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xmemory
+  Note: including file:      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\limits
+  Note: including file:       C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\cfloat
+  Note: including file:        C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\ucrt\float.h
+  Note: including file:       C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\intrin0.h
+  Note: including file:      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\new
+  Note: including file:       C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\exception
+  Note: including file:        C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\vcruntime_exception.h
+  Note: including file:         C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\eh.h
+  Note: including file:          C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\ucrt\corecrt_terminate.h
+  Note: including file:      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xatomic.h
+  Note: including file:      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\tuple
+  Note: including file:     C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xpolymorphic_allocator.h
+  Note: including file:    C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\cctype
+  Note: including file:     C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\ucrt\ctype.h
+  Note: including file:  C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\cassert
+  Note: including file:   C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\ucrt\assert.h
+  Note: including file:  C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\cmath
+  Note: including file:  C:\Users\chris\source\repos\SystemGL\external\glad\include\glad/glad.h
+  Note: including file:   C:\Users\chris\source\repos\SystemGL\external\glad\include\KHR/khrplatform.h
+  Note: including file:  C:\Users\chris\source\repos\SystemGL\external\glm\glm/glm.hpp
+  Note: including file:   C:\Users\chris\source\repos\SystemGL\external\glm\glm\detail/_fixes.hpp
+  Note: including file:   C:\Users\chris\source\repos\SystemGL\external\glm\glm\detail/setup.hpp
+  Note: including file:   C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\cassert
+  Note: including file:    C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\ucrt\assert.h
+  Note: including file:   C:\Users\chris\source\repos\SystemGL\external\glm\glm\vec2.hpp
+  Note: including file:    C:\Users\chris\source\repos\SystemGL\external\glm\glm\./ext/vector_bool2.hpp
+  Note: including file:     C:\Users\chris\source\repos\SystemGL\external\glm\glm\ext\../detail/type_vec2.hpp
+  Note: including file:      C:\Users\chris\source\repos\SystemGL\external\glm\glm\detail\type_vec2.inl
+  Note: including file:       C:\Users\chris\source\repos\SystemGL\external\glm\glm\detail\./compute_vector_relational.hpp
+  Note: including file:        C:\Users\chris\source\repos\SystemGL\external\glm\glm\detail\setup.hpp
+  Note: including file:    C:\Users\chris\source\repos\SystemGL\external\glm\glm\./ext/vector_bool2_precision.hpp
+  Note: including file:    C:\Users\chris\source\repos\SystemGL\external\glm\glm\./ext/vector_float2.hpp
+  Note: including file:    C:\Users\chris\source\repos\SystemGL\external\glm\glm\./ext/vector_float2_precision.hpp
+  Note: including file:    C:\Users\chris\source\repos\SystemGL\external\glm\glm\./ext/vector_double2.hpp
+  Note: including file:    C:\Users\chris\source\repos\SystemGL\external\glm\glm\./ext/vector_double2_precision.hpp
+  Note: including file:    C:\Users\chris\source\repos\SystemGL\external\glm\glm\./ext/vector_int2.hpp
+  Note: including file:    C:\Users\chris\source\repos\SystemGL\external\glm\glm\./ext/vector_int2_sized.hpp
+  Note: including file:     C:\Users\chris\source\repos\SystemGL\external\glm\glm\ext\../ext/scalar_int_sized.hpp
+  Note: including file:      C:\Users\chris\source\repos\SystemGL\external\glm\glm\ext\../detail/setup.hpp
+  Note: including file:    C:\Users\chris\source\repos\SystemGL\external\glm\glm\./ext/vector_uint2.hpp
+  Note: including file:    C:\Users\chris\source\repos\SystemGL\external\glm\glm\./ext/vector_uint2_sized.hpp
+  Note: including file:     C:\Users\chris\source\repos\SystemGL\external\glm\glm\ext\../ext/scalar_uint_sized.hpp
+  Note: including file:      C:\Users\chris\source\repos\SystemGL\external\glm\glm\ext\../detail/setup.hpp
+  Note: including file:   C:\Users\chris\source\repos\SystemGL\external\glm\glm\vec3.hpp
+  Note: including file:    C:\Users\chris\source\repos\SystemGL\external\glm\glm\./ext/vector_bool3.hpp
+  Note: including file:     C:\Users\chris\source\repos\SystemGL\external\glm\glm\ext\../detail/type_vec3.hpp
+  Note: including file:      C:\Users\chris\source\repos\SystemGL\external\glm\glm\detail\type_vec3.inl
+  Note: including file:       C:\Users\chris\source\repos\SystemGL\external\glm\glm\detail\compute_vector_decl.hpp
+  Note: including file:        C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\functional
+  Note: including file:         C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\typeinfo
+  Note: including file:          C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\vcruntime_typeinfo.h
+  Note: including file:         C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\unordered_map
+  Note: including file:          C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xhash
+  Note: including file:           C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\list
+  Note: including file:           C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\vector
+  Note: including file:            C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_bit_utils.hpp
+  Note: including file:           C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xbit_ops.h
+  Note: including file:           C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xnode_handle.h
+  Note: including file:        C:\Users\chris\source\repos\SystemGL\external\glm\glm\detail\_vectorize.hpp
+  Note: including file:    C:\Users\chris\source\repos\SystemGL\external\glm\glm\./ext/vector_bool3_precision.hpp
+  Note: including file:    C:\Users\chris\source\repos\SystemGL\external\glm\glm\./ext/vector_float3.hpp
+  Note: including file:    C:\Users\chris\source\repos\SystemGL\external\glm\glm\./ext/vector_float3_precision.hpp
+  Note: including file:    C:\Users\chris\source\repos\SystemGL\external\glm\glm\./ext/vector_double3.hpp
+  Note: including file:    C:\Users\chris\source\repos\SystemGL\external\glm\glm\./ext/vector_double3_precision.hpp
+  Note: including file:    C:\Users\chris\source\repos\SystemGL\external\glm\glm\./ext/vector_int3.hpp
+  Note: including file:    C:\Users\chris\source\repos\SystemGL\external\glm\glm\./ext/vector_int3_sized.hpp
+  Note: including file:    C:\Users\chris\source\repos\SystemGL\external\glm\glm\./ext/vector_uint3.hpp
+  Note: including file:    C:\Users\chris\source\repos\SystemGL\external\glm\glm\./ext/vector_uint3_sized.hpp
+  Note: including file:   C:\Users\chris\source\repos\SystemGL\external\glm\glm\vec4.hpp
+  Note: including file:    C:\Users\chris\source\repos\SystemGL\external\glm\glm\./ext/vector_bool4.hpp
+  Note: including file:     C:\Users\chris\source\repos\SystemGL\external\glm\glm\ext\../detail/type_vec4.hpp
+  Note: including file:      C:\Users\chris\source\repos\SystemGL\external\glm\glm\detail\type_vec4.inl
+  Note: including file:    C:\Users\chris\source\repos\SystemGL\external\glm\glm\./ext/vector_bool4_precision.hpp
+  Note: including file:    C:\Users\chris\source\repos\SystemGL\external\glm\glm\./ext/vector_float4.hpp
+  Note: including file:    C:\Users\chris\source\repos\SystemGL\external\glm\glm\./ext/vector_float4_precision.hpp
+  Note: including file:    C:\Users\chris\source\repos\SystemGL\external\glm\glm\./ext/vector_double4.hpp
+  Note: including file:    C:\Users\chris\source\repos\SystemGL\external\glm\glm\./ext/vector_double4_precision.hpp
+  Note: including file:     C:\Users\chris\source\repos\SystemGL\external\glm\glm\ext\../detail/setup.hpp
+  Note: including file:    C:\Users\chris\source\repos\SystemGL\external\glm\glm\./ext/vector_int4.hpp
+  Note: including file:    C:\Users\chris\source\repos\SystemGL\external\glm\glm\./ext/vector_int4_sized.hpp
+  Note: including file:    C:\Users\chris\source\repos\SystemGL\external\glm\glm\./ext/vector_uint4.hpp
+  Note: including file:    C:\Users\chris\source\repos\SystemGL\external\glm\glm\./ext/vector_uint4_sized.hpp
+  Note: including file:   C:\Users\chris\source\repos\SystemGL\external\glm\glm\mat2x2.hpp
+  Note: including file:    C:\Users\chris\source\repos\SystemGL\external\glm\glm\./ext/matrix_double2x2.hpp
+  Note: including file:     C:\Users\chris\source\repos\SystemGL\external\glm\glm\ext\../detail/type_mat2x2.hpp
+  Note: including file:      C:\Users\chris\source\repos\SystemGL\external\glm\glm\detail\type_mat2x2.inl
+  Note: including file:       C:\Users\chris\source\repos\SystemGL\external\glm\glm\detail\../matrix.hpp
+  Note: including file:        C:\Users\chris\source\repos\SystemGL\external\glm\glm\detail/setup.hpp
+  Note: including file:        C:\Users\chris\source\repos\SystemGL\external\glm\glm\mat2x3.hpp
+  Note: including file:         C:\Users\chris\source\repos\SystemGL\external\glm\glm\./ext/matrix_double2x3.hpp
+  Note: including file:          C:\Users\chris\source\repos\SystemGL\external\glm\glm\ext\../detail/type_mat2x3.hpp
+  Note: including file:           C:\Users\chris\source\repos\SystemGL\external\glm\glm\detail\type_mat2x3.inl
+  Note: including file:         C:\Users\chris\source\repos\SystemGL\external\glm\glm\./ext/matrix_double2x3_precision.hpp
+  Note: including file:         C:\Users\chris\source\repos\SystemGL\external\glm\glm\./ext/matrix_float2x3.hpp
+  Note: including file:         C:\Users\chris\source\repos\SystemGL\external\glm\glm\./ext/matrix_float2x3_precision.hpp
+  Note: including file:        C:\Users\chris\source\repos\SystemGL\external\glm\glm\mat2x4.hpp
+  Note: including file:         C:\Users\chris\source\repos\SystemGL\external\glm\glm\./ext/matrix_double2x4.hpp
+  Note: including file:          C:\Users\chris\source\repos\SystemGL\external\glm\glm\ext\../detail/type_mat2x4.hpp
+  Note: including file:           C:\Users\chris\source\repos\SystemGL\external\glm\glm\detail\type_mat2x4.inl
+  Note: including file:         C:\Users\chris\source\repos\SystemGL\external\glm\glm\./ext/matrix_double2x4_precision.hpp
+  Note: including file:         C:\Users\chris\source\repos\SystemGL\external\glm\glm\./ext/matrix_float2x4.hpp
+  Note: including file:         C:\Users\chris\source\repos\SystemGL\external\glm\glm\./ext/matrix_float2x4_precision.hpp
+  Note: including file:        C:\Users\chris\source\repos\SystemGL\external\glm\glm\mat3x2.hpp
+  Note: including file:         C:\Users\chris\source\repos\SystemGL\external\glm\glm\./ext/matrix_double3x2.hpp
+  Note: including file:          C:\Users\chris\source\repos\SystemGL\external\glm\glm\ext\../detail/type_mat3x2.hpp
+  Note: including file:           C:\Users\chris\source\repos\SystemGL\external\glm\glm\detail\type_mat3x2.inl
+  Note: including file:         C:\Users\chris\source\repos\SystemGL\external\glm\glm\./ext/matrix_double3x2_precision.hpp
+  Note: including file:         C:\Users\chris\source\repos\SystemGL\external\glm\glm\./ext/matrix_float3x2.hpp
+  Note: including file:         C:\Users\chris\source\repos\SystemGL\external\glm\glm\./ext/matrix_float3x2_precision.hpp
+  Note: including file:        C:\Users\chris\source\repos\SystemGL\external\glm\glm\mat3x3.hpp
+  Note: including file:         C:\Users\chris\source\repos\SystemGL\external\glm\glm\./ext/matrix_double3x3.hpp
+  Note: including file:          C:\Users\chris\source\repos\SystemGL\external\glm\glm\ext\../detail/type_mat3x3.hpp
+  Note: including file:           C:\Users\chris\source\repos\SystemGL\external\glm\glm\detail\type_mat3x3.inl
+  Note: including file:            C:\Users\chris\source\repos\SystemGL\external\glm\glm\detail\../common.hpp
+  Note: including file:             C:\Users\chris\source\repos\SystemGL\external\glm\glm\detail/_fixes.hpp
+  Note: including file:             C:\Users\chris\source\repos\SystemGL\external\glm\glm\detail/func_common.inl
+  Note: including file:              C:\Users\chris\source\repos\SystemGL\external\glm\glm\detail\../vector_relational.hpp
+  Note: including file:               C:\Users\chris\source\repos\SystemGL\external\glm\glm\detail/setup.hpp
+  Note: including file:               C:\Users\chris\source\repos\SystemGL\external\glm\glm\detail/func_vector_relational.inl
+  Note: including file:              C:\Users\chris\source\repos\SystemGL\external\glm\glm\detail\compute_common.hpp
+  Note: including file:               C:\Users\chris\source\repos\SystemGL\external\glm\glm\detail\setup.hpp
+  Note: including file:              C:\Users\chris\source\repos\SystemGL\external\glm\glm\detail\type_vec1.hpp
+  Note: including file:               C:\Users\chris\source\repos\SystemGL\external\glm\glm\detail\type_vec1.inl
+  Note: including file:         C:\Users\chris\source\repos\SystemGL\external\glm\glm\./ext/matrix_double3x3_precision.hpp
+  Note: including file:         C:\Users\chris\source\repos\SystemGL\external\glm\glm\./ext/matrix_float3x3.hpp
+  Note: including file:         C:\Users\chris\source\repos\SystemGL\external\glm\glm\./ext/matrix_float3x3_precision.hpp
+  Note: including file:        C:\Users\chris\source\repos\SystemGL\external\glm\glm\mat3x4.hpp
+  Note: including file:         C:\Users\chris\source\repos\SystemGL\external\glm\glm\./ext/matrix_double3x4.hpp
+  Note: including file:          C:\Users\chris\source\repos\SystemGL\external\glm\glm\ext\../detail/type_mat3x4.hpp
+  Note: including file:           C:\Users\chris\source\repos\SystemGL\external\glm\glm\detail\type_mat3x4.inl
+  Note: including file:         C:\Users\chris\source\repos\SystemGL\external\glm\glm\./ext/matrix_double3x4_precision.hpp
+  Note: including file:         C:\Users\chris\source\repos\SystemGL\external\glm\glm\./ext/matrix_float3x4.hpp
+  Note: including file:         C:\Users\chris\source\repos\SystemGL\external\glm\glm\./ext/matrix_float3x4_precision.hpp
+  Note: including file:        C:\Users\chris\source\repos\SystemGL\external\glm\glm\mat4x2.hpp
+  Note: including file:         C:\Users\chris\source\repos\SystemGL\external\glm\glm\./ext/matrix_double4x2.hpp
+  Note: including file:          C:\Users\chris\source\repos\SystemGL\external\glm\glm\ext\../detail/type_mat4x2.hpp
+  Note: including file:           C:\Users\chris\source\repos\SystemGL\external\glm\glm\detail\type_mat4x2.inl
+  Note: including file:         C:\Users\chris\source\repos\SystemGL\external\glm\glm\./ext/matrix_double4x2_precision.hpp
+  Note: including file:         C:\Users\chris\source\repos\SystemGL\external\glm\glm\./ext/matrix_float4x2.hpp
+  Note: including file:         C:\Users\chris\source\repos\SystemGL\external\glm\glm\./ext/matrix_float4x2_precision.hpp
+  Note: including file:        C:\Users\chris\source\repos\SystemGL\external\glm\glm\mat4x3.hpp
+  Note: including file:         C:\Users\chris\source\repos\SystemGL\external\glm\glm\./ext/matrix_double4x3.hpp
+  Note: including file:          C:\Users\chris\source\repos\SystemGL\external\glm\glm\ext\../detail/type_mat4x3.hpp
+  Note: including file:           C:\Users\chris\source\repos\SystemGL\external\glm\glm\detail\type_mat4x3.inl
+  Note: including file:         C:\Users\chris\source\repos\SystemGL\external\glm\glm\./ext/matrix_double4x3_precision.hpp
+  Note: including file:         C:\Users\chris\source\repos\SystemGL\external\glm\glm\./ext/matrix_float4x3.hpp
+  Note: including file:         C:\Users\chris\source\repos\SystemGL\external\glm\glm\./ext/matrix_float4x3_precision.hpp
+  Note: including file:        C:\Users\chris\source\repos\SystemGL\external\glm\glm\mat4x4.hpp
+  Note: including file:         C:\Users\chris\source\repos\SystemGL\external\glm\glm\./ext/matrix_double4x4.hpp
+  Note: including file:          C:\Users\chris\source\repos\SystemGL\external\glm\glm\ext\../detail/type_mat4x4.hpp
+  Note: including file:           C:\Users\chris\source\repos\SystemGL\external\glm\glm\detail\type_mat4x4.inl
+  Note: including file:            C:\Users\chris\source\repos\SystemGL\external\glm\glm\detail\../geometric.hpp
+  Note: including file:             C:\Users\chris\source\repos\SystemGL\external\glm\glm\detail/func_geometric.inl
+  Note: including file:              C:\Users\chris\source\repos\SystemGL\external\glm\glm\detail\../exponential.hpp
+  Note: including file:               C:\Users\chris\source\repos\SystemGL\external\glm\glm\detail/func_exponential.inl
+  Note: including file:                C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\cassert
+  Note: including file:                 C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\ucrt\assert.h
+  Note: including file:         C:\Users\chris\source\repos\SystemGL\external\glm\glm\./ext/matrix_double4x4_precision.hpp
+  Note: including file:         C:\Users\chris\source\repos\SystemGL\external\glm\glm\./ext/matrix_float4x4.hpp
+  Note: including file:         C:\Users\chris\source\repos\SystemGL\external\glm\glm\./ext/matrix_float4x4_precision.hpp
+  Note: including file:        C:\Users\chris\source\repos\SystemGL\external\glm\glm\detail/func_matrix.inl
+  Note: including file:    C:\Users\chris\source\repos\SystemGL\external\glm\glm\./ext/matrix_double2x2_precision.hpp
+  Note: including file:    C:\Users\chris\source\repos\SystemGL\external\glm\glm\./ext/matrix_float2x2.hpp
+  Note: including file:    C:\Users\chris\source\repos\SystemGL\external\glm\glm\./ext/matrix_float2x2_precision.hpp
+  Note: including file:   C:\Users\chris\source\repos\SystemGL\external\glm\glm\trigonometric.hpp
+  Note: including file:    C:\Users\chris\source\repos\SystemGL\external\glm\glm\detail/setup.hpp
+  Note: including file:    C:\Users\chris\source\repos\SystemGL\external\glm\glm\detail/func_trigonometric.inl
+  Note: including file:   C:\Users\chris\source\repos\SystemGL\external\glm\glm\packing.hpp
+  Note: including file:    C:\Users\chris\source\repos\SystemGL\external\glm\glm\detail/func_packing.inl
+  Note: including file:     C:\Users\chris\source\repos\SystemGL\external\glm\glm\detail\type_half.hpp
+  Note: including file:      C:\Users\chris\source\repos\SystemGL\external\glm\glm\detail\setup.hpp
+  Note: including file:      C:\Users\chris\source\repos\SystemGL\external\glm\glm\detail\type_half.inl
+  Note: including file:   C:\Users\chris\source\repos\SystemGL\external\glm\glm\integer.hpp
+  Note: including file:    C:\Users\chris\source\repos\SystemGL\external\glm\glm\detail/func_integer.inl
+  Note: including file: C:\Users\chris\source\repos\SystemGL\Softbody\../SystemGLCore/include/StateIO.h
+  Note: including file:  C:\Users\chris\source\repos\SystemGL\SystemGLCore\include\SystemGLMath.h
+  Note: including file:   C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\ostream
+  Note: including file:    C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_ostream.hpp
+  Note: including file:     C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\ios
+  Note: including file:      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xlocnum
+  Note: including file:       C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\iterator
+  Note: including file:       C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\streambuf
+  Note: including file:        C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xiosbase
+  Note: including file:         C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\ucrt\share.h
+  Note: including file:         C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\system_error
+  Note: including file:          C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_system_error_abi.hpp
+  Note: including file:          C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\cerrno
+  Note: including file:          C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\stdexcept
+  Note: including file:          C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xcall_once.h
+  Note: including file:          C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xerrc.h
+  Note: including file:          C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\atomic
+  Note: including file:           C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xatomic_wait.h
+  Note: including file:           C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xthreads.h
+  Note: including file:            C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_threads_core.hpp
+  Note: including file:            C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xtimec.h
+  Note: including file:             C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\ctime
+  Note: including file:              C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\ucrt\time.h
+  Note: including file:         C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xlocale
+  Note: including file:          C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\memory
+  Note: including file:          C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xfacet
+  Note: including file:          C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xlocinfo
+  Note: including file:           C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_xlocinfo_types.hpp
+  Note: including file:           C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\clocale
+  Note: including file:            C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\ucrt\locale.h
+  Note: including file:  C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\fstream
+  Note: including file:   C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_filebuf.hpp
+  Note: including file:   C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\istream
+  Note: including file:  C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\map
+  Note: including file:   C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xtree
+  Note: including file:  C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\sstream
+  Note: including file: C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\chrono
+  Note: including file:  C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_chrono.hpp
+  Note: including file:   C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\ratio
+  Note: including file:  C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xfilesystem_abi.h
+  Note: including file:  C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_tzdb.hpp
+  Note: including file:  C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\format
+  Note: including file:   C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_format_ucd_tables.hpp
+  Note: including file:   C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_formatter.hpp
+  Note: including file:   C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_print.hpp
+  Note: including file:   C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_ranges_tuple_formatter.hpp
+  Note: including file:    C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\bit
+  Note: including file:   C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\charconv
+  Note: including file:    C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xcharconv.h
+  Note: including file:    C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xcharconv_ryu.h
+  Note: including file:     C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xcharconv_ryu_tables.h
+  Note: including file:    C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xcharconv_tables.h
+  Note: including file:   C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\locale
+  Note: including file:    C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xlocbuf
+  Note: including file:    C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xlocmes
+  Note: including file:    C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xlocmon
+  Note: including file:    C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xloctime
+  Note: including file:  C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\forward_list
+  Note: including file:  C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\iomanip
+  Note: including file:  C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\optional
+  Note: including file:   C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xsmf_control.h
+  Note: including file: C:\Users\chris\source\repos\SystemGL\external\glfw\include\GLFW/glfw3.h
+  Note: including file: C:\Users\chris\source\repos\SystemGL\external\glm\glm/ext/matrix_clip_space.inl
+  Note: including file: C:\Users\chris\source\repos\SystemGL\external\glm\glm/ext/matrix_transform.inl
+  Note: including file: C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\iostream
+  Note: including file: C:\Users\chris\source\repos\SystemGL\SystemGLCore\include\Particle.h
+  Note: including file: C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\random
+  Note: including file:  C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_int128.hpp
+  Note: including file:  C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\algorithm
+  Note: including file:   C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_heap_algorithms.hpp
+  Note: including file:   C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_minmax.hpp
+  Note: including file: C:\Users\chris\source\repos\SystemGL\SystemGLCore\include\Simulation.h
+  Note: including file:  C:\Users\chris\source\repos\SystemGL\SystemGLCore\include\System.h
+  Note: including file:   C:\Users\chris\source\repos\SystemGL\SystemGLCore\include\Interaction.h
+C:\Users\chris\source\repos\SystemGL\Softbody\src.cpp(70,24): warning C4244: 'initializing': conversion from 'double' to 'unsigned int', possible loss of data
+LINK : warning LNK4098: defaultlib 'MSVCRT' conflicts with use of other libs; use /NODEFAULTLIB:library
+  Softbody.vcxproj -> C:\Users\chris\source\repos\SystemGL\x64\Debug\Softbody.exe

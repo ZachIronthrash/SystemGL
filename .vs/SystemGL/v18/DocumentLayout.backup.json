@@ -3,32 +3,28 @@
   "WorkspaceRootPath": "C:\\Users\\chris\\source\\repos\\SystemGL\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{E1A3E90A-0F25-44D5-A5E3-4476F44B9C4D}|SystemGL\\SystemGL.vcxproj|C:\\Users\\chris\\source\\repos\\SystemGL\\SystemGL\\include\\Simulation.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
-      "RelativeMoniker": "D:0:0:{E1A3E90A-0F25-44D5-A5E3-4476F44B9C4D}|SystemGL\\SystemGL.vcxproj|solutionrelative:SystemGL\\include\\Simulation.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+      "AbsoluteMoniker": "D:0:0:{CA21375F-C287-49EB-BB10-EC9F542B9867}|Softbody\\Softbody.vcxproj|C:\\Users\\chris\\source\\repos\\SystemGL\\Softbody\\src.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{CA21375F-C287-49EB-BB10-EC9F542B9867}|Softbody\\Softbody.vcxproj|solutionrelative:Softbody\\src.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{E1A3E90A-0F25-44D5-A5E3-4476F44B9C4D}|SystemGL\\SystemGL.vcxproj|C:\\Users\\chris\\source\\repos\\SystemGL\\SystemGL\\src\\Source.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
-      "RelativeMoniker": "D:0:0:{E1A3E90A-0F25-44D5-A5E3-4476F44B9C4D}|SystemGL\\SystemGL.vcxproj|solutionrelative:SystemGL\\src\\Source.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+      "AbsoluteMoniker": "D:0:0:{8E183FF4-09C2-4DCC-A6F6-A26376C5551E}|SystemGLCore\\SystemGLCore.vcxproj|C:\\Users\\chris\\source\\repos\\SystemGL\\SystemGLCore\\src\\Simulation.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{8E183FF4-09C2-4DCC-A6F6-A26376C5551E}|SystemGLCore\\SystemGLCore.vcxproj|solutionrelative:SystemGLCore\\src\\Simulation.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{3D89EC3A-970C-ACAF-3171-B5649D46E1A4}|SystemGLTests\\SystemGLTests.vcxproj|C:\\Users\\chris\\source\\repos\\SystemGL\\SystemGLTests\\SystemGLTests.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
-      "RelativeMoniker": "D:0:0:{3D89EC3A-970C-ACAF-3171-B5649D46E1A4}|SystemGLTests\\SystemGLTests.vcxproj|solutionrelative:SystemGLTests\\SystemGLTests.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+      "AbsoluteMoniker": "D:0:0:{8E183FF4-09C2-4DCC-A6F6-A26376C5551E}|SystemGLCore\\SystemGLCore.vcxproj|C:\\Users\\chris\\source\\repos\\SystemGL\\SystemGLCore\\include\\System.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{8E183FF4-09C2-4DCC-A6F6-A26376C5551E}|SystemGLCore\\SystemGLCore.vcxproj|solutionrelative:SystemGLCore\\include\\System.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{E1A3E90A-0F25-44D5-A5E3-4476F44B9C4D}|SystemGL\\SystemGL.vcxproj|C:\\Users\\chris\\source\\repos\\SystemGL\\SystemGL\\src\\Shader.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
-      "RelativeMoniker": "D:0:0:{E1A3E90A-0F25-44D5-A5E3-4476F44B9C4D}|SystemGL\\SystemGL.vcxproj|solutionrelative:SystemGL\\src\\Shader.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+      "AbsoluteMoniker": "D:0:0:{8E183FF4-09C2-4DCC-A6F6-A26376C5551E}|SystemGLCore\\SystemGLCore.vcxproj|C:\\Users\\chris\\source\\repos\\SystemGL\\SystemGLCore\\include\\Interaction.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{8E183FF4-09C2-4DCC-A6F6-A26376C5551E}|SystemGLCore\\SystemGLCore.vcxproj|solutionrelative:SystemGLCore\\include\\Interaction.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{E1A3E90A-0F25-44D5-A5E3-4476F44B9C4D}|SystemGL\\SystemGL.vcxproj|C:\\Users\\chris\\source\\repos\\SystemGL\\SystemGL\\src\\Mesh.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
-      "RelativeMoniker": "D:0:0:{E1A3E90A-0F25-44D5-A5E3-4476F44B9C4D}|SystemGL\\SystemGL.vcxproj|solutionrelative:SystemGL\\src\\Mesh.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+      "AbsoluteMoniker": "D:0:0:{8E183FF4-09C2-4DCC-A6F6-A26376C5551E}|SystemGLCore\\SystemGLCore.vcxproj|C:\\Users\\chris\\source\\repos\\SystemGL\\SystemGLCore\\src\\System.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{8E183FF4-09C2-4DCC-A6F6-A26376C5551E}|SystemGLCore\\SystemGLCore.vcxproj|solutionrelative:SystemGLCore\\src\\System.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{E1A3E90A-0F25-44D5-A5E3-4476F44B9C4D}|SystemGL\\SystemGL.vcxproj|C:\\Users\\chris\\source\\repos\\SystemGL\\SystemGL\\src\\System.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
-      "RelativeMoniker": "D:0:0:{E1A3E90A-0F25-44D5-A5E3-4476F44B9C4D}|SystemGL\\SystemGL.vcxproj|solutionrelative:SystemGL\\src\\System.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{E1A3E90A-0F25-44D5-A5E3-4476F44B9C4D}|SystemGL\\SystemGL.vcxproj|C:\\Users\\chris\\source\\repos\\SystemGL\\SystemGL\\include\\System.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
-      "RelativeMoniker": "D:0:0:{E1A3E90A-0F25-44D5-A5E3-4476F44B9C4D}|SystemGL\\SystemGL.vcxproj|solutionrelative:SystemGL\\include\\System.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+      "AbsoluteMoniker": "D:0:0:{8E183FF4-09C2-4DCC-A6F6-A26376C5551E}|SystemGLCore\\SystemGLCore.vcxproj|C:\\Users\\chris\\source\\repos\\SystemGL\\SystemGLCore\\include\\Simulation.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{8E183FF4-09C2-4DCC-A6F6-A26376C5551E}|SystemGLCore\\SystemGLCore.vcxproj|solutionrelative:SystemGLCore\\include\\Simulation.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     }
   ],
   "DocumentGroupContainers": [
@@ -60,97 +56,88 @@
         },
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 2,
+          "SelectedChildIndex": 0,
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 1,
-              "Title": "Source.cpp",
-              "DocumentMoniker": "C:\\Users\\chris\\source\\repos\\SystemGL\\SystemGL\\src\\Source.cpp",
-              "RelativeDocumentMoniker": "SystemGL\\src\\Source.cpp",
-              "ToolTip": "C:\\Users\\chris\\source\\repos\\SystemGL\\SystemGL\\src\\Source.cpp",
-              "RelativeToolTip": "SystemGL\\src\\Source.cpp",
-              "ViewState": "AgIAAGsAAAAAAAAAAAAAAHMAAAAAAAAAAAAAAA==",
+              "DocumentIndex": 0,
+              "Title": "src.cpp",
+              "DocumentMoniker": "C:\\Users\\chris\\source\\repos\\SystemGL\\Softbody\\src.cpp",
+              "RelativeDocumentMoniker": "Softbody\\src.cpp",
+              "ToolTip": "C:\\Users\\chris\\source\\repos\\SystemGL\\Softbody\\src.cpp",
+              "RelativeToolTip": "Softbody\\src.cpp",
+              "ViewState": "AgIAADsAAAAAAAAAAAAkwEoAAAAfAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
-              "WhenOpened": "2026-01-21T02:07:47.526Z",
+              "WhenOpened": "2026-02-17T00:54:03.261Z",
               "IsPinned": true,
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 6,
-              "Title": "System.h",
-              "DocumentMoniker": "C:\\Users\\chris\\source\\repos\\SystemGL\\SystemGL\\include\\System.h",
-              "RelativeDocumentMoniker": "SystemGL\\include\\System.h",
-              "ToolTip": "C:\\Users\\chris\\source\\repos\\SystemGL\\SystemGL\\include\\System.h",
-              "RelativeToolTip": "SystemGL\\include\\System.h",
-              "ViewState": "AgIAAAMAAAAAAAAAAAA+wAAAAAAAAAAAAAAAAA==",
+              "DocumentIndex": 3,
+              "Title": "Interaction.h",
+              "DocumentMoniker": "C:\\Users\\chris\\source\\repos\\SystemGL\\SystemGLCore\\include\\Interaction.h",
+              "RelativeDocumentMoniker": "SystemGLCore\\include\\Interaction.h",
+              "ToolTip": "C:\\Users\\chris\\source\\repos\\SystemGL\\SystemGLCore\\include\\Interaction.h",
+              "RelativeToolTip": "SystemGLCore\\include\\Interaction.h",
+              "ViewState": "AgIAAFAAAAAAAAAAAAAQwGoAAAACAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
-              "WhenOpened": "2026-01-21T02:21:31.491Z",
-              "IsPinned": true
+              "WhenOpened": "2026-02-17T01:20:14.774Z",
+              "IsPinned": true,
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": "Simulation.h",
-              "DocumentMoniker": "C:\\Users\\chris\\source\\repos\\SystemGL\\SystemGL\\include\\Simulation.h",
-              "RelativeDocumentMoniker": "SystemGL\\include\\Simulation.h",
-              "ToolTip": "C:\\Users\\chris\\source\\repos\\SystemGL\\SystemGL\\include\\Simulation.h",
-              "RelativeToolTip": "SystemGL\\include\\Simulation.h",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAMAAAASAAAAAAAAAA==",
+              "DocumentIndex": 2,
+              "Title": "System.h",
+              "DocumentMoniker": "C:\\Users\\chris\\source\\repos\\SystemGL\\SystemGLCore\\include\\System.h",
+              "RelativeDocumentMoniker": "SystemGLCore\\include\\System.h",
+              "ToolTip": "C:\\Users\\chris\\source\\repos\\SystemGL\\SystemGLCore\\include\\System.h",
+              "RelativeToolTip": "SystemGLCore\\include\\System.h",
+              "ViewState": "AgIAAL0BAAAAAAAAAAAAAC0AAAADAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
-              "WhenOpened": "2026-01-21T02:21:28.755Z",
+              "WhenOpened": "2026-02-17T01:50:06.828Z",
               "IsPinned": true,
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "System.cpp",
+              "DocumentMoniker": "C:\\Users\\chris\\source\\repos\\SystemGL\\SystemGLCore\\src\\System.cpp",
+              "RelativeDocumentMoniker": "SystemGLCore\\src\\System.cpp",
+              "ToolTip": "C:\\Users\\chris\\source\\repos\\SystemGL\\SystemGLCore\\src\\System.cpp",
+              "RelativeToolTip": "SystemGLCore\\src\\System.cpp",
+              "ViewState": "AgIAADkAAAAAAAAAAAAowEUAAAADAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2026-02-17T01:39:43.301Z",
+              "IsPinned": true,
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "Simulation.cpp",
+              "DocumentMoniker": "C:\\Users\\chris\\source\\repos\\SystemGL\\SystemGLCore\\src\\Simulation.cpp",
+              "RelativeDocumentMoniker": "SystemGLCore\\src\\Simulation.cpp",
+              "ToolTip": "C:\\Users\\chris\\source\\repos\\SystemGL\\SystemGLCore\\src\\Simulation.cpp",
+              "RelativeToolTip": "SystemGLCore\\src\\Simulation.cpp",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAAAoAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2026-02-18T01:41:13.724Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 5,
-              "Title": "System.cpp",
-              "DocumentMoniker": "C:\\Users\\chris\\source\\repos\\SystemGL\\SystemGL\\src\\System.cpp",
-              "RelativeDocumentMoniker": "SystemGL\\src\\System.cpp",
-              "ToolTip": "C:\\Users\\chris\\source\\repos\\SystemGL\\SystemGL\\src\\System.cpp",
-              "RelativeToolTip": "SystemGL\\src\\System.cpp",
-              "ViewState": "AgIAAAQAAAAAAAAAAAAzwAwAAAARAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
-              "WhenOpened": "2026-01-31T00:08:37.036Z",
-              "IsPinned": true
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 3,
-              "Title": "Shader.cpp",
-              "DocumentMoniker": "C:\\Users\\chris\\source\\repos\\SystemGL\\SystemGL\\src\\Shader.cpp",
-              "RelativeDocumentMoniker": "SystemGL\\src\\Shader.cpp",
-              "ToolTip": "C:\\Users\\chris\\source\\repos\\SystemGL\\SystemGL\\src\\Shader.cpp",
-              "RelativeToolTip": "SystemGL\\src\\Shader.cpp",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAuwA4AAAABAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
-              "WhenOpened": "2026-01-31T00:32:37.05Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 4,
-              "Title": "Mesh.cpp",
-              "DocumentMoniker": "C:\\Users\\chris\\source\\repos\\SystemGL\\SystemGL\\src\\Mesh.cpp",
-              "RelativeDocumentMoniker": "SystemGL\\src\\Mesh.cpp",
-              "ToolTip": "C:\\Users\\chris\\source\\repos\\SystemGL\\SystemGL\\src\\Mesh.cpp",
-              "RelativeToolTip": "SystemGL\\src\\Mesh.cpp",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAIAAAATAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
-              "WhenOpened": "2026-01-31T00:28:16.148Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 2,
-              "Title": "SystemGLTests.cpp",
-              "DocumentMoniker": "C:\\Users\\chris\\source\\repos\\SystemGL\\SystemGLTests\\SystemGLTests.cpp",
-              "RelativeDocumentMoniker": "SystemGLTests\\SystemGLTests.cpp",
-              "ToolTip": "C:\\Users\\chris\\source\\repos\\SystemGL\\SystemGLTests\\SystemGLTests.cpp",
-              "RelativeToolTip": "SystemGLTests\\SystemGLTests.cpp",
-              "ViewState": "AgIAAAgAAAAAAAAAAAAswAkAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
-              "WhenOpened": "2026-01-30T23:59:01.599Z",
+              "Title": "Simulation.h",
+              "DocumentMoniker": "C:\\Users\\chris\\source\\repos\\SystemGL\\SystemGLCore\\include\\Simulation.h",
+              "RelativeDocumentMoniker": "SystemGLCore\\include\\Simulation.h",
+              "ToolTip": "C:\\Users\\chris\\source\\repos\\SystemGL\\SystemGLCore\\include\\Simulation.h",
+              "RelativeToolTip": "SystemGLCore\\include\\Simulation.h",
+              "ViewState": "AgIAAAQAAAAAAAAAAAAzwBAAAAAWAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
+              "WhenOpened": "2026-02-17T01:53:49.077Z",
               "EditorCaption": ""
             }
           ]

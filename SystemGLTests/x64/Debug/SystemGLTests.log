@@ -1,5 +1,114 @@
 ﻿  pch.cpp
   glad.c
   SystemGLTests.cpp
-     Creating library C:\Users\chris\source\repos\SystemGL\x64\Debug\SystemGLTests.lib and object C:\Users\chris\source\repos\SystemGL\x64\Debug\SystemGLTests.exp
-  SystemGLTests.vcxproj -> C:\Users\chris\source\repos\SystemGL\x64\Debug\SystemGLTests.dll
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_filebuf.hpp(27,1): error C2059: syntax error: 'string'
+  (compiling source file '/SystemGLTests.cpp')
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_filebuf.hpp(27,1): error C2334: unexpected token(s) preceding '{'; skipping apparent function body
+  (compiling source file '/SystemGLTests.cpp')
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\istream(19,1): error C2059: syntax error: 'string'
+  (compiling source file '/SystemGLTests.cpp')
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\istream(19,1): error C2334: unexpected token(s) preceding '{'; skipping apparent function body
+  (compiling source file '/SystemGLTests.cpp')
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\fstream(20,1): error C2059: syntax error: 'string'
+  (compiling source file '/SystemGLTests.cpp')
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\fstream(20,1): error C2334: unexpected token(s) preceding '{'; skipping apparent function body
+  (compiling source file '/SystemGLTests.cpp')
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\iostream(19,1): error C2059: syntax error: 'string'
+  (compiling source file '/SystemGLTests.cpp')
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\iostream(19,1): error C2334: unexpected token(s) preceding '{'; skipping apparent function body
+  (compiling source file '/SystemGLTests.cpp')
+  
+C:\Users\chris\source\repos\SystemGL\SystemGL\include\Simulation.h(31,16): error C2079: 'UniversalInteraction::Simulation::in' uses undefined class 'std::basic_ifstream<char,std::char_traits<char>>'
+  (compiling source file '/SystemGLTests.cpp')
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\sstream(19,1): error C2059: syntax error: 'string'
+  (compiling source file '/SystemGLTests.cpp')
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\sstream(19,1): error C2334: unexpected token(s) preceding '{'; skipping apparent function body
+  (compiling source file '/SystemGLTests.cpp')
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Auxiliary\VS\UnitTest\include\CppUnitTestAssert.h(45,1): error C2059: syntax error: 'namespace'
+  (compiling source file '/SystemGLTests.cpp')
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Auxiliary\VS\UnitTest\include\CppUnitTestAssert.h(45,20): error C2334: unexpected token(s) preceding '{'; skipping apparent function body
+  (compiling source file '/SystemGLTests.cpp')
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Auxiliary\VS\UnitTest\include\CppUnitTestLogger.h(14,1): error C2059: syntax error: 'namespace'
+  (compiling source file '/SystemGLTests.cpp')
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Auxiliary\VS\UnitTest\include\CppUnitTestLogger.h(14,20): error C2334: unexpected token(s) preceding '{'; skipping apparent function body
+  (compiling source file '/SystemGLTests.cpp')
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Auxiliary\VS\UnitTest\include\CppUnitTest.h(272,1): error C2059: syntax error: 'namespace'
+  (compiling source file '/SystemGLTests.cpp')
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Auxiliary\VS\UnitTest\include\CppUnitTest.h(272,20): error C2334: unexpected token(s) preceding '{'; skipping apparent function body
+  (compiling source file '/SystemGLTests.cpp')
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_heap_algorithms.hpp(20,1): error C2059: syntax error: 'string'
+  (compiling source file '/SystemGLTests.cpp')
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_heap_algorithms.hpp(20,1): error C2334: unexpected token(s) preceding '{'; skipping apparent function body
+  (compiling source file '/SystemGLTests.cpp')
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_minmax.hpp(19,8): error C2059: syntax error: 'string'
+  (compiling source file '/SystemGLTests.cpp')
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_minmax.hpp(19,12): error C2334: unexpected token(s) preceding '{'; skipping apparent function body
+  (compiling source file '/SystemGLTests.cpp')
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\algorithm(33,8): error C2059: syntax error: 'string'
+  (compiling source file '/SystemGLTests.cpp')
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\algorithm(33,12): error C2334: unexpected token(s) preceding '{'; skipping apparent function body
+  (compiling source file '/SystemGLTests.cpp')
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\algorithm(115,1): error C2059: syntax error: 'string'
+  (compiling source file '/SystemGLTests.cpp')
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\algorithm(115,1): error C2334: unexpected token(s) preceding '{'; skipping apparent function body
+  (compiling source file '/SystemGLTests.cpp')
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\algorithm(389,1): error C2059: syntax error: 'string'
+  (compiling source file '/SystemGLTests.cpp')
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\algorithm(389,1): error C2334: unexpected token(s) preceding '{'; skipping apparent function body
+  (compiling source file '/SystemGLTests.cpp')
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xtree(23,1): error C2059: syntax error: 'string'
+  (compiling source file '/SystemGLTests.cpp')
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xtree(23,1): error C2334: unexpected token(s) preceding '{'; skipping apparent function body
+  (compiling source file '/SystemGLTests.cpp')
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\map(24,1): error C2059: syntax error: 'string'
+  (compiling source file '/SystemGLTests.cpp')
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\map(24,1): error C2334: unexpected token(s) preceding '{'; skipping apparent function body
+  (compiling source file '/SystemGLTests.cpp')
+  
+C:\Users\chris\source\repos\SystemGL\SystemGLTests\SystemGLTests.cpp(10,1): error C2059: syntax error: 'using namespace'
+  (compiling source file '/SystemGLTests.cpp')
+  
+C:\Users\chris\source\repos\SystemGL\SystemGLTests\SystemGLTests.cpp(10,17): error C2653: 'Microsoft': is not a class or namespace name
+  (compiling source file '/SystemGLTests.cpp')
+  
+C:\Users\chris\source\repos\SystemGL\SystemGLTests\SystemGLTests.cpp(10,62): error C2238: unexpected token(s) preceding ';'
+  (compiling source file '/SystemGLTests.cpp')
+  
+C:\Users\chris\source\repos\SystemGL\SystemGLTests\SystemGLTests.cpp(12,1): error C2059: syntax error: 'namespace'
+  (compiling source file '/SystemGLTests.cpp')
+  
+C:\Users\chris\source\repos\SystemGL\SystemGLTests\SystemGLTests.cpp(12,21): error C2334: unexpected token(s) preceding '{'; skipping apparent function body
+  (compiling source file '/SystemGLTests.cpp')
+  
+C:\Users\chris\source\repos\SystemGL\SystemGL\include\Interaction.h(75,28): error C1075: '{': no matching token found
+  (compiling source file '/SystemGLTests.cpp')
+  

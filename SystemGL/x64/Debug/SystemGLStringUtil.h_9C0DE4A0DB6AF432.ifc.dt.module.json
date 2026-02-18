@@ -1,0 +1,22 @@
+{
+    "version": 1,
+    "revision": 0,
+    "rules": [
+        {
+            "primary-output": "x64\\Debug\\SystemGLStringUtil.obj",
+            "outputs": [
+                "x64\\Debug\\SystemGLStringUtil.h_9C0DE4A0DB6AF432.ifc.dt.module.json",
+                "x64\\Debug\\SystemGLStringUtil.h_9C0DE4A0DB6AF432.ifc.dt.d.json",
+                "x64\\Debug\\SystemGLStringUtil.h.ifc"
+            ],
+            "provides": [
+                {
+                    "logical-name": "C:\\Users\\chris\\source\\repos\\SystemGL\\SystemGL\\include\\SystemGLStringUtil.h",
+                    "source-path": "c:\\users\\chris\\source\\repos\\systemgl\\systemgl\\include\\systemglstringutil.h",
+                    "lookup-method": "absolute"
+                }
+            ],
+            "requires": []
+        }
+    ]
+}

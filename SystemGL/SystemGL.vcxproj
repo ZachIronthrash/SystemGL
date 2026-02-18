@@ -137,17 +137,30 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\external\glad\src\glad.c" />
+    <ClCompile Include="include\SystemGLStringUtil.h" />
     <ClCompile Include="src\Mesh.cpp" />
+    <ClCompile Include="src\Particle.cpp" />
+    <ClCompile Include="src\PressureSimulation.cpp" />
+    <ClCompile Include="src\PressureSystem.cpp" />
     <ClCompile Include="src\Shader.cpp" />
     <ClCompile Include="src\Simulation.cpp" />
     <ClCompile Include="src\Source.cpp" />
+    <ClCompile Include="src\StateIO.cpp" />
     <ClCompile Include="src\System.cpp" />
+    <ClCompile Include="src\SystemGLMath.cpp" />
+    <ClCompile Include="src\SystemGLStringUtil.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\Interaction.h" />
     <ClInclude Include="include\Mesh.h" />
+    <ClInclude Include="include\Particle.h" />
+    <ClInclude Include="include\PressureSimulation.h" />
+    <ClInclude Include="include\PressureSystem.h" />
     <ClInclude Include="include\Shader.h" />
     <ClInclude Include="include\Simulation.h" />
+    <ClInclude Include="include\StateIO.h" />
     <ClInclude Include="include\System.h" />
+    <ClInclude Include="include\SystemGLMath.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="data\impulse_readout.txt" />
@@ -155,7 +168,6 @@
     <Text Include="data\simulation.txt" />
     <Text Include="data\simulation1 - simple_gravity_system.txt" />
     <Text Include="data\simulation2 - particles_in_a_box.txt" />
-    <Text Include="data\simulation_state.txt" />
     <Text Include="data\systemData.txt" />
     <Text Include="data\systemData1 - nested systems with particles.txt" />
     <Text Include="data\velocity.txt" />
@@ -163,6 +175,11 @@
   <ItemGroup>
     <None Include="fragment.glsl" />
     <None Include="vertex.glsl" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SystemGLCore\SystemGLCore.vcxproj">
+      <Project>{8e183ff4-09c2-4dcc-a6f6-a26376c5551e}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

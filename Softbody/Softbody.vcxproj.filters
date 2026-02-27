@@ -23,7 +23,9 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="vertex.glsl" />
-    <None Include="fragment.glsl" />
+    <None Include="light_cube.vs" />
+    <None Include="light_cube.fs" />
+    <None Include="colors.vs" />
+    <None Include="colors.fs" />
   </ItemGroup>
 </Project>

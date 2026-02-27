@@ -1,10 +1,10 @@
 #pragma once
 #include "Particle.h"
 #include "SystemGLMath.h"
-#include <functional>
 #include <iostream>
 #include <memory>
 #include <ostream>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -20,7 +20,7 @@ public:
 	}
 	virtual vec3 velocityGradientOverM(vec3 deltaV, long double mass) {
 		std::cout << "YOUR FEARS WILL BE REALISED" << std::endl;
-		return strength * deltaV / mass; 
+		return strength * deltaV / mass;
 	}
 
 	virtual bool operator==(const Potential&) const = default;
@@ -29,23 +29,9 @@ private:
 	long double strength = 1.0l;
 };
 
-//class ElasticPotential : public Potential {
-//public:
-//	ElasticPotential(long double k, long double equilibriumDisplacement) : k(k), equilibriumDisplacement(equilibriumDisplacement) {}
-//
-//	vec3 gradient(vec3 displacement, vec3 velocity, long double time) override {
-//		vec3 gradient = k * displacement.normalized() * (displacement.magnitude() - equilibriumDisplacement);
-//		std::cout << "gradient = " << gradient << std::endl;
-//		return gradient;
-//	}
-//
-//private:
-//	long double equilibriumDisplacement = 0.0l;
-//	long double k = 1.0l;
-//};
-class ElasticPotential : public Potential {
+class DampedHarmonicOscillator : public Potential {
 public:
-	ElasticPotential(long double equilibriumDisplacement, long double k, long double b) : b(b), k(k), equilibriumDisplacement(equilibriumDisplacement) {}
+	DampedHarmonicOscillator(long double equilibriumDisplacement, long double k, long double b) : b(b), k(k), equilibriumDisplacement(equilibriumDisplacement) {}
 
 	vec3 positionGradientOverM(vec3 displacement, long double mass) override {
 		vec3 gradient = k * displacement.normalized() * (displacement.magnitude() - equilibriumDisplacement) / mass;
@@ -111,7 +97,7 @@ public:
 
 		vec3 velGrad1 = V->velocityGradientOverM(-deltaV, first().getMass());
 		vec3 velGrad2 = V->velocityGradientOverM(deltaV, second().getMass());
-		
+
 		/*if (velGrad1 != vec3(0)) {
 			std::cout << velGrad1 << std::endl;
 		}*/

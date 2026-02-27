@@ -18,8 +18,9 @@
 */
 class System {
 public:
-
-	// CONSTRUCTORS
+	/*
+	* CONSTRUCTORS
+	*/
 
 	/*
 	* default constructor
@@ -30,7 +31,9 @@ public:
 	*/
 	System();
 
-	// ADDERS/CREATORS
+	/*
+	* ADDERS/CREATORS
+	*/
 
 	/*
 	* appends particle to particles
@@ -46,14 +49,20 @@ public:
 	*/
 	virtual void addParticle(Particle& particle);
 
-	virtual void createParticle(vec3 position, vec3 velocity, long double mass, long double t = 0.0l, long double dt = 0.001l) {
-		particles.push_back(*new Particle(position, velocity, mass, t, dt));
-	}
-	//virtual void addParticle(std::unique_ptr<Particle> particle);
+	virtual void createParticle(vec3 position, vec3 velocity, long double mass, long double t = 0.0l, long double dt = 0.001l);
 
-	virtual void addSubsystem(std::shared_ptr<System> sub) {
-		subsystems.push_back(sub);
-	}
+	virtual void addSubsystem(std::shared_ptr<System> sub);
+
+	virtual void createInteraction(std::shared_ptr<Potential> V, Particle& p1, Particle& p2);
+	virtual void createUniversalInteraction(std::shared_ptr<Potential> V);
+
+	virtual void interconnectWithPotential(std::shared_ptr<Potential> V);
+
+	virtual void addParticle2Universal(int uIndex, int pIndex);
+
+	/*
+	*  GETTERS
+	*/
 
 	/*
 	* returns the number of particles in particles
@@ -78,42 +87,23 @@ public:
 	*/
 	virtual Particle& getParticle(int i);
 	//virtual std::unique_ptr<Particle> getParticlePtr(int i);
-	
-	///*
-	//* returns the current time
-	//*
-	//* @return time
-	//*/
-	//virtual long double getTime();
-	///* returns the current delta-time
-	//*
-	//* @return dt
-	//*/
-	//virtual long double getDt();
 
-	///*
-	//* sets time to given value
-	//*
-	//* @param time - the time to set
-	//*
-	//* @ensures this->time = time
-	//*/
-	//virtual void setTime(long double time);
-	///*
-	//* sets dt to given value
-	//*
-	//* @param dt - the dt to set
-	//*
-	//* @ensures this->dt = dt
-	//*/
-	//virtual void setDt(long double dt);
+	/*
+	*  CHECKERS
+	*/
 
-	///*
-	//* pushes time foward by dt
-	//*
-	//* @ensures time = #time + dt
-	//*/
-	//virtual void timeStep();
+	virtual bool interactionExists(Potential V, Particle& p1, Particle& p2);
+	virtual bool universalInteractionExists(Potential V);
+
+	virtual void updateUniversalInteractions();
+
+	virtual bool hasParticle(Particle& ref);
+
+	virtual bool hasParticleInSubsystems(Particle& ref);
+
+	/*
+	*  TRANSFORMATIONS
+	*/
 
 	/*
 	* follows a simple kinematics scheme to evolve the particles in the system
@@ -136,78 +126,8 @@ public:
 	* @ensures mesh is drawn to screen at correct position with the supplied shader
 	* @ensures particle is only drawn if particle.index % fidelity = 0
 	*/
-	virtual void drawSystemParticles(Shader& shader, Mesh& mesh, unsigned fidelity = 1, vec3 offset = 0.0l);
-
-	virtual void createInteraction(std::shared_ptr<Potential> V, Particle& p1, Particle& p2) {
-		if (interactionExists(*V, p1, p2)) {
-			throw std::invalid_argument("Interaction with particle pair already exists");
-		}
-
-		interactions.push_back(Interaction(p1, p2, V));
-	}
-	virtual void createUniversalInteraction(std::shared_ptr<Potential> V) {
-		if (universalInteractionExists(*V)) {
-			throw std::invalid_argument("Universal interaction already contained in system");
-		}
-
-		universalInteractions.push_back(UniversalInteraction(particles, V));
-		/*for (size_t i = 0; i < particles.size(); i++) {
-			universalInteractions.push_back(std::ref(*particles.back()[i]));
-		}*/
-	}
-
-	virtual bool interactionExists(Potential V, Particle& p1, Particle& p2) {
-		for (Interaction interaction : interactions) {
-			if (interaction.isInteraction(V, p1, p2)) {
-				//std::cout << "TRUE" << std::endl;
-				return true;
-			}
-		}
-		//std::cout << "FALSE" << std::endl;
-		return false;
-	}
-	virtual bool universalInteractionExists(Potential V) {
-		for (UniversalInteraction interaction : universalInteractions) {
-			if (interaction.hasPotential(V)) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	virtual void updateUniversalInteractions() {
-		updateUniversalInteractions(universalInteractions);
-	}
-
-	virtual void interconnectWithPotential(std::shared_ptr<Potential> V) {
-		for (size_t i = 0; i < particles.size(); i++) {
-			for (size_t j = i + 1; j < particles.size(); j++) {
-				createInteraction(V, particles[i], particles[j]);
-			}
-		}
-	}
-
-	virtual void addParticle2Universal(int uIndex, int pIndex) {
-		universalInteractions[uIndex].addPart(particles[pIndex]);
-	}
-
-	virtual bool hasParticle(Particle& ref) {
-		for (Particle& p : particles) {
-			if (ref == p) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	virtual bool hasParticleInSubsystems(Particle& ref) {
-		for (const std::shared_ptr<System> sub : subsystems) {
-			if (sub->hasParticle(ref) || sub->hasParticleInSubsystems(ref)) {
-				return true;
-			}
-		}
-		return false;
-	}
+	// virtual void drawSystemParticles(Shader& shader, Mesh& mesh, unsigned fidelity = 1, vec3 offset = 0.0l);
+	virtual void drawSystemParticles(Shader& objectShader, Shader& lightingShader, Mesh& mesh, float particleScale = 0.01, unsigned fidelity = 1, vec3 offset = 0.0l);
 
 	/*virtual void apply(Particle& p, long double dt) {
 		for (Interaction& i : interactions) {
@@ -312,69 +232,6 @@ protected:
 			vec3 newP = pos;
 			vec3 newV = vel;
 
-			/*while (abs(newP.x) > boxSize.x || abs(newP.y) > boxSize.y || abs(newP.z) > boxSize.z) {
-				vec3 difference = vec3(0);
-				long double wallDt = 0.0l;
-
-				if (abs(pos.x) > boxSize.x) {
-					difference.x = abs(pos.x) - boxSize.x;
-					newV.x = -newV.x;
-				}
-				if (abs(pos.y) > boxSize.y) {
-					difference.y = abs(pos.y) - boxSize.y;
-					newV.y = -newV.y;
-				}
-				if (abs(pos.z) > boxSize.z) {
-					difference.z = abs(pos.z) - boxSize.z;
-					newV.z = -newV.z;
-				}
-
-				if (pos.x > boxSize.x) {
-					newP.x = boxSize.x;
-				}
-				else if (pos.x < -boxSize.x) {
-					newP.x = -boxSize.x;
-				}
-				if (pos.y > boxSize.y) {
-					newP.y = boxSize.y;
-				}
-				else if (pos.y < -boxSize.y) {
-					newP.y = -boxSize.y;
-				}
-				if (pos.z > boxSize.z) {
-					newP.z = boxSize.z;
-				}
-				else if (pos.z < -boxSize.z) {
-					newP.z = -boxSize.z;
-				}
-
-				int i = 0;
-				if (difference.x != 0.0l) {
-					wallDt += difference.x / abs(vel.x);
-					i++;
-				}
-				if (difference.y != 0.0l) {
-					wallDt += difference.y / abs(vel.y);
-					i++;
-				}
-				if (difference.z != 0.0l) {
-					wallDt += difference.z / abs(vel.z);
-					i++;
-				}
-				if (i != 0) {
-					wallDt /= i;
-				}
-
-				part.setPosition(newP);
-				part.setVelocity(newV);
-
-				apply(part, wallDt);
-
-				part.translateBy(wallDt * part.getVelocity());
-			}*/
-
-			//std::cout << "E after" << part.calcKE() << std::endl;
-
 			if (pos.x > boxSize.x) {
 				long double difference = pos.x - boxSize.x;
 
@@ -473,7 +330,7 @@ public:
 
 				//std::cout << "d = " << d << std::endl;
 
-				auto pot = std::make_shared<ElasticPotential>(d, k, b);
+				auto pot = std::make_shared<DampedHarmonicOscillator>(d, k, b);
 
 				if (abs(d) <= connectionSeparation && !interactionExists(*pot, p1, p2)) {
 					//std::cout << "created interaction" << std::endl;
@@ -485,73 +342,7 @@ public:
 
 	}
 	void evolve() override {
-		//// Evolve particles
-		//try {
-		//	for (Interaction i : interactions) {
-		//		i.apply();
-		//	}
-		//	for (UniversalInteraction u : universalInteractions) {
-		//		u.apply();
-		//	}
-
-		//	//for (/*std::unique_ptr<Particle>*/Particle& particle : particles) {
-		//	//	particle.get().translateBy(dt * particle.get().getVelocity());
-		//	//}
-		//	for (size_t i = 0; i < particles.size(); i++) {
-		//		Particle& p = particles[i].get();
-		//		particles[i].get().translateBy(p.getDt() * p.getVelocity());
-
-		//		if (!hasParticleInSubsystems(p)) {
-		//			p.pushTime();
-		//		}
-		//	}
-
-		//	for (std::shared_ptr<System> sub : subsystems) {
-		//		sub->evolve();
-		//	}
-		//}
-		//catch (std::exception& e) {
-		//	std::cerr << "Error during particle evolution: " << e.what() << std::endl;
-		//}
-
-		// Evolve particles
-		
 		BoundedSystem::evolve();
-
-		//try {
-		//	for (Interaction& i : interactions) {
-		//		i.apply();
-		//	}
-		//	for (UniversalInteraction& u : universalInteractions) {
-		//		u.apply();
-		//	}
-
-		//	//for (/*std::unique_ptr<Particle>*/Particle& particle : particles) {
-		//	//	particle.get().translateBy(dt * particle.get().getVelocity());
-		//	//}
-		//	for (size_t i = 0; i < particles.size(); i++) {
-		//		Particle& p = particles[i].get();
-		//		particles[i].get().translateBy(p.getDt() * p.getVelocity());
-
-		//		if (!hasParticleInSubsystems(p)) {
-		//			p.pushTime();
-		//		}
-		//	}
-
-		//	reflectParticles(particles);
-
-		//	for (std::shared_ptr<System> sub : subsystems) {
-		//		sub->evolve();
-		//		// only goes down the one level if sub isn't a BoundedSystem
-		//		reflectParticles(sub->getParticles());
-		//	}
-		//}
-		//catch (std::exception& e) {
-		//	std::cerr << "Error during particle evolution: " << e.what() << std::endl;
-		//}
-
-		// step time once after all evolutions are complete
-		//timeStep();
 	}
 };
 

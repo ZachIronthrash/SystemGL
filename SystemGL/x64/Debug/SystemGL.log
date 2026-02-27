@@ -1,2 +1,19 @@
 ﻿  Scanning sources for module dependencies...
+  SystemGLStringUtil.h
+  Compiling...
+  SystemGLStringUtil.h
+  glad.c
+  Mesh.cpp
+  Particle.cpp
+  PressureSimulation.cpp
+  PressureSystem.cpp
+  Shader.cpp
+  Simulation.cpp
+  Source.cpp
+  StateIO.cpp
+  System.cpp
+  SystemGLMath.cpp
+  SystemGLStringUtil.cpp
+  Generating Code...
+LINK : warning LNK4098: defaultlib 'MSVCRT' conflicts with use of other libs; use /NODEFAULTLIB:library
   SystemGL.vcxproj -> C:\Users\chris\source\repos\SystemGL\x64\Debug\SystemGL.exe

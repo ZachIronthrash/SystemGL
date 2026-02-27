@@ -1,2 +1,7 @@
-﻿  Simulation.cpp
+﻿  Mesh.cpp
+  PressureSimulation.cpp
+  PressureSystem.cpp
+  Simulation.cpp
+  System.cpp
+  Generating Code...
   SystemGLCore.vcxproj -> C:\Users\chris\source\repos\SystemGL\x64\Debug\SystemGLCore.lib

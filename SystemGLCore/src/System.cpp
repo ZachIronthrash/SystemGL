@@ -21,6 +21,44 @@ void System::addParticle(Particle& particle) {
 //	//particles.push_back(std::ref(*ownedParticles.back()));
 //}
 
+void System::createParticle(vec3 position, vec3 velocity, long double mass, long double t, long double dt) {
+	particles.push_back(*new Particle(position, velocity, mass, t, dt));
+}
+
+void System::addSubsystem(std::shared_ptr<System> sub) {
+	subsystems.push_back(sub);
+}
+
+void System::createInteraction(std::shared_ptr<Potential> V, Particle& p1, Particle& p2) {
+	if (interactionExists(*V, p1, p2)) {
+		throw std::invalid_argument("Interaction with particle pair already exists");
+	}
+
+	interactions.push_back(Interaction(p1, p2, V));
+}
+void System::createUniversalInteraction(std::shared_ptr<Potential> V) {
+	if (universalInteractionExists(*V)) {
+		throw std::invalid_argument("Universal interaction already contained in system");
+	}
+
+	universalInteractions.push_back(UniversalInteraction(particles, V));
+	/*for (size_t i = 0; i < particles.size(); i++) {
+		universalInteractions.push_back(std::ref(*particles.back()[i]));
+	}*/
+}
+
+void System::interconnectWithPotential(std::shared_ptr<Potential> V) {
+	for (size_t i = 0; i < particles.size(); i++) {
+		for (size_t j = i + 1; j < particles.size(); j++) {
+			createInteraction(V, particles[i], particles[j]);
+		}
+	}
+}
+
+void System::addParticle2Universal(int uIndex, int pIndex) {
+	universalInteractions[uIndex].addPart(particles[pIndex]);
+}
+
 size_t System::numberOfParticles() {
 	return particles.size();
 }
@@ -36,28 +74,47 @@ Particle& System::getParticle(int i) {
 	//return std::ref(*particles[i]);
 	return particles[i];
 }
-//std::unique_ptr<Particle> System::getParticlePtr(int i) {
-//	return std::move(particles[i]);
-//}
-//long double System::getTime() {
-//	return time;
-//}
-//long double System::getDt() {
-//	return dt;
-//}
 
-// setters
-//void System::setTime(long double time) {
-//	time = time;
-//}
-//void System::setDt(long double dt) {
-//	this->dt = dt;
-//}
-//
-//void System::timeStep() {
-//	step++;
-//	time += dt;
-//};
+bool System::interactionExists(Potential V, Particle& p1, Particle& p2) {
+	for (Interaction interaction : interactions) {
+		if (interaction.isInteraction(V, p1, p2)) {
+			//std::cout << "TRUE" << std::endl;
+			return true;
+		}
+	}
+	//std::cout << "FALSE" << std::endl;
+	return false;
+}
+bool System::universalInteractionExists(Potential V) {
+	for (UniversalInteraction interaction : universalInteractions) {
+		if (interaction.hasPotential(V)) {
+			return true;
+		}
+	}
+	return false;
+}
+
+void System::updateUniversalInteractions() {
+	updateUniversalInteractions(universalInteractions);
+}
+
+bool System::hasParticle(Particle& ref) {
+	for (Particle& p : particles) {
+		if (ref == p) {
+			return true;
+		}
+	}
+	return false;
+}
+
+bool System::hasParticleInSubsystems(Particle& ref) {
+	for (const std::shared_ptr<System> sub : subsystems) {
+		if (sub->hasParticle(ref) || sub->hasParticleInSubsystems(ref)) {
+			return true;
+		}
+	}
+	return false;
+}
 
 void System::evolve() {
 	// Evolve particles
@@ -106,16 +163,37 @@ void System::evolve() {
 	//timeStep();
 }
 
-void System::drawSystemParticles(Shader& shader, Mesh& mesh, unsigned fidelity, vec3 offset) {
+//void System::drawSystemParticles(Shader& shader, Mesh& mesh, unsigned fidelity, vec3 offset) {
+//	//int i = 0;
+//	/*for (Particle particle : particles) {*/
+//	for (size_t i = 0; i < particles.size(); i++) {
+// 		if (i % fidelity == 0) {
+//			glm::mat4 model = glm::mat4(1.0f);
+//			vec3 particlePos = particles[i].get().getPosition();
+//			model = glm::translate(model, glm::vec3(particlePos.x + offset.x, particlePos.y + offset.y, particlePos.z + offset.z));
+//			shader.setMat4("model", model);
+//			mesh.draw(shader);
+//			//std::cout << i << std::endl;
+//		}
+//		//i++;
+//	}
+//}
+
+void System::drawSystemParticles(Shader& objectShader, Shader& lightingShader, Mesh& mesh, float particleScale, unsigned fidelity, vec3 offset) {
 	//int i = 0;
 	/*for (Particle particle : particles) {*/
 	for (size_t i = 0; i < particles.size(); i++) {
- 		if (i % fidelity == 0) {
+	 	if (i % fidelity == 0) {
 			glm::mat4 model = glm::mat4(1.0f);
 			vec3 particlePos = particles[i].get().getPosition();
 			model = glm::translate(model, glm::vec3(particlePos.x + offset.x, particlePos.y + offset.y, particlePos.z + offset.z));
-			shader.setMat4("model", model);
-			mesh.draw(shader);
+			model = glm::scale(model, glm::vec3(particleScale));
+			model = glm::rotate(model, glm::radians(45.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+			model = glm::rotate(model, glm::radians(45.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+			//shader.setMat4("model", model);
+			//mesh.draw(shader);
+			objectShader.setMat4("model", model);
+			mesh.draw(objectShader);
 			//std::cout << i << std::endl;
 		}
 		//i++;

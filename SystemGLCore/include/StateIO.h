@@ -15,6 +15,10 @@ using namespace std;
 string trim(string s);
 string extract_between(const string& s, const string& open, const string& close);
 
+struct state {
+
+};
+
 struct stateData {
 private:
 	/* internal representation as a map
@@ -26,11 +30,14 @@ private:
 	map<string, unsigned> uState;
 	map<string, long double> ldState;
 	map<string, vec3> vState;
+	map<string, string> strState;
 public:
 	stateData() {};
 	stateData(map<string, unsigned> uState,
 		map<string, long double> ldState,
-		map<string, vec3> vState) : uState(uState), ldState(ldState), vState(vState) {
+		map<string, vec3> vState,
+		map<string, string> strState) : 
+		uState(uState), ldState(ldState), vState(vState), strState(strState) {
 	}
 
 	void add(const string& name, auto value) {
@@ -48,6 +55,9 @@ public:
 		}
 		else if constexpr (is_same_v<decltype(value), vec3>) {
 			vState[name] = value;
+		}
+		else if constexpr (is_same_v<decltype(value), string>) {
+			strState[name] = value;
 		}
 	}
 
@@ -85,6 +95,16 @@ public:
 				}
 			}
 		}
+		else if constexpr (is_same_v<T, string>) {
+			if (strState.size()) {
+				auto it = strState.begin();
+				if (it != strState.end()) {
+					pair.first = it->first;
+					pair.second = it->second;
+					strState.erase(it);
+				}
+			}
+		}
 
 		return pair;
 	}
@@ -99,6 +119,9 @@ public:
 		}
 		else if constexpr (is_same_v<T, vec3>) {
 			return vState.size();
+		}
+		else if constexpr (is_same_v<T, string>) {
+			return strState.size();
 		}
 	}
 
@@ -125,6 +148,13 @@ public:
 				out = state;
 			}
 		}
+		else if constexpr (is_same_v<T, string>) {
+			if (strState.find(name) != strState.end()) {
+				string state = strState[name];
+				strState.erase(name);
+				out = state;
+			}
+		}
 	}
 
 	bool contains(const string& name) {
@@ -135,6 +165,9 @@ public:
 			if (state.first == name) return true;
 		}
 		for (pair<string, vec3> state : vState) {
+			if (state.first == name) return true;
+		}
+		for (pair<string, string> state : strState) {
 			if (state.first == name) return true;
 		}
 		return false;
@@ -150,6 +183,9 @@ public:
 		}
 		else if constexpr (is_same_v<T, vec3>) {
 			vState.clear();
+		}
+		else if constexpr (is_same_v<T, string>) {
+			strState.clear();
 		}
 	}
 
@@ -199,6 +235,12 @@ public:
 		}
 		throw runtime_error("Vec3 state with name '" + name + "' does not exist.");
 	}
+	string fetchString(const string& name) {
+		if (strState.find(name) != strState.end()) {
+			return strState[name];
+		}
+		throw runtime_error("Vec3 state with name '" + name + "' does not exist.");
+	}
 
 	// friend class SimState;
 };
@@ -210,7 +252,9 @@ public:
 
 	StateIO(string f, map<string, unsigned> uStates = map<string, unsigned>(),
 		map<string, long double> ldStates = map<string, long double>(),
-		map<string, vec3> vStates = map<string, vec3>()) : file(f), states(stateData(uStates, ldStates, vStates)) {
+		map<string, vec3> vStates = map<string, vec3>(),
+		map<string, string> strStates = map<string, string>()) : 
+		file(f), states(stateData(uStates, ldStates, vStates, strStates)) {
 	}
 
 	void outputStatesToFile() {
@@ -233,6 +277,10 @@ public:
 		while (states.size<vec3>() > 0) {
 			pair<string, vec3> state = states.removeAny<vec3>();
 			o << "Vec3 - " << state.first << ": " << state.second << ";" << endl;
+		}
+		while (states.size<string>() > 0) {
+			pair<string, string> state = states.removeAny<string>();
+			o << "String - " << state.first << ": " << state.second << ";" << endl;
 		}
 
 		/*for (const auto& [key, value] : states.uState) {
@@ -276,6 +324,11 @@ public:
 
 				states.add(key, vec3(x, y, z));
 			}
+			else if (line.find("String - ") != string::npos) {
+				string key = extract_between(line, "String - ", ": ");
+				string value = extract_between(line, ": ", ";");
+				states.add(key, value);
+			}
 		}
 		i.close();
 	}
@@ -284,6 +337,7 @@ public:
 		states.clear<unsigned>();
 		states.clear<long double>();
 		states.clear<vec3>();
+		states.clear<string>();
 	}
 
 	~StateIO() {}

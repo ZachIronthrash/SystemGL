@@ -197,7 +197,7 @@ int main() {
 
 	chrono::high_resolution_clock::time_point totalRenderTime = chrono::high_resolution_clock::now();
 
-	chrono::milliseconds spaceBuffer(250);
+	chrono::milliseconds SPACE_BUFFER(250);
 
 	// init simulation
 	// ---------------
@@ -435,7 +435,7 @@ int main() {
 
 			//    PAUSE = true;
 			//}
-			if (KEY_SPACE && chrono::high_resolution_clock::now() - prevSpacePressedTime > spaceBuffer) {
+			if (KEY_SPACE && chrono::high_resolution_clock::now() - prevSpacePressedTime > SPACE_BUFFER) {
 				if (PAUSE == true) {
 					totalRenderTime = chrono::high_resolution_clock::now();
 				}

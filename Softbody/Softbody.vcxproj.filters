@@ -23,9 +23,19 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="light_cube.vs" />
-    <None Include="light_cube.fs" />
-    <None Include="colors.vs" />
-    <None Include="colors.fs" />
+    <None Include="light_cube.vert" />
+    <None Include="light_cube.frag" />
+    <None Include="colors.vert" />
+    <None Include="colors.frag" />
+    <None Include="material.vert" />
+    <None Include="material.frag" />
+    <None Include="light_casters.vert" />
+    <None Include="light_casters.frag" />
+    <None Include="multiple_lights.vert" />
+    <None Include="multiple_lights.frag" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="last_state_file.txt" />
+    <Text Include="data\energy_debt\actions.txt" />
   </ItemGroup>
 </Project>

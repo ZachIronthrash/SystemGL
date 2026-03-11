@@ -4,6 +4,8 @@
 #include "SystemGLStringUtil.h"
 #include "SystemGLMath.h"
 #include "Particle.h"
+#include <iomanip>
+#include <limits>
 
 const long double BAR_EPSILON = 0.000000000001l;
 
@@ -13,17 +15,25 @@ System& Simulation::getSystem() {
 	return system;
 }
 
-void Simulation::run(long double frameTime, long double endTime, std::ostream& debug) {
+void Simulation::run(long double frameTime, long double endTime, std::ofstream& action) {
 	std::ofstream o;
 	o.open(file);
 
 	long double targetTime = getScaledTime()/* + frameTime*/;
 	unsigned frameCount = 0;
 
-	while (getScaledTime() < endTime) {
+	long double actionSum = 0.0l;
 
+	action << std::setprecision(std::numeric_limits<long double>::max_digits10);
+
+	while (getScaledTime() < endTime) {
 		if (getScaledTime() <= targetTime) {
 			system.evolve();
+
+			// L * dt = ( T - V ) * dt should be constant
+			actionSum += system.lagrangianSum() * system.getParticle(0).getDt();
+
+			//std::cout << system.lagrangianSum() * system.getParticle(0).getDt() << std::endl;
 		}
 		else {
 			targetTime = getScaledTime() + frameTime;
@@ -35,44 +45,49 @@ void Simulation::run(long double frameTime, long double endTime, std::ostream& d
 			o << endl;*/
 			printLine2File(frameCount, o);
 
+			action << actionSum << " J * s" << std::endl;
+			actionSum = 0.0l;
+
 			/*int percentComplete = (int)(100.0l - (endTime - getScaledTime()) * 100.0l / endTime);
 
 			if (percentComplete > 100) percentComplete = 100;
 			else if (percentComplete < 0) percentComplete = 0;
 
 			if (fmod(percentComplete, 1.0l) < frameTime || fmod(percentComplete, 1.0l) > 1.0l - frameTime) {
-				debug << "\r|";
+				std::cout << "\r|";
 				for (int i = 0; i < percentComplete; i++) {
-					debug << "*";
+					std::cout << "*";
 				}
 				for (int i = 0; i < 100 - percentComplete; i++) {
-					debug << "-";
+					std::cout << "-";
 				}
-				debug << "| " << percentComplete << " %";
+				std::cout << "| " << percentComplete << " %";
 			}*/
 
 			int percentComplete = (int)(100.0l - (endTime - getScaledTime()) * 100.0l / endTime);
 
 			if (fmod(percentComplete, 1.0l) < BAR_EPSILON || fmod(percentComplete, 1.0l) > 1.0l - BAR_EPSILON) {
-				debug << "\r|";
+				std::cout << "\r|";
 				for (int i = 0; i < percentComplete; i++) {
-					debug << "*";
+					std::cout << "*";
 				}
 				for (int i = 0; i < 100 - percentComplete; i++) {
-					debug << "-";
+					std::cout << "-";
 				}
-				debug << "| " << percentComplete << " %";
+				std::cout << "| " << percentComplete << " %";
 			}
 		}
 	}
 
-	debug << "\r|";
-	for (int i = 0; i < 100; i++) {
-		debug << "*";
-	}
-	debug << "| " << 100 << " %";
+	action << actionSum << " J * s" << std::endl;
 
-	debug << std::endl;
+	std::cout << "\r|";
+	for (int i = 0; i < 100; i++) {
+		std::cout << "*";
+	}
+	std::cout << "| " << 100 << " %";
+
+	std::cout << std::endl;
 
 	printLine2File(frameCount, o);
 
@@ -116,7 +131,13 @@ unsigned Simulation::readNext() {
 }
 
 void Simulation::resetIn() {
-	closeIn();
+	//closeIn();
+
+	// instead of closing every time we want to reset, just clear and seek the start
+	//	this is mainly because "r" can reset the program every frame if the user desires it
+	//	for which closing and re-opening the input stream every time is just plain stupid
+	in.clear();
+	in.seekg(0, std::ios::beg);
 	iteration = 0;
 }
 

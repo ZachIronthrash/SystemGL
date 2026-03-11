@@ -7,7 +7,7 @@
 
 PressureSimulation::PressureSimulation(PressureSystem& s, std::string posFile, std::string impFile, long double ts, long double ss) : Simulation(s, posFile, ts, ss), impulseFile(impFile), system(s) {}
 
-void PressureSimulation::run(long double frameTime, long double endTime, std::ostream& debug) {
+void PressureSimulation::run(long double frameTime, long double endTime, std::ofstream& action) {
 	std::ofstream o;
 	std::ofstream imp;
 	o.open(file);
@@ -17,13 +17,13 @@ void PressureSimulation::run(long double frameTime, long double endTime, std::os
 	long double targetTime = getScaledTime()/* + frameTime*/;
 	unsigned frameCount = 0;
 
-	debug << "Simulation progress:\n";
+	std::cout << "Simulation progress:\n";
 
-	/*debug << "|";
+	/*std::cout << "|";
 	for (int i = 0; i < 100; i++) {
-		debug << "-";
+		std::cout << "-";
 	}
-	debug << "| 0 %";*/
+	std::cout << "| 0 %";*/
 
 	while (getScaledTime() < endTime) {
 		std::vector<vec3> initVelocities;
@@ -63,34 +63,34 @@ void PressureSimulation::run(long double frameTime, long double endTime, std::os
 			int percentComplete = (int)(100.0l - (endTime - getScaledTime()) * 100.0l / endTime);
 
 			if (fmod(percentComplete, 1.0l) < frameTime || fmod(percentComplete, 1.0l) > 1.0l - frameTime) {
-				debug << "\r|";
+				std::cout << "\r|";
 				for (int i = 0; i < percentComplete; i++) {
-					debug << "*";
+					std::cout << "*";
 				}
 				for (int i = 0; i < 100 - percentComplete; i++) {
-					debug << "-";
+					std::cout << "-";
 				}
-				debug << "| " << percentComplete << " %";
+				std::cout << "| " << percentComplete << " %";
 			}
 
 			/*if (fmod(100.0l - (endTime - getScaledTime()) * 100.0l / endTime, 1.0l) < frameTime) {
 				ios oldState(nullptr);
-				oldState.copyfmt(debug);
+				oldState.copyfmt(std::cout);
 
-				debug << setprecision(0) << fixed << "Simulation " << 100.0l - (endTime - getScaledTime()) * 100.0l / endTime << " % complete." << endl;
+				std::cout << setprecision(0) << fixed << "Simulation " << 100.0l - (endTime - getScaledTime()) * 100.0l / endTime << " % complete." << endl;
 
-				debug.copyfmt(oldState);
+				std::cout.copyfmt(oldState);
 			}*/
 		}
 	}
 
-	debug << "\r|";
+	std::cout << "\r|";
 	for (int i = 0; i < 100; i++) {
-		debug << "*";
+		std::cout << "*";
 	}
-	debug << "| " << 100 << " %";
+	std::cout << "| " << 100 << " %";
 
-	debug << std::endl;
+	std::cout << std::endl;
 
 	printLine2File(frameCount, o);
 

@@ -29,15 +29,15 @@ void System::addSubsystem(std::shared_ptr<System> sub) {
 	subsystems.push_back(sub);
 }
 
-void System::createInteraction(std::shared_ptr<Potential> V, Particle& p1, Particle& p2) {
-	if (interactionExists(*V, p1, p2)) {
+void System::createInteraction(Potential V, Particle& p1, Particle& p2) {
+	if (interactionExists(V, p1, p2)) {
 		throw std::invalid_argument("Interaction with particle pair already exists");
 	}
 
 	interactions.push_back(Interaction(p1, p2, V));
 }
-void System::createUniversalInteraction(std::shared_ptr<Potential> V) {
-	if (universalInteractionExists(*V)) {
+void System::createUniversalInteraction(Potential V) {
+	if (universalInteractionExists(V)) {
 		throw std::invalid_argument("Universal interaction already contained in system");
 	}
 
@@ -47,7 +47,7 @@ void System::createUniversalInteraction(std::shared_ptr<Potential> V) {
 	}*/
 }
 
-void System::interconnectWithPotential(std::shared_ptr<Potential> V) {
+void System::interconnectWithPotential(Potential V) {
 	for (size_t i = 0; i < particles.size(); i++) {
 		for (size_t j = i + 1; j < particles.size(); j++) {
 			createInteraction(V, particles[i], particles[j]);
@@ -119,6 +119,10 @@ bool System::hasParticleInSubsystems(Particle& ref) {
 void System::evolve() {
 	// Evolve particles
 	try {
+		for (Interaction& i : interactions) {
+			i.recordDisplacement();
+			i.recordRelativeVelocity();
+		}
 		for (Interaction& i : interactions) {
 			i.apply();
 		}

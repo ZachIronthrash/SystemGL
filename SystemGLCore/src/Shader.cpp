@@ -25,6 +25,15 @@ Shader::Shader(const char* vertexPath, const char* fragmentPath)
 		// convert stream into string
 		vertexCode = vShaderStream.str();
 		fragmentCode = fShaderStream.str();
+
+	// Strip UTF-8 BOM if present (some editors add it which breaks GLSL #version requirement)
+	auto stripBOM = [](std::string &s) {
+		if (s.size() >= 3 && (unsigned char)s[0] == 0xEF && (unsigned char)s[1] == 0xBB && (unsigned char)s[2] == 0xBF) {
+			s.erase(0, 3);
+		}
+	};
+	stripBOM(vertexCode);
+	stripBOM(fragmentCode);
 	}
 	catch (std::ifstream::failure e)
 	{

@@ -7,9 +7,10 @@
 #include <glad/glad.h> // ensure OpenGL symbols are visible when this header is parsed
 //#include <glm/fwd.hpp>
 #include <vector>
-#include <iostream>
-#include <ostream>
-#include <glm/fwd.hpp>
+#include <glm/glm.hpp>
+#include <algorithm>
+#include <cstdint>
+#include <unordered_map>
 
 /*
 * Source code for Mesh class is from https://learnopengl.com/code_viewer_gh.php?code=includes/learnopengl/mesh.h
@@ -451,7 +452,7 @@ static void invertedSimpleBoxNoTop(std::vector<float>& vert, std::vector<unsigne
 		switch (i / 6) { // each face has 6 indices, so integer division gives us the face index
 		case 0: normal = glm::vec3(-1.0f, 0.0f, 0.0f); break; // right face
 		case 1: normal = glm::vec3(1.0f, 0.0f, 0.0f); break; // left face
-		//case 2: normal = glm::vec3(0.0f, -1.0f, 0.0f); break; // top face
+			//case 2: normal = glm::vec3(0.0f, -1.0f, 0.0f); break; // top face
 		case 2: normal = glm::vec3(0.0f, 1.0f, 0.0f); break; // bottom face
 		case 3: normal = glm::vec3(0.0f, 0.0f, -1.0f); break; // front face
 		case 4: normal = glm::vec3(0.0f, 0.0f, 1.0f); break; // back face

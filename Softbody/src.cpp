@@ -1,7 +1,12 @@
+
 #include "../SystemGLCore/include/Camera.h"
+#include "../SystemGLCore/include/ColorHarmonies.h"
 #include "../SystemGLCore/include/Mesh.h"
+#include "../SystemGLCore/include/Particle.h"
 #include "../SystemGLCore/include/Shader.h"
+#include "../SystemGLCore/include/Simulation.h"
 #include "../SystemGLCore/include/StateIO.h"
+#include "../SystemGLCore/include/System.h"
 #include "../SystemGLCore/include/SystemGLMath.h"
 #include <algorithm>
 #include <chrono>
@@ -10,29 +15,40 @@
 #include <functional>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-#include <glm/fwd.hpp>
+// GLM core types
+#include <glm/glm.hpp>
+// matrix transform functions like translate, perspective, lookAt
+#include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
 #include <istream>
 #include <limits>
 #include <ostream>
-#include <Particle.h>
 #include <random>
-#include <Simulation.h>
 #include <sstream>
 #include <string>
-#include <System.h>
 #include <tuple>
 #include <type_traits>
 #include <vector>
+//#include "System.h"
+
+/* HOUSEKEEPING TODO:
+*	- properly label constants and free variables (using "const PotentialType CAPITAL_CASE" & "PotentialType camelCase" respectively)
+*	- implement constants for EVERY magic number in the program (including custom dependencies/headers)
+*	- go through every custom header file and put ALL methods in .h files into their respective .cpp
+*		- also, go through every header file and separate classes into dedicated files (i.e. Potential or SoftBodyInBox)
+*/
 
 /* TODO:
-*  - Refine model for extended stability (should not need damping for stability, but it is currently necessary for larger systems, otherwise energy explodes)
+*   - Adjust file storage to allow for recording and replaying simulations based on state-files
+*		- Prompt user for state file name
+*		- Store simulation file name in state file
+*	- Refine model for extended stability (should not need damping for stability, but it is currently necessary for larger systems, otherwise energy explodes)
 *		- Categorize the degree of instability by summing the energies from the speed and potentials of each particle, and comparing to the initial energy of the system.
 *		- Verify that reflection algorithm conserves energy and momentum, and that it is implemented correctly (currently using a simple reflection algorithm which breaks down in the high velocity limit, and may not be conserving energy correctly)
 *		- Implement a more stable integration method (currently using Euler's method, which is not very stable for larger systems)
 *			- Research different integration methods and their stability properties, and implement one that is more stable for larger systems (e.g. Verlet integration, Runge-Kutta methods, etc.)
 *			- Look into differential equation solvers which I believe should constrain simple motion like SHOs to their expected trajectories, which should help with stability.
-*  ~ Sort meshes by distance from camera and draw in order
+*	~ Sort meshes by distance from camera and draw in order
 *		x Mesh drawing class for holding meshes and their draw order
 *			x Sorted vector of meshes
 *			x Insertion handling based on mesh pos and camera pos
@@ -40,12 +56,12 @@
 *				^ NOTE: distance sorting doesn't work for inverted meshes
 *				^ UPDATE: inverted meshes will be drawn before non-inverted meshes, maybe with their own sorting scheme, but this is a bit of an edge case and can be handled later if it becomes an issue
 *					(ideally the only inverted mesh is the box representing the bounds of the system)
-*			~ Shader logic for drawing meshes 
-*				(ideally every mesh would use the same shader, but this is highly unlikely if I want any style flexibility, 
+*			~ Shader logic for drawing meshes
+*				(ideally every mesh would use the same shader, but this is highly unlikely if I want any style flexibility,
 *				so the shader should probably be stored in the mesh drawing class as well. The issue is that .use(...) and
 *				pushing uniforms might be unfeasable for each mesh)
 *		x Create mesh drawing object with mesh and camera positions in main loop scope
-* - Standardize mesh implementation
+*	- Standardize mesh implementation
 *		- Refactor mesh sorting to match existing schemes in literature (check learnopengl.com and other resources for best practices)
 *		- Standardize mesh class
 *			~ Vertexes (should probably use a vertex struct)
@@ -54,18 +70,20 @@
 *			- Color/transparency or other unforseen needs
 *		- Loading meshes from file
 *		- Outputting meshes to file
-*  ~ UI elements for setting system parameters
+*	~ UI elements for setting system parameters
 *		x Container for system parameters
 *		x I/O system for parameters
 *		- UI system
 *		- UI-parameter integration (switching between a scene for setting parameters, and one for playing simulations)
-*  x Camera controls
+*	x Camera controls
 *		x Up/Down controls
 *		x Everything else
-*  x Render-to-simulation time scaling as well as space scaling
+*	x Render-to-simulation time scaling as well as space scaling
 */
 
 using namespace std;
+
+// *** METHOD DECLARATIONS ***
 
 void configureGLFW();
 
@@ -84,105 +102,170 @@ void getUnsignedWithDefault(istream& in, unsigned& v);
 
 void getLongDoubleWithDefault(istream& in, long double& v);
 
-// void drawSystemBounds(Mesh boxMesh, Shader& shader, vec3 offset);
 void drawSystemBounds(Shader& objectShader, Shader& lightingShader, Mesh boxMesh, vec3 offset);
 
-//void createVertexAndIndexData(vec3 boxSize, std::vector<float>& vertices, std::vector<unsigned int>& indices);
+void resetRender(Simulation& simulation, unsigned int& targetRenderIteration, unsigned int& renderIterations);
+
+// global constants
+// ----------------
+
+const glm::vec3 INITIAL_CAMERA_POS = glm::vec3(0.0f, 0.0f, 3.0f);
+
+// colors
+const color PRIM_GREEN = { 0.31f, 0.94f, 0.0f };
+const color PRIM_PINK = { 0.94f, 0.0f, 0.92f };
+const color PRIM_ORANGE = { 0.94f, 0.55f, 0.0f };
+const color PRIM_BLUE = { 0.0f, 0.56f, 0.94f };
+
+const color SEC_GREEN = { 0.34f, 0.61f, 0.20f };
+const color SEC_BROWN = { 0.43f, 0.35f, 0.22f };
+
+const color PINKISH_WHITE = { 0.94f, 0.80f, 0.92f };
+const color GREENISH_WHITE = { 0.95f, 1.00f, 0.93f };
+
+const color HEATHER_GREEN = { 0.6701960784313725f, 1.0f, 0.48627450980392156f };
+const color PASTEL_GREEN = { 0.8196078431372549f, 1.0f, 0.8313725490196079f };
+
+const color WHITE_W_GREEN_TINT = { 0.9882352941176471f, 1.0f, 0.9803921568627451f };
+
+const palette COLOR_PALETTE = palette(HEATHER_GREEN, Harmony::SplitComplementary);
+
+// durations
+const chrono::milliseconds SPACE_BUFFER(250);
+const chrono::milliseconds FRAME_DURATION(16); // Approx. 60 FPS
+const float FRAME_DURATION_F = FRAME_DURATION.count() / 1000.0f; // in seconds
+
+// global variables
+// ----------------
 
 // settings
-unsigned int SCR_WIDTH = 800;
-unsigned int SCR_HEIGHT = 600;
+unsigned int scr_width = 800;
+unsigned int scr_height = 600;
 
-// camera
-glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
-glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
-
-bool firstMouse = false;
-float yaw = -90.0f;	// YAW is initialized to -90.0 degrees since a yaw of 0.0 results in a direction vector pointing to the right so we initially rotate a bit to the left.
-float pitch = 0.0f;
-//float lastX = (float)SCR_WIDTH / 2.0f;
-//float lastY = (float)SCR_HEIGHT / 2.0f;
-//float fov = 90.0f;
-
-float baseCameraSpeed = 1.0f;
-float baseFOV = 45.0f;
-
-Camera camera(cameraPos, cameraUp, yaw, pitch);
-
-chrono::milliseconds FRAME_DURATION(16); // Approx. 60 FPS
-float FRAME_TIME = FRAME_DURATION.count() / 1000.0f; // in seconds
-
-// keyboard input processing
-//bool KEY_E = false;
-bool KEY_SPACE = false;
-//bool KEY_N = false;
-
-bool PAUSE = true;
-
+// rng
 unsigned seed = (int)std::chrono::system_clock::now().time_since_epoch().count();
-
 mt19937 generator(seed);
 
-class MeshSorter {
+// camera
+Camera camera(INITIAL_CAMERA_POS);
+
+// times
+chrono::high_resolution_clock::time_point lastFrameTime = chrono::high_resolution_clock::now();
+chrono::high_resolution_clock::time_point prevSpacePressedTime = chrono::high_resolution_clock::now();
+chrono::high_resolution_clock::time_point totalRenderTime = chrono::high_resolution_clock::now();
+
+// booleans
+bool pause = true; // true if render should load next frame
+bool reset = false; // true if render should reset to initial value and pause on the next frame
+bool firstMouse = false; // true if the firstMouse button has been/is being pressed this frame
+bool runSim = true; // true if the program should run a new simulation
+bool newSim = false;
+bool usePrevious = true; // true if the program should use the previously loaded parameters
+
+struct drawable {
+    std::reference_wrapper<Mesh> mesh;
+
+	std::reference_wrapper<Shader> shader;
+
+	glm::vec3 meshPos;
+	glm::vec3 scale;
+
+	glm::vec3 ambient;
+	glm::vec3 diffuse;
+	glm::vec3 specular;
+	float shininess;
+
+	drawable(Mesh& m, Shader& s, glm::vec3 meshPos, glm::vec3 ambient, glm::vec3 diffuse, glm::vec3 specular, float shininess, glm::vec3 scale = glm::vec3(1.0f)) :
+		mesh(m), shader(s), meshPos(meshPos), ambient(ambient), diffuse(diffuse), specular(specular), shininess(shininess), scale(scale) {}
+
+	void useShader() {
+		shader.get().use();
+	}
+
+	void draw() {
+        mesh.get().draw(shader);
+	}
+
+	void setUniforms() {
+		if (ambient.x >= 0 && ambient.y >= 0 && ambient.z >= 0) shader.get().setVec3("material.ambient", ambient);
+		if (diffuse.x >= 0 && diffuse.y >= 0 && diffuse.z >= 0) shader.get().setVec3("material.diffuse", diffuse);
+		if (specular.x >= 0 && specular.y >= 0 && specular.z >= 0) shader.get().setVec3("material.specular", specular);
+		if (shininess >= 0) shader.get().setFloat("material.shininess", shininess);
+
+		glm::mat4 model = glm::mat4(1.0f);
+		model = glm::translate(model, meshPos);
+		model = glm::scale(model, scale);
+		shader.get().setMat4("model", model);
+	}
+};
+
+struct orderedDrawable : drawable {
+	float distance = 0.0f;
+
+	orderedDrawable(Mesh& m, Shader& s, glm::vec3 meshPos, glm::vec3 ambient, glm::vec3 diffuse, glm::vec3 specular, float shininess, glm::vec3 scale = glm::vec3(1.0f)) :
+		drawable(m, s, meshPos, ambient, diffuse, specular, shininess, scale) {}
+};
+
+class MeshSorter2 {
 public:
-	MeshSorter(Shader& s, Camera& c) : shader(s), camera(c) {};
+	MeshSorter2(Camera& c) : camera(c) {}
 
-	void add(Mesh& mesh, Shader& shader, glm::vec3 meshPos, glm::vec3 meshColor) {
-		meshes.push_back(std::make_tuple(std::reference_wrapper<Mesh>(mesh), 0.0f, meshPos, meshColor));
+	void add(Mesh& mesh, Shader& shader, glm::vec3 meshPos, glm::vec3 ambient, glm::vec3 diffuse, glm::vec3 specular, float shininess, glm::vec3 scale = glm::vec3(1.0f)) {
+		// meshes.push_back(std::make_tuple(std::reference_wrapper<Mesh>(mesh), 0.0f, meshPos, ambient, diffuse, specular, shininess));
+
+		//glm::mat4 model = glm::mat4(1.0f);
+		//glm::vec3 position = fetchPos(i);
+		//model = glm::translate(model, position);
+		////this->shader.setVec3("objectColor", fetchColor(i));
+		//this->shader.setVec3("material.ambient", fetchAmbient(i));
+		//this->shader.setVec3("material.diffuse", fetchDiffuse(i));
+		//this->shader.setVec3("material.specular", fetchSpecular(i));
+		//this->shader.setFloat("material.shininess", fetchShininess(i));
+		//this->shader.setMat4("model", model);
+		//fetchMesh(i).draw(shader);
+
+		orderedDrawable od(mesh, shader, meshPos, ambient, diffuse, specular, shininess, scale);
+
+        od.distance = glm::dot(camera.Front, meshPos); // double check this first if things break
+        // push the prepared orderedDrawable into the vector
+        drawables.push_back(od);
 	}
 
-	void sort(glm::vec3 cameraPos, std::function<float(float, float)> op = std::greater<float>()) {
-		for (size_t i = 0; i < meshes.size(); i++) {
-			//std::get<2>(meshes[i]) = glm::distance(std::get<1>(meshes[i]), cameraPos);
-			fetchDistance(i) = glm::distance(fetchPos(i), cameraPos);
-			//std::cout << "Mesh " << i << " distance from camera: " << fetchDistance(i) << std::endl;
-		}
-		std::sort(meshes.begin(), meshes.end(), MeshDistanceComparator(op));
+	void sort(std::function<float(float, float)> op = std::greater<float>()) {
+		std::sort(drawables.begin(), drawables.end(), DrawableDistanceComparator(op));
 	}
 
-	// TWO POSSIBILITIES IN THE FUTURE
-	//  1. save transformations in tuple (scale and rotation), and apply to model matrix
-	//		upsides			-> for repeated meshes, transformations don't need new references
-	//		downsides		-> consequences from increased vector entry size (large tuple reads take longer?)
-	//  2. modify model with scale and rotation before passing to add(...)
-	//		upsides			-> no slowdown from larger tuple size
-	//		downsides		-> many, many new mesh references for each unique pair of scaling & rotation
-	void draw(float aspectRatio) {
-		for (size_t i = 0; i < meshes.size(); i++) {
-			glm::mat4 model = glm::mat4(1.0f);
-			glm::vec3 position = fetchPos(i);
-			model = glm::translate(model, position);
-			this->shader.setVec3("objectColor", fetchColor(i));
-			this->shader.setMat4("model", model);
-			fetchMesh(i).draw(shader);
+	void draw() {
+		for (size_t i = 0; i < drawables.size(); i++) {
+			//glm::mat4 model = glm::mat4(1.0f);
+			//glm::vec3 position = fetchPos(i);
+			//model = glm::translate(model, position);
+			////this->shader.setVec3("objectColor", fetchColor(i));
+			//this->shader.setVec3("material.ambient", fetchAmbient(i));
+			//this->shader.setVec3("material.diffuse", fetchDiffuse(i));
+			//this->shader.setVec3("material.specular", fetchSpecular(i));
+			//this->shader.setFloat("material.shininess", fetchShininess(i));
+			//this->shader.setMat4("model", model);
+			//fetchMesh(i).draw(shader);
+
+			drawables.at(i).useShader();
+			drawables.at(i).setUniforms();
+			drawables.at(i).draw();
 		}
 	}
 
 private:
-	std::vector<std::tuple<std::reference_wrapper<Mesh>, float, glm::vec3, glm::vec3>> meshes; // tuple of mesh reference, distance from camera, position, and color
-	Shader& shader;
+	std::vector<orderedDrawable> drawables;
 	Camera& camera;
 
-	Mesh& fetchMesh(size_t index) {
-		return std::get<0>(meshes[index]);
-	}
-	glm::vec3& fetchPos(size_t index) {
-		return std::get<2>(meshes[index]);
-	}
-	glm::vec3& fetchColor(size_t index) {
-		return std::get<3>(meshes[index]);
-	}
-	float& fetchDistance(size_t index) {
-		return std::get<1>(meshes[index]);
-	}
-
-	class MeshDistanceComparator {
+	class DrawableDistanceComparator {
 	public:
 		// template <typename comparisonFunction> <- could use this instead of std::function
-		MeshDistanceComparator(std::function<float(float, float)> op = std::greater<float>()) : op(op) {}
-		bool operator()(const std::tuple<std::reference_wrapper<Mesh>, float, glm::vec3, glm::vec3>& a, const std::tuple<std::reference_wrapper<Mesh>, float, glm::vec3, glm::vec3>& b) {
-			float distA = std::get<1>(a); // distance from camera is pre-computed and stored in the tuple for efficiency
-			float distB = std::get<1>(b);
+		DrawableDistanceComparator(std::function<float(float, float)> op = std::greater<float>()) : op(op) {}
+		bool operator()(const orderedDrawable& a, const orderedDrawable& b) {
+
+			float distA = a.distance; // distance from camera is pre-computed and stored in the tuple for efficiency
+			float distB = b.distance;
 			return op(distA, distB); // Sort according to supplied operator (greater than for back-to-front, less than for front-to-back)
 		}
 
@@ -194,6 +277,7 @@ private:
 int main() {
 	// variable initialization
 	// -----------------------
+
 	long double renderTimeScale = 1.0l;
 	long double renderSpaceScale = 1.0l;
 
@@ -202,8 +286,9 @@ int main() {
 	long double pointSeparation = 0.1l;
 	long double connectionThreshold = 1.01l * pointSeparation * sqrt(3);
 
-	long double springConstant = 500.0l;
-	long double dampingConstant = 0.0001l;
+	long double springConstant = 1000.0l;
+	long double dampingConstant = 0.01l;
+	long double massPer = 0.1l;
 
 	vec3 gravitationalAcceleration = vec3(0.0l, -10.0l, 0.0l);
 
@@ -213,24 +298,68 @@ int main() {
 
 	long double renderDuration = 15.0l; // [s]
 
-	bool runSim = true;
+	// user selections
+	// ---------------
 
 	string input;
 
-	cout << "Run simulation? (Y/N): ";
-	while (getline(cin, input) && input != "Y" && input != "N") {
-		cout << "invalid input.\n";
+	//string stateFile = "data/simulation_states.txt";
+	//string positionFile = "data/softbody_simulation.txt";
+
+	ifstream lastStateFile("last_state_file.txt");
+
+	lastStateFile >> input;
+
+	lastStateFile.close();
+
+	string stateFile = input;
+	string positionFile;
+
+	cout << "Default state file: " << stateFile << endl;
+
+	cout << "Run simulation? (Y/N/ChangeFile): ";
+	while (getline(cin, input) && input != "Y" && input != "N" /*&& input != "ChangeFile"*/) {
+		if (input == "ChangeFile") {
+			cout << "New simulation or Old simulation (N/O)?: ";
+			string input2;
+			while (getline(cin, input2) && input2 != "N" && input2 != "O") {
+				cout << "invalid input.\n";
+			}
+
+			if (input2 == "N") {
+				cout << "Enter the name of a simulation state file (.state): ";
+				getline(cin, input2);
+				newSim = true;
+			}
+			if (input2 == "O") {
+				cout << "Enter the name of an existing simulation state file (.state): ";
+				getline(cin, input2);
+				//runSim = false;
+			}
+
+			stateFile = input2;
+			ofstream outLastStateFile("last_state_file.txt");
+			outLastStateFile << input2 << endl;
+			outLastStateFile.close();
+
+			input = "";
+			cout << "Run simulation? (Y/N/ChangeFile): ";
+		}
+		else {
+			cout << "invalid input.\n";
+		}
 	}
 
 	if (input == "N") {
 		runSim = false;
 		cout << "Loading last simulation...\n";
 	}
+
+	StateIO stateIO(stateFile);
+
 	input = "";
 
-	bool usePrevious = true;
-
-	if (runSim == true) {
+	if (runSim == true && newSim == false) {
 		cout << "Load previous parameters? (Y/N): ";
 		while (getline(cin, input) && input != "Y" && input != "N") {
 			cout << "invalid input.\n";
@@ -238,10 +367,18 @@ int main() {
 
 		if (input == "N") {
 			usePrevious = false;
+
+			stateIO.readStatesFromFile();
+
+			positionFile.assign(stateIO.states.fetchString("simulation_position_file"));
 		}
 	}
-
-	StateIO stateFile("data/simulation_states.txt");
+	else if (newSim) {
+		usePrevious = false;
+		cout << "Select a simulation name (.sim): ";
+		getline(cin, positionFile);
+		stateIO.states.add("simulation_position_file", positionFile);
+	}
 
 	if (runSim && !usePrevious) {
 		cout << "Render defaults to " << renderTimeScale << "x speed and " << renderSpaceScale << "x \"zoom\"" << endl;
@@ -277,6 +414,9 @@ int main() {
 			cout << "Select the strength of the damping (default: " << dampingConstant << "): ";
 			getLongDoubleWithDefault(cin, dampingConstant);
 
+			cout << "Select the mass per particle (default: " << massPer << "): ";
+			getLongDoubleWithDefault(cin, massPer);
+
 			cout << "Select simulation time step (default: " << dt << "): ";
 			getLongDoubleWithDefault(cin, dt);
 
@@ -295,47 +435,57 @@ int main() {
 		cout << "Select render duration in seconds (\"-\" for default: " << renderDuration << "s): ";
 		getLongDoubleWithDefault(cin, renderDuration);
 
-		stateFile.states.add("render_time_scale", renderTimeScale);
-		stateFile.states.add("render_space_scale", renderSpaceScale);
-		stateFile.states.add("particle_number", numParticles);
-		stateFile.states.add("point_separation", pointSeparation);
-		stateFile.states.add("connection_threshold", connectionThreshold);
-		stateFile.states.add("spring_constant", springConstant);
-		stateFile.states.add("damping_constant", dampingConstant);
-		stateFile.states.add("gravitational_acceleration", gravitationalAcceleration);
-		stateFile.states.add("delta_time", dt);
-		stateFile.states.add("box_size", boxSize);
-		stateFile.states.add("render_duration", renderDuration);
-		stateFile.outputStatesToFile();
+		stateIO.states.add("render_time_scale", renderTimeScale);
+		stateIO.states.add("render_space_scale", renderSpaceScale);
+		stateIO.states.add("particle_number", numParticles);
+		stateIO.states.add("point_separation", pointSeparation);
+		stateIO.states.add("connection_threshold", connectionThreshold);
+		stateIO.states.add("spring_constant", springConstant);
+		stateIO.states.add("damping_constant", dampingConstant);
+		stateIO.states.add("mass_per_particle", massPer);
+		stateIO.states.add("gravitational_acceleration", gravitationalAcceleration);
+		stateIO.states.add("delta_time", dt);
+		stateIO.states.add("box_size", boxSize);
+		stateIO.states.add("render_duration", renderDuration);
+		stateIO.states.add("simulation_position_file", positionFile);
+		stateIO.outputStatesToFile();
 	}
 	else if (usePrevious) {
-		stateFile.readStatesFromFile();
-		renderTimeScale = stateFile.states.fetchLD("render_time_scale");
-		renderSpaceScale = stateFile.states.fetchLD("render_space_scale");
-		numParticles = stateFile.states.fetchU("particle_number");
-		pointSeparation = stateFile.states.fetchLD("point_separation");
-		connectionThreshold = stateFile.states.fetchLD("connection_threshold");
-		springConstant = stateFile.states.fetchLD("spring_constant");
-		dampingConstant = stateFile.states.fetchLD("damping_constant");
-		gravitationalAcceleration = stateFile.states.fetchV("gravitational_acceleration");
-		dt = stateFile.states.fetchLD("delta_time");
-		boxSize = stateFile.states.fetchV("box_size");
-		renderDuration = stateFile.states.fetchLD("render_duration");
+		stateIO.readStatesFromFile();
+
+		positionFile.assign(stateIO.states.fetchString("simulation_position_file"));
+
+		renderTimeScale = stateIO.states.fetchLD("render_time_scale");
+		renderSpaceScale = stateIO.states.fetchLD("render_space_scale");
+		numParticles = stateIO.states.fetchU("particle_number");
+		pointSeparation = stateIO.states.fetchLD("point_separation");
+		connectionThreshold = stateIO.states.fetchLD("connection_threshold");
+		springConstant = stateIO.states.fetchLD("spring_constant");
+		dampingConstant = stateIO.states.fetchLD("damping_constant");
+		massPer = stateIO.states.fetchLD("mass_per_particle");
+		gravitationalAcceleration = stateIO.states.fetchV("gravitational_acceleration");
+		dt = stateIO.states.fetchLD("delta_time");
+		boxSize = stateIO.states.fetchV("box_size");
+		renderDuration = stateIO.states.fetchLD("render_duration");
 	}
 
 	// init simulation
 	// ---------------
-	SoftBoxInBox system(numParticles, pointSeparation, connectionThreshold, springConstant, dampingConstant, 0.1l, gravitationalAcceleration, boxSize, dt);
+	SoftBoxInBox system(numParticles, pointSeparation, connectionThreshold, springConstant, dampingConstant, massPer, gravitationalAcceleration, boxSize, dt);
 
 	for (Particle& p : system.getParticles()) {
 		p.translateBy(vec3(0, -boxSize.y * 0.0l, 0));
 	}
 
-	Simulation simulation(system, "data/softbody_simulation.txt", renderTimeScale, renderSpaceScale);
+	Simulation simulation(system, positionFile, renderTimeScale, renderSpaceScale);
+
+	std::ofstream actionsOF("data/energy_debt/actions.txt");
 
 	if (runSim) {
-		simulation.run((long double)FRAME_TIME, renderDuration, std::cout);
+		simulation.run((long double)FRAME_DURATION_F, renderDuration, actionsOF);
 	}
+
+	actionsOF.close();
 
 	// configure glfw
 	// --------------
@@ -343,7 +493,7 @@ int main() {
 
 	// glfw window creation
 	// --------------------
-	GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "SystemGL by Christopher Hart", NULL, NULL);
+	GLFWwindow* window = glfwCreateWindow(scr_width, scr_height, "SystemGL by Christopher Hart", NULL, NULL);
 
 	bool retFlag;
 	int retVal = configureWindow(window, retFlag); // auto-gen: probably not ideal
@@ -357,8 +507,10 @@ int main() {
 	// shader
 	// ------
 	//Shader shader("vertex.glsl", "fragment.glsl");
-	Shader lightingShader("colors.vs", "colors.fs");
-	Shader lightCubeShader("light_cube.vs", "light_cube.fs");
+	//Shader lightingShader("colors.vert", "colors.frag");
+	//Shader lightCubeShader("light_cube.vert", "light_cube.frag");
+	Shader lightingShader("multiple_lights.vert", "multiple_lights.frag");
+	Shader lightCubeShader("light_cube.vert", "light_cube.frag");
 
 	// sphere mesh
 	// -----------
@@ -384,37 +536,43 @@ int main() {
 	// ----------
 	// USES CUBEMESH
 
-	// enable gl settings (TODO: pull out into a method)
+	// positions of the point lights
+	glm::vec3 pointLightPositions[] = {
+		glm::vec3(0.7f,  0.2f,  2.0f),
+		glm::vec3(2.3f, -3.3f, -4.0f),
+		glm::vec3(-4.0f,  2.0f, -12.0f),
+		glm::vec3(0.0f,  0.0f, -3.0f)
+	};
 
+	//for (glm::vec3& v : pointLightPositions) {
+	//	v.x *= 0.1f;
+	//	v.z *= 0.1f;
+	//	v.y += 0.5f;
+	//}
+
+	// enable gl settings (TODO: pull out into a method)
+	// ------------------
 	//glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
 	glFrontFace(GL_CW);
 	glCullFace(GL_BACK);
 
-	camera.MovementSpeed = baseCameraSpeed;
-	camera.Zoom = baseFOV;
-
-	glfwMakeContextCurrent(window);
-	glfwMaximizeWindow(window);
-
 	// init time tracking
 	// ------------------
-	//int iterations = 0;
-
-	float targetTime = FRAME_TIME;
-
-	chrono::high_resolution_clock::time_point lastFrameTime = chrono::high_resolution_clock::now();
-	chrono::high_resolution_clock::time_point prevSpacePressedTime = chrono::high_resolution_clock::now();
-
-	chrono::high_resolution_clock::time_point totalRenderTime = chrono::high_resolution_clock::now();
-
-	chrono::milliseconds spaceBuffer(250);
+	float targetTime = FRAME_DURATION_F;
 
 	//unsigned int simIterations = 0;
 	unsigned int missedFrameIterations = 0;
-
 	unsigned int renderIterations = simulation.readNext();
-	unsigned int targetRenderIteration = 1;
+	unsigned int targetRenderIteration = renderIterations;
+
+	// final adjustments before loop
+	// -----------------------------
+	centerMouse(window, scr_width, scr_height);
+
+	// make window current
+	glfwMakeContextCurrent(window);
+	glfwMaximizeWindow(window);
 
 	// render loop
 	// -----------
@@ -424,125 +582,219 @@ int main() {
 			// update time
 			lastFrameTime = chrono::high_resolution_clock::now();
 
-			// input
-			// -----
-			/*if (KEY_N) {
-				KEY_N = false;
-			}*/
-
-			if (KEY_SPACE && chrono::high_resolution_clock::now() - prevSpacePressedTime > spaceBuffer) {
-				if (PAUSE == true) {
-					totalRenderTime = chrono::high_resolution_clock::now();
-				}
-
-				PAUSE = !PAUSE;
-				KEY_SPACE = false;
-				prevSpacePressedTime = chrono::high_resolution_clock::now();
-			}
-
-			KEY_SPACE = false;
-			//KEY_E = false;
-
-			glfwGetWindowSize(window, (int*)&SCR_WIDTH, (int*)&SCR_HEIGHT);
+			// process input
 			processInput(window);
-			centerMouse(window, SCR_WIDTH, SCR_HEIGHT);
+			centerMouse(window, scr_width, scr_height);
+
+			// update sizes
+			glfwGetWindowSize(window, (int*)&scr_width, (int*)&scr_height);
 			camera.BalanceMovementSpeedWithZoom();
 			camera.BalanceSensitivityWithZoom();
 
+			// reset render if necessary
+			if (reset) {
+				resetRender(simulation, targetRenderIteration, renderIterations);
+				reset = !reset;
+				pause = true;
+			}
+
 			// render
 			// ------
-			glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+
+			//glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+			auto clearC = COLOR_PALETTE.colors.at(4);
+			glClearColor(clearC.r, clearC.g, clearC.b, 1.0f);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-			glm::vec3 lightPos = { 0.0f, 1.5f, 0.0f };
-			
-			lightingShader.use();
-			//lightCubeShader.use();
-			lightingShader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
-			lightingShader.setVec3("lightPos", lightPos);
-			lightingShader.setVec3("viewPos", camera.Position);
+			//glm::vec4 sunDirection = { 0.0f, -1.5f, 0.0f, 0.0f };
+			//glm::vec4 lightPosition = { 0.9f, 0.9f, 0.9f, 1.0f };
 
-			lightingShader.setMat4("projection", camera.GetProjectionMatrix((float)SCR_WIDTH / (float)SCR_HEIGHT));
+			// activate lighting shader
+
+			// light properties
+			////lightingShader.setVec3("light.position", lightPos);
+			//lightingShader.setVec4("light.lightVector", lightPosition);
+			//lightingShader.setVec3("viewPos", camera.Position);
+
+			//glm::vec3 lightColor = glm::vec3(1.0f);
+			//glm::vec3 diffuseColor = lightColor * glm::vec3(0.5f); // decrease the influence
+			//glm::vec3 ambientColor = diffuseColor * glm::vec3(0.2f); // low influence
+
+			//lightingShader.setVec3("light.ambient", ambientColor);
+			//lightingShader.setVec3("light.diffuse", diffuseColor);
+			//lightingShader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
+
+			//lightingShader.setFloat("light.constant", 1.0f);
+			//lightingShader.setFloat("light.linear", 0.09f);
+			//lightingShader.setFloat("light.quadratic", 0.032f);
+
+			//// flashlight properties
+			//float zoomAdjustement = camera.Zoom / ZOOM;
+			//lightingShader.setVec3("fLight.position", camera.Position);
+			//lightingShader.setVec3("fLight.direction", camera.Front);
+			//lightingShader.setFloat("fLight.cutOff", glm::cos(glm::radians(1.0f * zoomAdjustement)));
+			//lightingShader.setFloat("fLight.outerCutOff", glm::cos(glm::radians(17.5f * zoomAdjustement)));
+
+			//lightingShader.setVec3("fLight.ambient", 0.025f, 0.025f, 0.025f);
+			//lightingShader.setVec3("fLight.diffuse", 0.2f, 0.2f, 0.2f);
+			//lightingShader.setVec3("fLight.specular", 0.25f, 0.25f, 0.25f);
+			//lightingShader.setFloat("fLight.constant", 1.0f);
+			//lightingShader.setFloat("fLight.linear", 0.7f);
+			//lightingShader.setFloat("fLight.quadratic", 1.8f);
+
+			lightingShader.use();
+			/*
+			   Here we set all the uniforms for the 5/6 types of lights we have. We have to set them manually and index
+			   the proper PointLight struct in the array to set each uniform variable. This can be done more code-friendly
+			   by defining light types as classes and set their values in there, or by using a more efficient uniform approach
+			   by using 'Uniform buffer objects', but that is something we'll discuss in the 'Advanced GLSL' tutorial.
+			*/
+			// directional light
+			lightingShader.setVec3("dirLight.direction", -0.2f, -1.0f, -0.3f);
+			lightingShader.setVec3("dirLight.ambient", 0.05f, 0.05f, 0.05f);
+			lightingShader.setVec3("dirLight.diffuse", 0.4f, 0.4f, 0.4f);
+			lightingShader.setVec3("dirLight.specular", 0.5f, 0.5f, 0.5f);
+			// point light 1
+			lightingShader.setVec3("pointLights[0].position", pointLightPositions[0]);
+			lightingShader.setVec3("pointLights[0].ambient", 0.05f, 0.05f, 0.05f);
+			lightingShader.setVec3("pointLights[0].diffuse", 0.8f, 0.8f, 0.8f);
+			lightingShader.setVec3("pointLights[0].specular", 1.0f, 1.0f, 1.0f);
+			lightingShader.setFloat("pointLights[0].constant", 1.0f);
+			lightingShader.setFloat("pointLights[0].linear", 0.09f);
+			lightingShader.setFloat("pointLights[0].quadratic", 0.032f);
+			// point light 2
+			lightingShader.setVec3("pointLights[1].position", pointLightPositions[1]);
+			lightingShader.setVec3("pointLights[1].ambient", 0.05f, 0.05f, 0.05f);
+			lightingShader.setVec3("pointLights[1].diffuse", 0.8f, 0.8f, 0.8f);
+			lightingShader.setVec3("pointLights[1].specular", 1.0f, 1.0f, 1.0f);
+			lightingShader.setFloat("pointLights[1].constant", 1.0f);
+			lightingShader.setFloat("pointLights[1].linear", 0.09f);
+			lightingShader.setFloat("pointLights[1].quadratic", 0.032f);
+			// point light 3
+			lightingShader.setVec3("pointLights[2].position", pointLightPositions[2]);
+			lightingShader.setVec3("pointLights[2].ambient", 0.05f, 0.05f, 0.05f);
+			lightingShader.setVec3("pointLights[2].diffuse", 0.8f, 0.8f, 0.8f);
+			lightingShader.setVec3("pointLights[2].specular", 1.0f, 1.0f, 1.0f);
+			lightingShader.setFloat("pointLights[2].constant", 1.0f);
+			lightingShader.setFloat("pointLights[2].linear", 0.09f);
+			lightingShader.setFloat("pointLights[2].quadratic", 0.032f);
+			// point light 4
+			lightingShader.setVec3("pointLights[3].position", pointLightPositions[3]);
+			lightingShader.setVec3("pointLights[3].ambient", 0.05f, 0.05f, 0.05f);
+			lightingShader.setVec3("pointLights[3].diffuse", 0.8f, 0.8f, 0.8f);
+			lightingShader.setVec3("pointLights[3].specular", 1.0f, 1.0f, 1.0f);
+			lightingShader.setFloat("pointLights[3].constant", 1.0f);
+			lightingShader.setFloat("pointLights[3].linear", 0.09f);
+			lightingShader.setFloat("pointLights[3].quadratic", 0.032f);
+			// spotLight
+			lightingShader.setVec3("spotLight.position", camera.Position);
+			lightingShader.setVec3("spotLight.direction", camera.Front);
+			lightingShader.setVec3("spotLight.ambient", 0.0f, 0.0f, 0.0f);
+			lightingShader.setVec3("spotLight.diffuse", 0.1f, 0.1f, 0.1f);
+			lightingShader.setVec3("spotLight.specular", 0.1f, 0.1f, 0.1f);
+			lightingShader.setFloat("spotLight.constant", 1.0f);
+			lightingShader.setFloat("spotLight.linear", 0.44f);
+			lightingShader.setFloat("spotLight.quadratic", 1.2f);
+			lightingShader.setFloat("spotLight.cutOff", glm::cos(glm::radians(12.5f)));
+			lightingShader.setFloat("spotLight.outerCutOff", glm::cos(glm::radians(15.0f)));
+
+			// view/projection transformations
+			lightingShader.setMat4("projection", camera.GetProjectionMatrix((float)scr_width / (float)scr_height));
 			lightingShader.setMat4("view", camera.GetViewMatrix());
 
 			// Draw bounding box before anything else b/c it is inverted
-			lightingShader.setVec3("objectColor", 0.1f, 0.1f, 0.1f);
-			drawSystemBounds(lightingShader, lightCubeShader, boxMesh, vec3(0));
+			{
+				auto sbC = COLOR_PALETTE.colors.at(5);
+				glm::vec3 systemBoundsColor = { sbC.r, sbC.g, sbC.b };
+				lightingShader.setVec3("material.ambient", systemBoundsColor);
+				lightingShader.setVec3("material.diffuse", systemBoundsColor);
+				lightingShader.setVec3("material.specular", 0.01f, 0.01f, 0.01f);
+				lightingShader.setFloat("material.shininess", 2.0f);
+				drawSystemBounds(lightingShader, lightCubeShader, boxMesh, vec3(0));
+			}
 
 			// Lamp should be a part of the sort unlike the bounding box
 			// but since the lamp uses a difference shader, I'm hesitant to add it to the sorter because I don't know the runtime of .use() and setMat4() for the shaders, and it may cause performance issues to call those for each entry in the sorter
 			// really need to look into whether that's an issue or not, and if it is, look into ways to optimize shader switching (if possible)
 			lightCubeShader.use();
-			lightCubeShader.setMat4("projection", camera.GetProjectionMatrix((float)SCR_WIDTH / (float)SCR_HEIGHT));
+			lightCubeShader.setMat4("projection", camera.GetProjectionMatrix((float)scr_width / (float)scr_height));
 			lightCubeShader.setMat4("view", camera.GetViewMatrix());
-			glm::mat4 model = glm::mat4(1.0f);
-			model = glm::translate(model, lightPos);
-			model = glm::scale(model, glm::vec3(0.2f)); // a smaller cube
-			lightCubeShader.setMat4("model", model);
-			cubeMesh.draw(lightCubeShader);
+			//for (glm::vec3 v : pointLightPositions) {
+			//	glm::mat4 model = glm::mat4(1.0f);
+			//	model = glm::translate(model, v);
+			//	model = glm::scale(model, glm::vec3(0.05f)); // a smaller cube
+			//	lightCubeShader.setMat4("model", model);
+			//	cubeMesh.draw(lightCubeShader);
+			//}
 
-			lightingShader.use();
+			//// re-activate lighting shader
+			//lightingShader.use();
 
-			// set shader Mat4's
-			//glm::mat4 projection;
-			// shader.setMat4("projection", camera.GetProjectionMatrix((float)SCR_WIDTH / (float)SCR_HEIGHT));
+			// create sorter 	
+			//MeshSorter sorter(lightingShader, camera);
+			MeshSorter2 sorter(camera);
 
-			try {
-				MeshSorter sorter(lightingShader, camera);
+			// add meshes to sorter 
+			for (Particle& p : system.getParticles()) {
+				vec3 pos = p.getPosition();
+				glm::vec3 posGLM = { pos.x , pos.y, pos.z };
 
-				for (Particle& p : system.getParticles()) {
-					vec3 gamma = p.getPosition();
-					glm::vec3 particlePos = { gamma.x , gamma.y, gamma.z };
-					sorter.add(sphereMesh, lightingShader, particlePos, { 0.8f, 0.4f, 0.4f });
-				}
+				auto pC = COLOR_PALETTE.colors.at(0);
 
-				sorter.sort(camera.Position);
+				glm::vec3 color = { pC.r, pC.g, pC.b };
+				glm::vec3 ambient = color * glm::vec3(1.0f);
+				glm::vec3 diffuse = color * glm::vec3(1.0f);
+				glm::vec3 specular = glm::vec3(1.0f);
+				float shininess = 32.0f;
 
-				sorter.draw((float)SCR_WIDTH / (float)SCR_HEIGHT);
-			} catch (const std::exception& e) {
-				std::cerr << "An error occurred during sorting: " << e.what() << std::endl;
+				sorter.add(sphereMesh, lightingShader, posGLM, ambient, diffuse, specular, shininess);
 			}
 
-			//// Draw bounding box before particles
-			//lightingShader.setVec3("objectColor", 0.1f, 0.1f, 0.1f);
-			//drawSystemBounds(lightingShader, lightCubeShader, boxMesh, vec3(0));
+			for (glm::vec3 pos : pointLightPositions) {
+				//glm::mat4 model = glm::mat4(1.0f);
+				//model = glm::translate(model, v);
+				//model = glm::scale(model, glm::vec3(0.05f)); // a smaller cube
+				//lightCubeShader.setMat4("model", model);
 
-			//// draw particles
-			//lightingShader.setVec3("objectColor", 0.8f, 0.4f, 0.4f);
-			//system.drawSystemParticles(lightingShader, lightCubeShader, cubeMesh /*sphereMesh*/);
+				sorter.add(cubeMesh, lightCubeShader, pos, glm::vec3(-1.0f), glm::vec3(-1.0f), glm::vec3(-1.0f), -1.0f, glm::vec3(0.01f));
+				//cubeMesh.draw(lightCubeShader);
+			}
+
+			// sort
+			sorter.sort();
+
+			// draw according to order
+			sorter.draw();
 
 			bool foundTargetTime = false;
-
-			// glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
-			// -------------------------------------------------------------------------------
-			glfwSwapBuffers(window);
-			glfwPollEvents();
 
 			// Wait for frame time to elapse (16ms for ~60FPS)
 			while (chrono::high_resolution_clock::now() - lastFrameTime < FRAME_DURATION) {
 				/* wait */
 
 				// Instead of solving at render-time we pre-run the sim and read in positions from a file
-				if (!PAUSE /*|| KEY_N*/) {
-					while (!PAUSE && renderIterations < targetRenderIteration && renderIterations != std::numeric_limits<unsigned int>::max()) {
+				if (!pause /*|| KEY_N*/) {
+					while (!pause && renderIterations < targetRenderIteration && renderIterations != std::numeric_limits<unsigned int>::max()) {
 						renderIterations = simulation.readNext();
 						//cout << renderIterations << endl;
 					}
 					if (renderIterations == std::numeric_limits<unsigned int>::max()) {
-						PAUSE = true;
-						simulation.resetIn();
-						targetRenderIteration = 0;
-						cout << "Total render time: " << chrono::duration_cast<chrono::milliseconds>(chrono::high_resolution_clock::now() - totalRenderTime).count() << " ms" << endl;
-						totalRenderTime = chrono::high_resolution_clock::now();
-						renderIterations = 0;
+						pause = true;
+						resetRender(simulation, targetRenderIteration, renderIterations);
 						//renderIterations = simulation.readNext();
 					}
 				}
 			}
 
-			if (!PAUSE) {
+			// if unpaused, iterate render
+			if (!pause) {
 				targetRenderIteration++;
 			}
+
+			// glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
+			// -------------------------------------------------------------------------------
+			glfwSwapBuffers(window);
+			glfwPollEvents();
 		}
 	}
 	catch (const std::exception& e) {
@@ -556,12 +808,16 @@ int main() {
 	return 0;
 }
 
-//void drawSystemBounds(Mesh boxMesh, Shader& shader, vec3 offset) {
-//	glm::mat4 model = glm::mat4(1.0f);
-//	model = glm::translate(model, glm::vec3(offset.x, offset.y, offset.z));
-//	shader.setMat4("model", model);
-//	boxMesh.draw(shader);
-//}
+void resetRender(Simulation& simulation, unsigned int& targetRenderIteration, unsigned int& renderIterations)
+{
+	simulation.resetIn();
+	targetRenderIteration = 0;
+	if (!reset) cout << "Total render time: " << chrono::duration_cast<chrono::milliseconds>(chrono::high_resolution_clock::now() - totalRenderTime).count() << " ms" << endl;
+	totalRenderTime = chrono::high_resolution_clock::now();
+	//renderIterations = 0;
+	if (reset) renderIterations = simulation.readNext();
+	else renderIterations = 0;
+}
 
 void drawSystemBounds(Shader& objectShader, Shader& lightingShader, Mesh boxMesh, vec3 offset) {
 	glm::mat4 model = glm::mat4(1.0f);
@@ -631,23 +887,33 @@ void processInput(GLFWwindow* window)
 		glfwSetWindowShouldClose(window, true);
 	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
 	{
-		// Pause functionality can be implemented here
-		KEY_SPACE = true;
+		if (chrono::high_resolution_clock::now() - prevSpacePressedTime > SPACE_BUFFER) {
+			if (pause == true) {
+				totalRenderTime = chrono::high_resolution_clock::now();
+			}
+
+			pause = !pause;
+			//KEY_SPACE = false;
+			prevSpacePressedTime = chrono::high_resolution_clock::now();
+		}
+	}
+	if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) {
+		reset = !reset;
 	}
 
-	float cameraSpeed = (2.5f * FRAME_TIME);
+	float cameraSpeed = (2.5f * FRAME_DURATION_F);
 	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-		camera.ProcessKeyboard(Camera_Movement::FORWARD, FRAME_TIME);
+		camera.ProcessKeyboard(Camera_Movement::FORWARD, FRAME_DURATION_F);
 	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-		camera.ProcessKeyboard(Camera_Movement::BACKWARD, FRAME_TIME);
+		camera.ProcessKeyboard(Camera_Movement::BACKWARD, FRAME_DURATION_F);
 	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-		camera.ProcessKeyboard(Camera_Movement::LEFT, FRAME_TIME);
+		camera.ProcessKeyboard(Camera_Movement::LEFT, FRAME_DURATION_F);
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-		camera.ProcessKeyboard(Camera_Movement::RIGHT, FRAME_TIME);
+		camera.ProcessKeyboard(Camera_Movement::RIGHT, FRAME_DURATION_F);
 	if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
-		camera.ProcessKeyboard(Camera_Movement::UP, FRAME_TIME);
+		camera.ProcessKeyboard(Camera_Movement::UP, FRAME_DURATION_F);
 	if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
-		camera.ProcessKeyboard(Camera_Movement::DOWN, FRAME_TIME);
+		camera.ProcessKeyboard(Camera_Movement::DOWN, FRAME_DURATION_F);
 
 	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1) == GLFW_PRESS) {
 		firstMouse = true;
@@ -668,8 +934,8 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
 	float xpos = static_cast<float>(xposIn);
 	float ypos = static_cast<float>(yposIn);
 
-	float xcenter = (float)SCR_WIDTH / 2.0f;
-	float ycenter = (float)SCR_HEIGHT / 2.0f;
+	float xcenter = (float)scr_width / 2.0f;
+	float ycenter = (float)scr_height / 2.0f;
 
 	// ignore mouse input when holding click
 	if (firstMouse)
@@ -690,8 +956,8 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
 // ---------------------------------------------------------------------------------------------
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
-	SCR_WIDTH = width;
-	SCR_HEIGHT = height;
+	scr_width = width;
+	scr_height = height;
 	// make sure the viewport matches the new window dimensions; note that width and 
 	// height will be significantly larger than specified on retina displays.
 	glViewport(0, 0, width, height);
@@ -742,27 +1008,91 @@ void configureGLFW()
 #endif
 }
 
-//void createVertexAndIndexData(vec3 boxSize, std::vector<float>& vertices, std::vector<unsigned int>& indices) {
-//	float size[3] = { (float)boxSize.x, (float)boxSize.y, (float)boxSize.z };
-//	float boundingBoxVert[] = {
-//		// positions                                            // colors
-//		 size[0],  size[1], -size[2],     0, 0, 0,    // Top right
-//		 size[0], -size[1], -size[2],     0, 0, 0,    // Bottom right
-//		-size[0],  size[1], -size[2],     0, 0, 0,    // Top left
-//		-size[0], -size[1], -size[2],     0, 0, 0     // Bottom left
-//	};
-//	unsigned int boundingBoxInd[] = {
-//		0, 1, 2,
-//		2, 1, 3
-//	};
+///*
+//* Class awaiting deprecation for better methods. I will not waste my time documenting this but it sorts meshes for drawing.
+//*/
+//class MeshSorter {
+//public:
+//	MeshSorter(Shader& s, Camera& c) : shader(s), camera(c) {};
 //
-//	vertices.clear();
-//	indices.clear();
+//	void add(Mesh& mesh, Shader& shader, glm::vec3 meshPos, glm::vec3 ambient, glm::vec3 diffuse, glm::vec3 specular, float shininess) {
+//		meshes.push_back(std::make_tuple(std::reference_wrapper<Mesh>(mesh), 0.0f, meshPos, ambient, diffuse, specular, shininess));
+//	}
 //
-//	for (float f : boundingBoxVert) {
-//		vertices.push_back(f);
+//	void sort(glm::vec3 cameraPos, std::function<float(float, float)> op = std::greater<float>()) {
+//		for (size_t i = 0; i < meshes.size(); i++) {
+//			//std::get<2>(meshes[i]) = glm::distance(std::get<1>(meshes[i]), cameraPos);
+//			fetchDistance(i) = glm::distance(fetchPos(i), cameraPos);
+//			//std::cout << "Mesh " << i << " distance from camera: " << fetchDistance(i) << std::endl;
+//		}
+//		std::sort(meshes.begin(), meshes.end(), MeshDistanceComparator(op));
 //	}
-//	for (unsigned int i : boundingBoxInd) {
-//		indices.push_back(i);
+//
+//	// TWO POSSIBILITIES IN THE FUTURE
+//	//  1. save transformations in tuple (scale and rotation), and apply to model matrix
+//	//		upsides			-> for repeated meshes, transformations don't need new references
+//	//		downsides		-> consequences from increased vector entry size (large tuple reads take longer?)
+//	//  2. modify model with scale and rotation before passing to add(...)
+//	//		upsides			-> no slowdown from larger tuple size
+//	//		downsides		-> many, many new mesh references for each unique pair of scaling & rotation
+//	void draw(float aspectRatio) {
+//		for (size_t i = 0; i < meshes.size(); i++) {
+//			glm::mat4 model = glm::mat4(1.0f);
+//			glm::vec3 position = fetchPos(i);
+//			model = glm::translate(model, position);
+//			//this->shader.setVec3("objectColor", fetchColor(i));
+//			this->shader.setVec3("material.ambient", fetchAmbient(i));
+//			this->shader.setVec3("material.diffuse", fetchDiffuse(i));
+//			this->shader.setVec3("material.specular", fetchSpecular(i));
+//			this->shader.setFloat("material.shininess", fetchShininess(i));
+//			this->shader.setMat4("model", model);
+//			fetchMesh(i).draw(shader);
+//		}
 //	}
-//}
+//
+//private:
+//	// note: storing everything in a massive chunk and then sorting it like this a TERRIBLE idea
+//	// ... but it works.
+//	// (moving more data around in memory is bad)
+//	std::vector<std::tuple<std::reference_wrapper<Mesh>, float, glm::vec3, glm::vec3, glm::vec3, glm::vec3, float>> meshes; // tuple of mesh reference, distance from camera, position, ambient, diffuse, specular, and shininess
+//	Shader& shader;
+//	Camera& camera;
+//
+//	Mesh& fetchMesh(size_t index) {
+//		return std::get<0>(meshes[index]);
+//	}
+//	float& fetchDistance(size_t index) {
+//		return std::get<1>(meshes[index]);
+//	}
+//	glm::vec3& fetchPos(size_t index) {
+//		return std::get<2>(meshes[index]);
+//	}
+//	glm::vec3& fetchAmbient(size_t index) {
+//		return std::get<3>(meshes[index]);
+//	}
+//	glm::vec3& fetchDiffuse(size_t index) {
+//		return std::get<4>(meshes[index]);
+//	}
+//	glm::vec3& fetchSpecular(size_t index) {
+//		return std::get<5>(meshes[index]);
+//	}
+//	float& fetchShininess(size_t index) {
+//		return std::get<6>(meshes[index]);
+//	}
+//
+//	class MeshDistanceComparator {
+//	public:
+//		// template <typename comparisonFunction> <- could use this instead of std::function
+//		MeshDistanceComparator(std::function<float(float, float)> op = std::greater<float>()) : op(op) {}
+//		bool operator()(const std::tuple<std::reference_wrapper<Mesh>, float, glm::vec3, glm::vec3, glm::vec3, glm::vec3, float>& a,
+//			const std::tuple<std::reference_wrapper<Mesh>, float, glm::vec3, glm::vec3, glm::vec3, glm::vec3, float>& b) {
+//
+//			float distA = std::get<1>(a); // distance from camera is pre-computed and stored in the tuple for efficiency
+//			float distB = std::get<1>(b);
+//			return op(distA, distB); // Sort according to supplied operator (greater than for back-to-front, less than for front-to-back)
+//		}
+//
+//	private:
+//		std::function<float(float, float)> op; // deafults to > in constructor: equates to furthest objects first, which is what we want for transparency rendering
+//	};
+//};

@@ -12,7 +12,7 @@ public:
 
 	System& getSystem();
 
-	virtual void run(long double frameTime, long double endTime, std::ostream& debug);
+	virtual void run(long double frameTime, long double endTime, std::ofstream& energyDebt);
 
 	virtual unsigned readNext();
 

@@ -145,6 +145,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="include\Camera.h" />
+    <ClInclude Include="include\ColorHarmonies.h" />
     <ClInclude Include="include\framework.h" />
     <ClInclude Include="include\Interaction.h" />
     <ClInclude Include="include\Mesh.h" />
@@ -161,6 +162,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Camera.cpp" />
+    <ClCompile Include="src\ColorHarmonies.cpp" />
+    <ClCompile Include="src\Interaction2.cpp" />
     <ClCompile Include="src\pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

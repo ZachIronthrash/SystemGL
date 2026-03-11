@@ -14,7 +14,7 @@ public:
 
 	}*/
 
-	void run(long double frameTime, long double endTime, std::ostream& debug) override;
+	void run(long double frameTime, long double endTime, std::ofstream& action) override;
 
 	vec3 readNextImpulse(long double& time);
 

@@ -25,12 +25,11 @@
 // #include <glm/fwd.hpp> breaks things here for some reason
 // something to do with foward declaration, google it later
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 #include <ios>
 #include <iostream>
 #include <exception>
 #include <functional>
-#include <glm/ext/matrix_transform.inl>
-#include <glm/fwd.hpp>
 #include <utility>
 #include <cassert>
 #include <algorithm>

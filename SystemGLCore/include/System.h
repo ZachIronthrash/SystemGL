@@ -1,6 +1,6 @@
 ﻿
 #pragma once
-#include "Interaction.h"
+#include "Interaction2.h"
 #include "Mesh.h"
 #include "Particle.h"
 #include "Shader.h"
@@ -53,10 +53,10 @@ public:
 
 	virtual void addSubsystem(std::shared_ptr<System> sub);
 
-	virtual void createInteraction(std::shared_ptr<Potential> V, Particle& p1, Particle& p2);
-	virtual void createUniversalInteraction(std::shared_ptr<Potential> V);
+	virtual void createInteraction(Potential V, Particle& p1, Particle& p2);
+	virtual void createUniversalInteraction(Potential V);
 
-	virtual void interconnectWithPotential(std::shared_ptr<Potential> V);
+	virtual void interconnectWithPotential(Potential V);
 
 	virtual void addParticle2Universal(int uIndex, int pIndex);
 
@@ -141,6 +141,39 @@ public:
 			}
 		}
 	}*/
+
+	virtual long double kineticEnergy() {
+		long double T = 0.0l;
+
+		for (Particle p : particles) {
+			T += 0.5l * p.getMass() * powl(p.getVelocity().magnitude(), 2);
+		}
+
+		for (int i = 0; i < subsystems.size(); i++) {
+			T += subsystems.at(i).get()->kineticEnergy();
+		}
+
+		return T;
+	}
+
+	virtual long double lagrangianSum() {
+		long double L = 0.0l;
+
+		for (Interaction I : interactions) {
+			I.recordDisplacement();
+			I.recordRelativeVelocity();
+		}
+		for (Interaction I : interactions) {
+			L += I.lagrangian();
+		}
+
+		for (Interaction U : interactions) {
+			L += U.lagrangian();
+		}
+
+		return L;
+	}
+
 protected:
 	// Owned storage for particles — guarantees lifetime.
 	//std::vector<std::unique_ptr<Particle>> particles;
@@ -182,7 +215,7 @@ public:
 		try {
 			for (Interaction& i : interactions) {
 				i.recordDisplacement();
-				i.recordDeltaV();
+				i.recordRelativeVelocity();
 			}
 			for (Interaction& i : interactions) {
 				i.apply();
@@ -286,8 +319,8 @@ protected:
 class SoftBoxInBox : public BoundedSystem {
 public:
 	SoftBoxInBox(unsigned particleCount, long double separation, long double connectionSeparation, /*std::shared_ptr<Potential> interconnectingPotential*/long double k, long double b, long double mPer, vec3 g, vec3 boxSize, long double dt = 0.001) : BoundedSystem(boxSize) {
-		auto grav = std::make_shared<PlanetaryGravitationalPotential>(g);
-		createUniversalInteraction(grav);
+		//auto grav = std::make_shared<PlanetaryGravitationalPotential>(g);
+		createUniversalInteraction(Potential(PotentialType::PlanetaryGravitationalPotential, { g.x, g.y, g.z, 0.0l }));
 
 		long int N = (long int)ceil(cbrt((double)particleCount));
 
@@ -302,7 +335,9 @@ public:
 				(z - (N - 1) * 0.5f) * separation
 			);
 
-			vec3 velocity = vec3(0);
+			//position -= vec3(0.0l, 0.75, 0.0l);
+
+			vec3 velocity = vec3(0.1l, 0.0l, 0.0l);
 
 			/*long double mV = sqrt(0.005 * position.magnitude());
 
@@ -330,9 +365,11 @@ public:
 
 				//std::cout << "d = " << d << std::endl;
 
-				auto pot = std::make_shared<DampedHarmonicOscillator>(d, k, b);
+				//auto pot = std::make_shared<DampedHarmonicOscillator>(d, k, b);
+				Potential pot = Potential(PotentialType::DampedHarmonicOscillator, { d, k, b });
+				//Potential pot = Potential(LogarithmForce, { d, k });
 
-				if (abs(d) <= connectionSeparation && !interactionExists(*pot, p1, p2)) {
+				if (abs(d) <= connectionSeparation && !interactionExists(pot, p1, p2)) {
 					//std::cout << "created interaction" << std::endl;
 
 					createInteraction(pot, p1, p2);

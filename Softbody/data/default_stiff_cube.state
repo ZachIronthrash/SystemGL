@@ -1,0 +1,13 @@
+Unsigned - particle_number: 64;
+Long Double - connection_threshold: 0.174937;
+Long Double - damping_constant: 0.01;
+Long Double - delta_time: 0.0001;
+Long Double - mass_per_particle: 0.1;
+Long Double - point_separation: 0.1;
+Long Double - render_duration: 5;
+Long Double - render_space_scale: 1;
+Long Double - render_time_scale: 1;
+Long Double - spring_constant: 1000;
+Vec3 - box_size: 1, 1, 1;
+Vec3 - gravitational_acceleration: 0, -10, 0;
+String - simulation_position_file: data/default_stiff_cube.sim;

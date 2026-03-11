@@ -1,5 +1,5 @@
-﻿  pch.cpp
-  glad.c
+﻿  Scanning sources for module dependencies...
+  SystemGLStringUtil.h
   SystemGLTests.cpp
 C:\Users\chris\source\repos\SystemGL\SystemGLTests\SystemGLTests.cpp(15,27): error C2061: syntax error: identifier 'StateIO'
   (compiling source file '/SystemGLTests.cpp')

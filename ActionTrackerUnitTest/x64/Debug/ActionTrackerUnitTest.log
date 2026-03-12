@@ -1,3 +1,5 @@
-﻿  ActionTrackerUnitTest.cpp
+﻿  pch.cpp
+  ActionTrackerUnitTest.cpp
+  LINK : C:\Users\chris\source\repos\SystemGL\x64\Debug\ActionTrackerUnitTest.dll not found or not built by the last incremental link; performing full link
      Creating library C:\Users\chris\source\repos\SystemGL\x64\Debug\ActionTrackerUnitTest.lib and object C:\Users\chris\source\repos\SystemGL\x64\Debug\ActionTrackerUnitTest.exp
   ActionTrackerUnitTest.vcxproj -> C:\Users\chris\source\repos\SystemGL\x64\Debug\ActionTrackerUnitTest.dll

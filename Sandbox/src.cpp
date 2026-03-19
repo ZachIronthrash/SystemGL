@@ -1,0 +1,1051 @@
+
+#include "../SystemGLCore/include/Camera.h"
+#include "../SystemGLCore/include/ColorHarmonies.h"
+#include "../SystemGLCore/include/Mesh.h"
+#include "../SystemGLCore/include/Particle.h"
+#include "../SystemGLCore/include/Shader.h"
+#include "../SystemGLCore/include/Simulation2.h"
+//#include "../SystemGLCore/include/StateIO.h"
+#include "../SystemGLCore/include/Temp.h"
+#include "../SystemGLCore/include/SystemGLMath.h"
+#include <algorithm>
+#include <chrono>
+#include <cmath>
+#include <exception>
+#include <functional>
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
+// GLM core types
+#include <glm/glm.hpp>
+// matrix transform functions like translate, perspective, lookAt
+#include <glm/gtc/matrix_transform.hpp>
+#include <iostream>
+#include <istream>
+#include <limits>
+#include <ostream>
+#include <random>
+#include <sstream>
+#include <string>
+#include <tuple>
+#include <type_traits>
+#include <vector>
+//#include "System.h"
+
+/* HOUSEKEEPING TODO:
+*	- properly label constants and free variables (using "const PotentialType CAPITAL_CASE" & "PotentialType camelCase" respectively)
+*	- implement constants for EVERY magic number in the program (including custom dependencies/headers)
+*	- go through every custom header file and put ALL methods in .h files into their respective .cpp
+*		- also, go through every header file and separate classes into dedicated files (i.e. Potential or SoftBodyInBox)
+*/
+
+/* TODO:
+*   - Adjust file storage to allow for recording and replaying simulations based on state-files
+*		- Prompt user for state file name
+*		- Store simulation file name in state file
+*	- Refine model for extended stability (should not need damping for stability, but it is currently necessary for larger systems, otherwise energy explodes)
+*		- Categorize the degree of instability by summing the energies from the speed and potentials of each particle, and comparing to the initial energy of the system.
+*		- Verify that reflection algorithm conserves energy and momentum, and that it is implemented correctly (currently using a simple reflection algorithm which breaks down in the high velocity limit, and may not be conserving energy correctly)
+*		- Implement a more stable integration method (currently using Euler's method, which is not very stable for larger systems)
+*			- Research different integration methods and their stability properties, and implement one that is more stable for larger systems (e.g. Verlet integration, Runge-Kutta methods, etc.)
+*			- Look into differential equation solvers which I believe should constrain simple motion like SHOs to their expected trajectories, which should help with stability.
+*	~ Sort meshes by distance from camera and draw in order
+*		x Mesh drawing class for holding meshes and their draw order
+*			x Sorted vector of meshes
+*			x Insertion handling based on mesh pos and camera pos
+*			x Drawing logic which draws in the order of the sorted vector
+*				^ NOTE: distance sorting doesn't work for inverted meshes
+*				^ UPDATE: inverted meshes will be drawn before non-inverted meshes, maybe with their own sorting scheme, but this is a bit of an edge case and can be handled later if it becomes an issue
+*					(ideally the only inverted mesh is the box representing the bounds of the system)
+*			~ Shader logic for drawing meshes
+*				(ideally every mesh would use the same shader, but this is highly unlikely if I want any style flexibility,
+*				so the shader should probably be stored in the mesh drawing class as well. The issue is that .use(...) and
+*				pushing uniforms might be unfeasable for each mesh)
+*		x Create mesh drawing object with mesh and camera positions in main loop scope
+*	- Standardize mesh implementation
+*		- Refactor mesh sorting to match existing schemes in literature (check learnopengl.com and other resources for best practices)
+*		- Standardize mesh class
+*			~ Vertexes (should probably use a vertex struct)
+*			~ Normals (could re-use vertex struct)
+*			- Textures
+*			- Color/transparency or other unforseen needs
+*		- Loading meshes from file
+*		- Outputting meshes to file
+*	~ UI elements for setting system parameters
+*		x Container for system parameters
+*		x I/O system for parameters
+*		- UI system
+*		- UI-parameter integration (switching between a scene for setting parameters, and one for playing simulations)
+*	x Camera controls
+*		x Up/Down controls
+*		x Everything else
+*	x Render-to-simulation time scaling as well as space scaling
+*/
+
+using namespace std;
+
+// *** METHOD DECLARATIONS ***
+
+void configureGLFW();
+
+int configureWindow(GLFWwindow* window, bool& retFlag);
+
+int loadGLAD(bool& retFlag);
+
+void framebuffer_size_callback(GLFWwindow* window, int width, int height);
+void mouse_callback(GLFWwindow* window, double xpos, double ypos);
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
+void processInput(GLFWwindow* window);
+
+void centerMouse(GLFWwindow* window, int windowWidth, int windowHeight);
+
+void getUnsignedWithDefault(istream& in, unsigned& v);
+
+void getLongDoubleWithDefault(istream& in, long double& v);
+
+void drawSystemBounds(Shader& objectShader, Shader& lightingShader, Mesh boxMesh, vec3 offset);
+
+void resetRender(Simulation& simulation, unsigned int& targetRenderIteration, unsigned int& renderIterations);
+
+// global constants
+// ----------------
+
+const glm::vec3 INITIAL_CAMERA_POS = glm::vec3(0.0f, 0.0f, 3.0f);
+
+// colors
+const color PRIM_GREEN = { 0.31f, 0.94f, 0.0f };
+const color PRIM_PINK = { 0.94f, 0.0f, 0.92f };
+const color PRIM_ORANGE = { 0.94f, 0.55f, 0.0f };
+const color PRIM_BLUE = { 0.0f, 0.56f, 0.94f };
+
+const color SEC_GREEN = { 0.34f, 0.61f, 0.20f };
+const color SEC_BROWN = { 0.43f, 0.35f, 0.22f };
+
+const color PINKISH_WHITE = { 0.94f, 0.80f, 0.92f };
+const color GREENISH_WHITE = { 0.95f, 1.00f, 0.93f };
+
+const color HEATHER_GREEN = { 0.6701960784313725f, 1.0f, 0.48627450980392156f };
+const color PASTEL_GREEN = { 0.8196078431372549f, 1.0f, 0.8313725490196079f };
+
+const color WHITE_W_GREEN_TINT = { 0.9882352941176471f, 1.0f, 0.9803921568627451f };
+
+const palette COLOR_PALETTE = palette(HEATHER_GREEN, Harmony::SplitComplementary);
+
+// durations
+const chrono::milliseconds SPACE_BUFFER(250);
+const chrono::milliseconds FRAME_DURATION(16); // Approx. 60 FPS
+const float FRAME_DURATION_F = FRAME_DURATION.count() / 1000.0f; // in seconds
+
+// global variables
+// ----------------
+
+// settings
+unsigned int scr_width = 800;
+unsigned int scr_height = 600;
+
+// rng
+unsigned seed = (int)std::chrono::system_clock::now().time_since_epoch().count();
+mt19937 generator(seed);
+
+// camera
+Camera camera(INITIAL_CAMERA_POS);
+
+// times
+chrono::high_resolution_clock::time_point lastFrameTime = chrono::high_resolution_clock::now();
+chrono::high_resolution_clock::time_point prevSpacePressedTime = chrono::high_resolution_clock::now();
+chrono::high_resolution_clock::time_point totalRenderTime = chrono::high_resolution_clock::now();
+
+// booleans
+bool pause = true; // true if render should load next frame
+bool reset = false; // true if render should reset to initial value and pause on the next frame
+bool firstMouse = false; // true if the firstMouse button has been/is being pressed this frame
+bool runSim = true; // true if the program should run a new simulation
+bool newSim = false;
+bool usePrevious = true; // true if the program should use the previously loaded parameters
+
+struct drawable {
+	std::reference_wrapper<Mesh> mesh;
+
+	std::reference_wrapper<Shader> shader;
+
+	glm::vec3 meshPos;
+	glm::vec3 scale;
+
+	glm::vec3 ambient;
+	glm::vec3 diffuse;
+	glm::vec3 specular;
+	float shininess;
+
+	drawable(Mesh& m, Shader& s, glm::vec3 meshPos, glm::vec3 ambient, glm::vec3 diffuse, glm::vec3 specular, float shininess, glm::vec3 scale = glm::vec3(1.0f)) :
+		mesh(m), shader(s), meshPos(meshPos), ambient(ambient), diffuse(diffuse), specular(specular), shininess(shininess), scale(scale) {
+	}
+
+	void useShader() {
+		shader.get().use();
+	}
+
+	void draw() {
+		mesh.get().draw(shader);
+	}
+
+	void setUniforms() {
+		if (ambient.x >= 0 && ambient.y >= 0 && ambient.z >= 0) shader.get().setVec3("material.ambient", ambient);
+		if (diffuse.x >= 0 && diffuse.y >= 0 && diffuse.z >= 0) shader.get().setVec3("material.diffuse", diffuse);
+		if (specular.x >= 0 && specular.y >= 0 && specular.z >= 0) shader.get().setVec3("material.specular", specular);
+		if (shininess >= 0) shader.get().setFloat("material.shininess", shininess);
+
+		glm::mat4 model = glm::mat4(1.0f);
+		model = glm::translate(model, meshPos);
+		model = glm::scale(model, scale);
+		shader.get().setMat4("model", model);
+	}
+};
+
+struct orderedDrawable : drawable {
+	float distance = 0.0f;
+
+	orderedDrawable(Mesh& m, Shader& s, glm::vec3 meshPos, glm::vec3 ambient, glm::vec3 diffuse, glm::vec3 specular, float shininess, glm::vec3 scale = glm::vec3(1.0f)) :
+		drawable(m, s, meshPos, ambient, diffuse, specular, shininess, scale) {
+	}
+};
+
+class MeshSorter2 {
+public:
+	MeshSorter2(Camera& c) : camera(c) {}
+
+	void add(Mesh& mesh, Shader& shader, glm::vec3 meshPos, glm::vec3 ambient, glm::vec3 diffuse, glm::vec3 specular, float shininess, glm::vec3 scale = glm::vec3(1.0f)) {
+		// meshes.push_back(std::make_tuple(std::reference_wrapper<Mesh>(mesh), 0.0f, meshPos, ambient, diffuse, specular, shininess));
+
+		//glm::mat4 model = glm::mat4(1.0f);
+		//glm::vec3 position = fetchPos(i);
+		//model = glm::translate(model, position);
+		////this->shader.setVec3("objectColor", fetchColor(i));
+		//this->shader.setVec3("material.ambient", fetchAmbient(i));
+		//this->shader.setVec3("material.diffuse", fetchDiffuse(i));
+		//this->shader.setVec3("material.specular", fetchSpecular(i));
+		//this->shader.setFloat("material.shininess", fetchShininess(i));
+		//this->shader.setMat4("model", model);
+		//fetchMesh(i).draw(shader);
+
+		orderedDrawable od(mesh, shader, meshPos, ambient, diffuse, specular, shininess, scale);
+
+		od.distance = glm::dot(camera.Front, meshPos); // double check this first if things break
+		// push the prepared orderedDrawable into the vector
+		drawables.push_back(od);
+	}
+
+	void sort(std::function<float(float, float)> op = std::greater<float>()) {
+		std::sort(drawables.begin(), drawables.end(), DrawableDistanceComparator(op));
+	}
+
+	void draw() {
+		for (size_t i = 0; i < drawables.size(); i++) {
+			//glm::mat4 model = glm::mat4(1.0f);
+			//glm::vec3 position = fetchPos(i);
+			//model = glm::translate(model, position);
+			////this->shader.setVec3("objectColor", fetchColor(i));
+			//this->shader.setVec3("material.ambient", fetchAmbient(i));
+			//this->shader.setVec3("material.diffuse", fetchDiffuse(i));
+			//this->shader.setVec3("material.specular", fetchSpecular(i));
+			//this->shader.setFloat("material.shininess", fetchShininess(i));
+			//this->shader.setMat4("model", model);
+			//fetchMesh(i).draw(shader);
+
+			drawables.at(i).useShader();
+			drawables.at(i).setUniforms();
+			drawables.at(i).draw();
+		}
+	}
+
+private:
+	std::vector<orderedDrawable> drawables;
+	Camera& camera;
+
+	class DrawableDistanceComparator {
+	public:
+		// template <typename comparisonFunction> <- could use this instead of std::function
+		DrawableDistanceComparator(std::function<float(float, float)> op = std::greater<float>()) : op(op) {}
+		bool operator()(const orderedDrawable& a, const orderedDrawable& b) {
+
+			float distA = a.distance; // distance from camera is pre-computed and stored in the tuple for efficiency
+			float distB = b.distance;
+			return op(distA, distB); // Sort according to supplied operator (greater than for back-to-front, less than for front-to-back)
+		}
+
+	private:
+		std::function<float(float, float)> op; // deafults to > in constructor: equates to furthest objects first, which is what we want for transparency rendering
+	};
+};
+
+int main() {
+	// variable initialization
+	// -----------------------
+
+	long double renderTimeScale = 1.0l;
+	long double renderSpaceScale = 1.0l;
+
+	unsigned numParticles = (unsigned)pow(4, 3);
+
+	long double pointSeparation = 1.0l;
+	//long double connectionThreshold = 1.01l * pointSeparation * sqrt(3);
+
+	long double springConstant = 1.0l;
+	long double dampingConstant = 0.0l;
+	long double massPer = 1.0l;
+
+	vec3 gravitationalAcceleration = vec3(0.0l, -1.0l, 0.0l);
+
+	long double dt = 1e-4l;
+
+	vec3 boxSize = vec3(1.0l, 1.0l, 1.0l) / renderSpaceScale;
+
+	long double renderDuration = 15.0l; // [s]
+
+	// user selections
+	// ---------------
+
+	//string input;
+
+	////string stateFile = "data/simulation_states.txt";
+	////string positionFile = "data/softbody_simulation.txt";
+
+	//ifstream lastStateFile("last_state_file.txt");
+
+	//lastStateFile >> input;
+
+	//lastStateFile.close();
+
+	//string stateFile = input;
+	//string positionFile;
+
+	//cout << "Default state file: " << stateFile << endl;
+
+	//cout << "Run simulation? (Y/N/ChangeFile): ";
+	//while (getline(cin, input) && input != "Y" && input != "N" /*&& input != "ChangeFile"*/) {
+	//	if (input == "ChangeFile") {
+	//		cout << "New simulation or Old simulation (N/O)?: ";
+	//		string input2;
+	//		while (getline(cin, input2) && input2 != "N" && input2 != "O") {
+	//			cout << "invalid input.\n";
+	//		}
+
+	//		if (input2 == "N") {
+	//			cout << "Enter the name of a simulation state file (.state): ";
+	//			getline(cin, input2);
+	//			newSim = true;
+	//		}
+	//		if (input2 == "O") {
+	//			cout << "Enter the name of an existing simulation state file (.state): ";
+	//			getline(cin, input2);
+	//			//runSim = false;
+	//		}
+
+	//		stateFile = input2;
+	//		ofstream outLastStateFile("last_state_file.txt");
+	//		outLastStateFile << input2 << endl;
+	//		outLastStateFile.close();
+
+	//		input = "";
+	//		cout << "Run simulation? (Y/N/ChangeFile): ";
+	//	}
+	//	else {
+	//		cout << "invalid input.\n";
+	//	}
+	//}
+
+	//if (input == "N") {
+	//	runSim = false;
+	//	cout << "Loading last simulation...\n";
+	//}
+
+	//StateIO stateIO(stateFile);
+
+	//input = "";
+
+	//if (runSim == true && newSim == false) {
+	//	cout << "Load previous parameters? (Y/N): ";
+	//	while (getline(cin, input) && input != "Y" && input != "N") {
+	//		cout << "invalid input.\n";
+	//	}
+
+	//	if (input == "N") {
+	//		usePrevious = false;
+
+	//		stateIO.readStatesFromFile();
+
+	//		positionFile.assign(stateIO.states.fetchString("simulation_position_file"));
+	//	}
+	//}
+	//else if (newSim) {
+	//	usePrevious = false;
+	//	cout << "Select a simulation name (.sim): ";
+	//	getline(cin, positionFile);
+	//	stateIO.states.add("simulation_position_file", positionFile);
+	//}
+
+	//if (runSim && !usePrevious) {
+	//	cout << "Render defaults to " << renderTimeScale << "x speed and " << renderSpaceScale << "x \"zoom\"" << endl;
+	//	cout << "  (1 sec render time = " << 1.0l / renderTimeScale << " sec simulation time)" << endl;
+	//	cout << "  (1 unit render distance = " << 1.0l / renderSpaceScale << " m sim distance)" << endl;
+	//	cout << endl << "To skip prompts and use defaults type \"SKIP\": ";
+
+	//	string input;
+	//	getline(cin, input);
+
+	//	if (input == "SKIP") {
+	//		cout << "Using default parameters.";
+	//	}
+	//	else {
+	//		cout << "Select render time scale (\"-\" for default): ";
+	//		getLongDoubleWithDefault(cin, renderTimeScale);
+
+	//		cout << "Select render space scale (\"-\" for default): ";
+	//		getLongDoubleWithDefault(cin, renderSpaceScale);
+
+	//		cout << "Select particle count (default: " << numParticles << "): ";
+	//		getUnsignedWithDefault(cin, numParticles);
+
+	//		cout << "Select the separation of the points (default: " << pointSeparation << "): ";
+	//		getLongDoubleWithDefault(cin, pointSeparation);
+
+	//		cout << "Select the separation of the connections (default: " << connectionThreshold << "): ";
+	//		getLongDoubleWithDefault(cin, connectionThreshold);
+
+	//		cout << "Select the strength of the springs (default: " << springConstant << "): ";
+	//		getLongDoubleWithDefault(cin, springConstant);
+
+	//		cout << "Select the strength of the damping (default: " << dampingConstant << "): ";
+	//		getLongDoubleWithDefault(cin, dampingConstant);
+
+	//		cout << "Select the mass per particle (default: " << massPer << "): ";
+	//		getLongDoubleWithDefault(cin, massPer);
+
+	//		cout << "Select simulation time step (default: " << dt << "): ";
+	//		getLongDoubleWithDefault(cin, dt);
+
+	//		cout << "Select the direction and strength of gravity (default: " << gravitationalAcceleration << "\n    \"-\" for any defaults, enter each component on separate lines): ";
+	//		getLongDoubleWithDefault(cin, gravitationalAcceleration.x);
+	//		getLongDoubleWithDefault(cin, gravitationalAcceleration.y);
+	//		getLongDoubleWithDefault(cin, gravitationalAcceleration.z);
+
+	//		cout << "Select bounding box size (\"-\" for any default values, enter each component on separate lines: " << boxSize << "): ";
+	//		getLongDoubleWithDefault(cin, boxSize.x);
+	//		getLongDoubleWithDefault(cin, boxSize.y);
+	//		getLongDoubleWithDefault(cin, boxSize.z);
+	//	}
+	//	cout << endl;
+
+	//	cout << "Select render duration in seconds (\"-\" for default: " << renderDuration << "s): ";
+	//	getLongDoubleWithDefault(cin, renderDuration);
+
+	//	stateIO.states.add("render_time_scale", renderTimeScale);
+	//	stateIO.states.add("render_space_scale", renderSpaceScale);
+	//	stateIO.states.add("particle_number", numParticles);
+	//	stateIO.states.add("point_separation", pointSeparation);
+	//	stateIO.states.add("connection_threshold", connectionThreshold);
+	//	stateIO.states.add("spring_constant", springConstant);
+	//	stateIO.states.add("damping_constant", dampingConstant);
+	//	stateIO.states.add("mass_per_particle", massPer);
+	//	stateIO.states.add("gravitational_acceleration", gravitationalAcceleration);
+	//	stateIO.states.add("delta_time", dt);
+	//	stateIO.states.add("box_size", boxSize);
+	//	stateIO.states.add("render_duration", renderDuration);
+	//	stateIO.states.add("simulation_position_file", positionFile);
+	//	stateIO.outputStatesToFile();
+	//}
+	//else if (usePrevious) {
+	//	stateIO.readStatesFromFile();
+
+	//	positionFile.assign(stateIO.states.fetchString("simulation_position_file"));
+
+	//	renderTimeScale = stateIO.states.fetchLD("render_time_scale");
+	//	renderSpaceScale = stateIO.states.fetchLD("render_space_scale");
+	//	numParticles = stateIO.states.fetchU("particle_number");
+	//	pointSeparation = stateIO.states.fetchLD("point_separation");
+	//	connectionThreshold = stateIO.states.fetchLD("connection_threshold");
+	//	springConstant = stateIO.states.fetchLD("spring_constant");
+	//	dampingConstant = stateIO.states.fetchLD("damping_constant");
+	//	massPer = stateIO.states.fetchLD("mass_per_particle");
+	//	gravitationalAcceleration = stateIO.states.fetchV("gravitational_acceleration");
+	//	dt = stateIO.states.fetchLD("delta_time");
+	//	boxSize = stateIO.states.fetchV("box_size");
+	//	renderDuration = stateIO.states.fetchLD("render_duration");
+	//}
+
+	// init simulation
+	// ---------------
+	//SoftBoxInBox system(numParticles, pointSeparation, connectionThreshold, springConstant, dampingConstant, massPer, gravitationalAcceleration, boxSize, dt);
+	//BoundedSystem system(boxSize);
+	////system.
+
+	//long double velocity = sqrtl(0.5l * springConstant * pointSeparation * pointSeparation / massPer);
+
+	//Particle p1 = Particle(vec3(pointSeparation / 2.0l, 0.0l, 0.0l), vec3(0.0l, velocity, 0.0l), massPer, 0.0l, dt);
+	//Particle p2 = Particle(vec3(-pointSeparation / 2.0l, 0.0l, 0.0l), vec3(0.0l, -velocity, 0.0l), massPer, 0.0l, dt);
+
+	//system.addParticle(p1);
+	//system.addParticle(p2);
+
+	//system.createInteraction(Potential(PotentialType::SimpleHarmonicOscillator, { 0.0l, springConstant }), Rayleigh(), p1, p2);
+	//system.createUniversalInteraction(Potential(PotentialType::PlanetaryGravitationalPotential, { gravitationalAcceleration.x, gravitationalAcceleration.y, gravitationalAcceleration.z, 0.0l }));
+
+	//for (Particle& p : system.getParticles()) {
+	//	p.accelerateBy(vec3(0.05l));
+	//}
+
+	long double velocity = sqrtl(0.5l * springConstant * pointSeparation * pointSeparation / massPer);
+
+	Particle p1 = Particle(vec3(pointSeparation / 2.0l, 0.0l, 0.0l), vec3(0.0l, velocity, 0.0l), massPer, 0.0l, dt);
+	Particle p2 = Particle(vec3(-pointSeparation / 2.0l, 0.0l, 0.0l), vec3(0.0l, -velocity, 0.0l), massPer, 0.0l, dt);
+
+	System system(BoundaryConditions::reflection);
+
+	system.addNode(p1);
+	system.addNode(p2);
+
+	system.createInteraction(p1, p2, Potential(PotentialType::SimpleHarmonicOscillator, { 0.0l, springConstant }));
+	
+	{
+		long double T = system.kineticEnergy();
+		long double V = system.potentialEnergy();
+		//long double R = system.rayleigh();
+		std::cout << "Initial KE - PE - R => " << T << " - " << V /*<< " - " << R*/ << " = " << T - V/* - R*/ << endl;
+	}
+
+	string positionFile = "data/general_position_file.sim";
+
+	Simulation simulation(positionFile, renderTimeScale, renderSpaceScale);
+
+	std::ofstream actionsOF("data/energy_debt/actions.txt");
+	if (runSim) {
+		simulation.run(system, (long double)FRAME_DURATION_F, renderDuration, actionsOF);
+	}
+	actionsOF.close();
+
+	{
+		long double T = system.kineticEnergy();
+		long double V = system.potentialEnergy();
+		//long double R = system.rayleigh();
+		std::cout << "Final KE - PE - R => " << T << " - " << V /*<< " - " << R*/ << " = " << T - V/* - R*/ << endl;
+	}
+
+	// configure glfw
+	// --------------
+	configureGLFW();
+
+	// glfw window creation
+	// --------------------
+	GLFWwindow* window = glfwCreateWindow(scr_width, scr_height, "SystemGL by Christopher Hart", NULL, NULL);
+
+	bool retFlag;
+	int retVal = configureWindow(window, retFlag); // auto-gen: probably not ideal
+	if (retFlag) return retVal;
+
+	// glad: load all OpenGL function pointers
+	// ---------------------------------------
+	retVal = loadGLAD(retFlag); // auto-gen: probably not ideal
+	if (retFlag) return retVal;
+
+	// shader
+	// ------
+	//Shader shader("vertex.glsl", "fragment.glsl");
+	//Shader lightingShader("colors.vert", "colors.frag");
+	//Shader lightCubeShader("light_cube.vert", "light_cube.frag");
+	Shader lightingShader("multiple_lights.vert", "multiple_lights.frag");
+	Shader lightCubeShader("light_cube.vert", "light_cube.frag");
+
+	// sphere mesh
+	// -----------
+	float sphereRadius = 0.01f;
+
+	unsigned stacks = 16;
+	unsigned slices = 32;
+
+	unsigned subdivisions = 2;
+
+	//Mesh sphereMesh = sphereStack_n_Slice(sphereRadius, stacks, slices);
+	Mesh sphereMesh = icosphere(sphereRadius, subdivisions);
+
+	// box mesh
+	// --------
+	Mesh boxMesh = invertedBoxNoTop(2.0l * renderSpaceScale * boxSize);
+
+	// cube mesh
+	// ---------
+	Mesh cubeMesh = cube(1.0f);
+
+	// light mesh
+	// ----------
+	// USES CUBEMESH
+
+	// positions of the point lights
+	glm::vec3 pointLightPositions[] = {
+		glm::vec3(0.7f,  0.2f,  2.0f),
+		glm::vec3(2.3f, -3.3f, -4.0f),
+		glm::vec3(-4.0f,  2.0f, -12.0f),
+		glm::vec3(0.0f,  0.0f, -3.0f)
+	};
+
+	//for (glm::vec3& v : pointLightPositions) {
+	//	v.x *= 0.1f;
+	//	v.z *= 0.1f;
+	//	v.y += 0.5f;
+	//}
+
+	// enable gl settings (TODO: pull out into a method)
+	// ------------------
+	//glEnable(GL_DEPTH_TEST);
+	glEnable(GL_CULL_FACE);
+	glFrontFace(GL_CW);
+	glCullFace(GL_BACK);
+
+	// init time tracking
+	// ------------------
+	float targetTime = FRAME_DURATION_F;
+
+	//unsigned int simIterations = 0;
+	unsigned int missedFrameIterations = 0;
+	unsigned int renderIterations = simulation.readNext();
+	unsigned int targetRenderIteration = renderIterations;
+
+	// final adjustments before loop
+	// -----------------------------
+	centerMouse(window, scr_width, scr_height);
+
+	// make window current
+	glfwMakeContextCurrent(window);
+	glfwMaximizeWindow(window);
+
+	// render loop
+	// -----------
+	try {
+		while (!glfwWindowShouldClose(window))
+		{
+			// update time
+			lastFrameTime = chrono::high_resolution_clock::now();
+
+			// process input
+			processInput(window);
+			centerMouse(window, scr_width, scr_height);
+
+			// update sizes
+			glfwGetWindowSize(window, (int*)&scr_width, (int*)&scr_height);
+			camera.BalanceMovementSpeedWithZoom();
+			camera.BalanceSensitivityWithZoom();
+
+			// reset render if necessary
+			if (reset) {
+				resetRender(simulation, targetRenderIteration, renderIterations);
+				reset = !reset;
+				pause = true;
+			}
+
+			// render
+			// ------
+
+			//glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+			auto clearC = COLOR_PALETTE.colors.at(4);
+			glClearColor(clearC.r, clearC.g, clearC.b, 1.0f);
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+			//glm::vec4 sunDirection = { 0.0f, -1.5f, 0.0f, 0.0f };
+			//glm::vec4 lightPosition = { 0.9f, 0.9f, 0.9f, 1.0f };
+
+			// activate lighting shader
+
+			// light properties
+			////lightingShader.setVec3("light.position", lightPos);
+			//lightingShader.setVec4("light.lightVector", lightPosition);
+			//lightingShader.setVec3("viewPos", camera.Position);
+
+			//glm::vec3 lightColor = glm::vec3(1.0f);
+			//glm::vec3 diffuseColor = lightColor * glm::vec3(0.5f); // decrease the influence
+			//glm::vec3 ambientColor = diffuseColor * glm::vec3(0.2f); // low influence
+
+			//lightingShader.setVec3("light.ambient", ambientColor);
+			//lightingShader.setVec3("light.diffuse", diffuseColor);
+			//lightingShader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
+
+			//lightingShader.setFloat("light.constant", 1.0f);
+			//lightingShader.setFloat("light.linear", 0.09f);
+			//lightingShader.setFloat("light.quadratic", 0.032f);
+
+			//// flashlight properties
+			//float zoomAdjustement = camera.Zoom / ZOOM;
+			//lightingShader.setVec3("fLight.position", camera.Position);
+			//lightingShader.setVec3("fLight.direction", camera.Front);
+			//lightingShader.setFloat("fLight.cutOff", glm::cos(glm::radians(1.0f * zoomAdjustement)));
+			//lightingShader.setFloat("fLight.outerCutOff", glm::cos(glm::radians(17.5f * zoomAdjustement)));
+
+			//lightingShader.setVec3("fLight.ambient", 0.025f, 0.025f, 0.025f);
+			//lightingShader.setVec3("fLight.diffuse", 0.2f, 0.2f, 0.2f);
+			//lightingShader.setVec3("fLight.specular", 0.25f, 0.25f, 0.25f);
+			//lightingShader.setFloat("fLight.constant", 1.0f);
+			//lightingShader.setFloat("fLight.linear", 0.7f);
+			//lightingShader.setFloat("fLight.quadratic", 1.8f);
+
+			lightingShader.use();
+			/*
+			   Here we set all the uniforms for the 5/6 types of lights we have. We have to set them manually and index
+			   the proper PointLight struct in the array to set each uniform variable. This can be done more code-friendly
+			   by defining light types as classes and set their values in there, or by using a more efficient uniform approach
+			   by using 'Uniform buffer objects', but that is something we'll discuss in the 'Advanced GLSL' tutorial.
+			*/
+			// directional light
+			lightingShader.setVec3("dirLight.direction", -0.2f, -1.0f, -0.3f);
+			lightingShader.setVec3("dirLight.ambient", 0.05f, 0.05f, 0.05f);
+			lightingShader.setVec3("dirLight.diffuse", 0.4f, 0.4f, 0.4f);
+			lightingShader.setVec3("dirLight.specular", 0.5f, 0.5f, 0.5f);
+			// point light 1
+			lightingShader.setVec3("pointLights[0].position", pointLightPositions[0]);
+			lightingShader.setVec3("pointLights[0].ambient", 0.05f, 0.05f, 0.05f);
+			lightingShader.setVec3("pointLights[0].diffuse", 0.8f, 0.8f, 0.8f);
+			lightingShader.setVec3("pointLights[0].specular", 1.0f, 1.0f, 1.0f);
+			lightingShader.setFloat("pointLights[0].constant", 1.0f);
+			lightingShader.setFloat("pointLights[0].linear", 0.09f);
+			lightingShader.setFloat("pointLights[0].quadratic", 0.032f);
+			// point light 2
+			lightingShader.setVec3("pointLights[1].position", pointLightPositions[1]);
+			lightingShader.setVec3("pointLights[1].ambient", 0.05f, 0.05f, 0.05f);
+			lightingShader.setVec3("pointLights[1].diffuse", 0.8f, 0.8f, 0.8f);
+			lightingShader.setVec3("pointLights[1].specular", 1.0f, 1.0f, 1.0f);
+			lightingShader.setFloat("pointLights[1].constant", 1.0f);
+			lightingShader.setFloat("pointLights[1].linear", 0.09f);
+			lightingShader.setFloat("pointLights[1].quadratic", 0.032f);
+			// point light 3
+			lightingShader.setVec3("pointLights[2].position", pointLightPositions[2]);
+			lightingShader.setVec3("pointLights[2].ambient", 0.05f, 0.05f, 0.05f);
+			lightingShader.setVec3("pointLights[2].diffuse", 0.8f, 0.8f, 0.8f);
+			lightingShader.setVec3("pointLights[2].specular", 1.0f, 1.0f, 1.0f);
+			lightingShader.setFloat("pointLights[2].constant", 1.0f);
+			lightingShader.setFloat("pointLights[2].linear", 0.09f);
+			lightingShader.setFloat("pointLights[2].quadratic", 0.032f);
+			// point light 4
+			lightingShader.setVec3("pointLights[3].position", pointLightPositions[3]);
+			lightingShader.setVec3("pointLights[3].ambient", 0.05f, 0.05f, 0.05f);
+			lightingShader.setVec3("pointLights[3].diffuse", 0.8f, 0.8f, 0.8f);
+			lightingShader.setVec3("pointLights[3].specular", 1.0f, 1.0f, 1.0f);
+			lightingShader.setFloat("pointLights[3].constant", 1.0f);
+			lightingShader.setFloat("pointLights[3].linear", 0.09f);
+			lightingShader.setFloat("pointLights[3].quadratic", 0.032f);
+			// spotLight
+			lightingShader.setVec3("spotLight.position", camera.Position);
+			lightingShader.setVec3("spotLight.direction", camera.Front);
+			lightingShader.setVec3("spotLight.ambient", 0.0f, 0.0f, 0.0f);
+			lightingShader.setVec3("spotLight.diffuse", 0.1f, 0.1f, 0.1f);
+			lightingShader.setVec3("spotLight.specular", 0.1f, 0.1f, 0.1f);
+			lightingShader.setFloat("spotLight.constant", 1.0f);
+			lightingShader.setFloat("spotLight.linear", 0.44f);
+			lightingShader.setFloat("spotLight.quadratic", 1.2f);
+			lightingShader.setFloat("spotLight.cutOff", glm::cos(glm::radians(12.5f)));
+			lightingShader.setFloat("spotLight.outerCutOff", glm::cos(glm::radians(15.0f)));
+
+			// view/projection transformations
+			lightingShader.setMat4("projection", camera.GetProjectionMatrix((float)scr_width / (float)scr_height));
+			lightingShader.setMat4("view", camera.GetViewMatrix());
+
+			// Draw bounding box before anything else b/c it is inverted
+			{
+				auto sbC = COLOR_PALETTE.colors.at(5);
+				glm::vec3 systemBoundsColor = { sbC.r, sbC.g, sbC.b };
+				lightingShader.setVec3("material.ambient", systemBoundsColor);
+				lightingShader.setVec3("material.diffuse", systemBoundsColor);
+				lightingShader.setVec3("material.specular", 0.01f, 0.01f, 0.01f);
+				lightingShader.setFloat("material.shininess", 2.0f);
+				drawSystemBounds(lightingShader, lightCubeShader, boxMesh, vec3(0));
+			}
+
+			// Lamp should be a part of the sort unlike the bounding box
+			// but since the lamp uses a difference shader, I'm hesitant to add it to the sorter because I don't know the runtime of .use() and setMat4() for the shaders, and it may cause performance issues to call those for each entry in the sorter
+			// really need to look into whether that's an issue or not, and if it is, look into ways to optimize shader switching (if possible)
+			lightCubeShader.use();
+			lightCubeShader.setMat4("projection", camera.GetProjectionMatrix((float)scr_width / (float)scr_height));
+			lightCubeShader.setMat4("view", camera.GetViewMatrix());
+			//for (glm::vec3 v : pointLightPositions) {
+			//	glm::mat4 model = glm::mat4(1.0f);
+			//	model = glm::translate(model, v);
+			//	model = glm::scale(model, glm::vec3(0.05f)); // a smaller cube
+			//	lightCubeShader.setMat4("model", model);
+			//	cubeMesh.draw(lightCubeShader);
+			//}
+
+			//// re-activate lighting shader
+			//lightingShader.use();
+
+			// create sorter 	
+			//MeshSorter sorter(lightingShader, camera);
+			MeshSorter2 sorter(camera);
+
+			// add meshes to sorter 
+			for (glm::vec3 pos : simulation.positions) {
+				//vec3 pos = p.getPosition();
+				//glm::vec3 posGLM = { pos.x , pos.y, pos.z };
+
+				auto pC = COLOR_PALETTE.colors.at(0);
+
+				glm::vec3 color = { pC.r, pC.g, pC.b };
+				glm::vec3 ambient = color * glm::vec3(1.0f);
+				glm::vec3 diffuse = color * glm::vec3(1.0f);
+				glm::vec3 specular = glm::vec3(1.0f);
+				float shininess = 32.0f;
+
+				sorter.add(sphereMesh, lightingShader, pos, ambient, diffuse, specular, shininess);
+			}
+
+			for (glm::vec3 pos : pointLightPositions) {
+				//glm::mat4 model = glm::mat4(1.0f);
+				//model = glm::translate(model, v);
+				//model = glm::scale(model, glm::vec3(0.05f)); // a smaller cube
+				//lightCubeShader.setMat4("model", model);
+
+				sorter.add(cubeMesh, lightCubeShader, pos, glm::vec3(-1.0f), glm::vec3(-1.0f), glm::vec3(-1.0f), -1.0f, glm::vec3(0.01f));
+				//cubeMesh.draw(lightCubeShader);
+			}
+
+			// sort
+			sorter.sort();
+
+			// draw according to order
+			sorter.draw();
+
+			bool foundTargetTime = false;
+
+			// Wait for frame time to elapse (16ms for ~60FPS)
+			while (chrono::high_resolution_clock::now() - lastFrameTime < FRAME_DURATION) {
+				/* wait */
+
+				// Instead of solving at render-time we pre-run the sim and read in positions from a file
+				if (!pause /*|| KEY_N*/) {
+					while (!pause && renderIterations < targetRenderIteration && renderIterations != std::numeric_limits<unsigned int>::max()) {
+						//std::cout << "REALLY" << std::endl;
+						renderIterations = simulation.readNext();
+						//cout << renderIterations << endl;
+					}
+					if (renderIterations == std::numeric_limits<unsigned int>::max()) {
+						pause = true;
+						resetRender(simulation, targetRenderIteration, renderIterations);
+						//renderIterations = simulation.readNext();
+					}
+				}
+			}
+
+			// if unpaused, iterate render
+			if (!pause) {
+				targetRenderIteration++;
+			}
+
+			// glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
+			// -------------------------------------------------------------------------------
+			glfwSwapBuffers(window);
+			glfwPollEvents();
+		}
+	}
+	catch (const std::exception& e) {
+		std::cerr << "An error occurred during the render loop: " << e.what() << std::endl;
+	}
+
+	// glfw: terminate, clearing all previously allocated GLFW resources.
+	// ------------------------------------------------------------------
+	glfwTerminate();
+
+	return 0;
+}
+
+void resetRender(Simulation& simulation, unsigned int& targetRenderIteration, unsigned int& renderIterations)
+{
+	simulation.resetIn();
+	targetRenderIteration = 0;
+	if (!reset) cout << "Total render time: " << chrono::duration_cast<chrono::milliseconds>(chrono::high_resolution_clock::now() - totalRenderTime).count() << " ms" << endl;
+	totalRenderTime = chrono::high_resolution_clock::now();
+	//renderIterations = 0;
+	if (reset) renderIterations = simulation.readNext();
+	else renderIterations = 0;
+}
+
+void drawSystemBounds(Shader& objectShader, Shader& lightingShader, Mesh boxMesh, vec3 offset) {
+	glm::mat4 model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(offset.x, offset.y, offset.z));
+	// shader.setMat4("model", model);
+	objectShader.setMat4("model", model);
+	boxMesh.draw(objectShader);
+}
+
+
+void getLongDoubleWithDefault(istream& in, long double& v)
+{
+	string str;
+
+	getline(in, str);
+
+	while (str.empty()) {
+		cout << "Invalid entry. Enter again: ";
+		getline(in, str);
+	}
+	{
+		long double l;
+		stringstream ss(str);
+
+		if (ss >> l) {
+			v = l;
+		}
+	}
+}
+
+void getUnsignedWithDefault(istream& in, unsigned& v)
+{
+	string str;
+
+	getline(in, str);
+
+	while (str.empty()) {
+		cout << "Invalid entry. Enter again: ";
+		getline(in, str);
+	}
+	{
+		int i;
+		stringstream ss(str);
+
+		if (!(ss >> i)) {
+			i = v;
+		}
+
+		v = i;
+	}
+}
+
+void centerMouse(GLFWwindow* window, int windowWidth, int windowHeight) {
+	// 1. Calculate center coordinates
+	double centerX = windowWidth / 2.0;
+	double centerY = windowHeight / 2.0;
+
+	// 2. Set the cursor position to the center
+	glfwSetCursorPos(window, centerX, centerY);
+}
+
+// process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
+// ---------------------------------------------------------------------------------------------------------
+void processInput(GLFWwindow* window)
+{
+	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+		glfwSetWindowShouldClose(window, true);
+	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+	{
+		if (chrono::high_resolution_clock::now() - prevSpacePressedTime > SPACE_BUFFER) {
+			if (pause == true) {
+				totalRenderTime = chrono::high_resolution_clock::now();
+			}
+
+			pause = !pause;
+			//KEY_SPACE = false;
+			prevSpacePressedTime = chrono::high_resolution_clock::now();
+		}
+	}
+	if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) {
+		reset = !reset;
+	}
+
+	float cameraSpeed = (2.5f * FRAME_DURATION_F);
+	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+		camera.ProcessKeyboard(Camera_Movement::FORWARD, FRAME_DURATION_F);
+	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+		camera.ProcessKeyboard(Camera_Movement::BACKWARD, FRAME_DURATION_F);
+	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+		camera.ProcessKeyboard(Camera_Movement::LEFT, FRAME_DURATION_F);
+	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+		camera.ProcessKeyboard(Camera_Movement::RIGHT, FRAME_DURATION_F);
+	if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
+		camera.ProcessKeyboard(Camera_Movement::UP, FRAME_DURATION_F);
+	if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
+		camera.ProcessKeyboard(Camera_Movement::DOWN, FRAME_DURATION_F);
+
+	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1) == GLFW_PRESS) {
+		firstMouse = true;
+	}
+}
+
+// glfw: whenever the mouse scroll wheel scrolls, this callback is called
+// ----------------------------------------------------------------------
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+{
+	camera.ProcessMouseScroll((float)yoffset);
+}
+
+// glfw: whenever the mouse moves, this callback is called
+// -------------------------------------------------------
+void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
+{
+	float xpos = static_cast<float>(xposIn);
+	float ypos = static_cast<float>(yposIn);
+
+	float xcenter = (float)scr_width / 2.0f;
+	float ycenter = (float)scr_height / 2.0f;
+
+	// ignore mouse input when holding click
+	if (firstMouse)
+	{
+		xpos = xcenter;
+		ypos = ycenter;
+
+		firstMouse = false;
+	}
+
+	float xoffset = xpos - xcenter;
+	float yoffset = ycenter - ypos; // reversed since y-coordinates go from bottom to top
+
+	camera.ProcessMouseMovement(xoffset, yoffset);
+}
+
+// glfw: whenever the window size changed (by OS or user resize) this callback function executes
+// ---------------------------------------------------------------------------------------------
+void framebuffer_size_callback(GLFWwindow* window, int width, int height)
+{
+	scr_width = width;
+	scr_height = height;
+	// make sure the viewport matches the new window dimensions; note that width and 
+	// height will be significantly larger than specified on retina displays.
+	glViewport(0, 0, width, height);
+}
+
+int loadGLAD(bool& retFlag)
+{
+	retFlag = true;
+	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+	{
+		cout << "Failed to initialize GLAD" << std::endl;
+		return -1;
+	}
+	retFlag = false;
+	return {};
+}
+
+int configureWindow(GLFWwindow* window, bool& retFlag)
+{
+	retFlag = true;
+	if (window == NULL)
+	{
+		cout << "Failed to create GLFW window" << std::endl;
+		glfwTerminate();
+		return -1;
+	}
+	glfwMakeContextCurrent(window);
+	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+	glfwSetCursorPosCallback(window, mouse_callback);
+	glfwSetScrollCallback(window, scroll_callback);
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+
+	retFlag = false;
+	return {};
+}
+
+void configureGLFW()
+{
+	// glfw: initialize and configure
+	// ------------------------------
+	glfwInit();
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+#ifdef __APPLE__
+	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+#endif
+}

@@ -53,10 +53,10 @@ public:
 
 	virtual void addSubsystem(std::shared_ptr<System> sub);
 
-	virtual void createInteraction(Potential V, Particle& p1, Particle& p2);
-	virtual void createUniversalInteraction(Potential V);
+	virtual void createInteraction(Potential V, Rayleigh R, Particle& p1, Particle& p2);
+	virtual void createUniversalInteraction(Potential V, Rayleigh R);
 
-	virtual void interconnectWithPotential(Potential V);
+	virtual void interconnectWithPotential(Potential V, Rayleigh R);
 
 	virtual void addParticle2Universal(int uIndex, int pIndex);
 
@@ -92,8 +92,8 @@ public:
 	*  CHECKERS
 	*/
 
-	virtual bool interactionExists(Potential V, Particle& p1, Particle& p2);
-	virtual bool universalInteractionExists(Potential V);
+	virtual bool interactionExists(Potential V, Rayleigh R, Particle& p1, Particle& p2);
+	virtual bool universalInteractionExists(Potential V, Rayleigh R);
 
 	virtual void updateUniversalInteractions();
 
@@ -156,19 +156,73 @@ public:
 		return T;
 	}
 
-	virtual long double lagrangianSum() {
-		long double L = 0.0l;
+	virtual long double potentialEnergy() {
+		long double V = 0.0;
 
-		for (Interaction I : interactions) {
+		for (Interaction& I : interactions) {
 			I.recordDisplacement();
 			I.recordRelativeVelocity();
 		}
 		for (Interaction I : interactions) {
-			L += I.lagrangian();
+			V += I.potentialEnergy();
 		}
 
-		for (Interaction U : interactions) {
-			L += U.lagrangian();
+		for (UniversalInteraction U : universalInteractions) {
+			V += U.potentialEnergySum();
+		}
+
+		for (int i = 0; i < subsystems.size(); i++) {
+			V += subsystems.at(i)->potentialEnergy();
+		}
+
+		return V;
+	}
+
+	virtual long double rayleigh() {
+		long double R = 0.0l;
+
+		for (Interaction& I : interactions) {
+			I.recordDisplacement();
+			I.recordRelativeVelocity();
+		}
+		for (Interaction I : interactions) {
+			R += I.rayleigh();
+		}
+
+		for (UniversalInteraction U : universalInteractions) {
+			R += U.rayleighSum();
+		}
+
+		for (int i = 0; i < subsystems.size(); i++) {
+			R+= subsystems.at(i)->rayleigh();
+		}
+
+		return R;
+	}
+
+	virtual long double lagrangianSum() {
+		long double L = 0.0l;
+
+		for (Interaction& I : interactions) {
+			I.recordDisplacement();
+			I.recordRelativeVelocity();
+		}
+		for (Interaction I : interactions) {
+			L -= I.potentialEnergy();
+			L -= I.rayleigh();
+		}
+
+		for (UniversalInteraction U : universalInteractions) {
+			L -= U.potentialEnergySum();
+			L -= U.rayleighSum();
+		}
+
+		for (Particle p : particles) {
+			L += p.calcKE();
+		}
+
+		for (int i = 0; i < subsystems.size(); i++) {
+			L += subsystems.at(i)->lagrangianSum();
 		}
 
 		return L;
@@ -320,7 +374,7 @@ class SoftBoxInBox : public BoundedSystem {
 public:
 	SoftBoxInBox(unsigned particleCount, long double separation, long double connectionSeparation, /*std::shared_ptr<Potential> interconnectingPotential*/long double k, long double b, long double mPer, vec3 g, vec3 boxSize, long double dt = 0.001) : BoundedSystem(boxSize) {
 		//auto grav = std::make_shared<PlanetaryGravitationalPotential>(g);
-		createUniversalInteraction(Potential(PotentialType::PlanetaryGravitationalPotential, { g.x, g.y, g.z, 0.0l }));
+		createUniversalInteraction(Potential(PotentialType::PlanetaryGravitationalPotential, { g.x, g.y, g.z, 0.0l }), Rayleigh());
 
 		long int N = (long int)ceil(cbrt((double)particleCount));
 
@@ -366,13 +420,13 @@ public:
 				//std::cout << "d = " << d << std::endl;
 
 				//auto pot = std::make_shared<DampedHarmonicOscillator>(d, k, b);
-				Potential pot = Potential(PotentialType::DampedHarmonicOscillator, { d, k, b });
+				Potential pot = Potential(PotentialType::SimpleHarmonicOscillator, { d, k });
 				//Potential pot = Potential(LogarithmForce, { d, k });
 
-				if (abs(d) <= connectionSeparation && !interactionExists(pot, p1, p2)) {
+				if (abs(d) <= connectionSeparation && !interactionExists(pot, Rayleigh(), p1, p2)) {
 					//std::cout << "created interaction" << std::endl;
 
-					createInteraction(pot, p1, p2);
+					createInteraction(pot, Rayleigh(), p1, p2);
 				}
 			}
 		}

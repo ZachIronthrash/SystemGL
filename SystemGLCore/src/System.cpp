@@ -29,28 +29,28 @@ void System::addSubsystem(std::shared_ptr<System> sub) {
 	subsystems.push_back(sub);
 }
 
-void System::createInteraction(Potential V, Particle& p1, Particle& p2) {
-	if (interactionExists(V, p1, p2)) {
+void System::createInteraction(Potential V, Rayleigh R, Particle& p1, Particle& p2) {
+	if (interactionExists(V, R, p1, p2)) {
 		throw std::invalid_argument("Interaction with particle pair already exists");
 	}
 
-	interactions.push_back(Interaction(p1, p2, V));
+	interactions.push_back(Interaction(p1, p2, V, R));
 }
-void System::createUniversalInteraction(Potential V) {
-	if (universalInteractionExists(V)) {
+void System::createUniversalInteraction(Potential V, Rayleigh R) {
+	if (universalInteractionExists(V, R)) {
 		throw std::invalid_argument("Universal interaction already contained in system");
 	}
 
-	universalInteractions.push_back(UniversalInteraction(particles, V));
+	universalInteractions.push_back(UniversalInteraction(particles, V, R));
 	/*for (size_t i = 0; i < particles.size(); i++) {
 		universalInteractions.push_back(std::ref(*particles.back()[i]));
 	}*/
 }
 
-void System::interconnectWithPotential(Potential V) {
+void System::interconnectWithPotential(Potential V, Rayleigh R) {
 	for (size_t i = 0; i < particles.size(); i++) {
 		for (size_t j = i + 1; j < particles.size(); j++) {
-			createInteraction(V, particles[i], particles[j]);
+			createInteraction(V, R, particles[i], particles[j]);
 		}
 	}
 }
@@ -75,9 +75,9 @@ Particle& System::getParticle(int i) {
 	return particles[i];
 }
 
-bool System::interactionExists(Potential V, Particle& p1, Particle& p2) {
+bool System::interactionExists(Potential V, Rayleigh R, Particle& p1, Particle& p2) {
 	for (Interaction interaction : interactions) {
-		if (interaction.isInteraction(V, p1, p2)) {
+		if (interaction.isInteraction(V, R, p1, p2)) {
 			//std::cout << "TRUE" << std::endl;
 			return true;
 		}
@@ -85,9 +85,9 @@ bool System::interactionExists(Potential V, Particle& p1, Particle& p2) {
 	//std::cout << "FALSE" << std::endl;
 	return false;
 }
-bool System::universalInteractionExists(Potential V) {
+bool System::universalInteractionExists(Potential V, Rayleigh R) {
 	for (UniversalInteraction interaction : universalInteractions) {
-		if (interaction.hasPotential(V)) {
+		if (interaction.hasPotential(V) && interaction.hasRayleigh(R)) {
 			return true;
 		}
 	}

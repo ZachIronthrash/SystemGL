@@ -7,7 +7,7 @@
 #include <iomanip>
 #include <limits>
 
-const long double BAR_EPSILON = 0.000000000001l;
+const long double BAR_EPSILON = 0.00000000000001l;
 
 Simulation::Simulation(System& s, std::string f, long double ts, long double ss) : system(s), file(f), timeScale(ts), spaceScale(ss) {}
 
@@ -26,16 +26,35 @@ void Simulation::run(long double frameTime, long double endTime, std::ofstream& 
 
 	action << std::setprecision(std::numeric_limits<long double>::max_digits10);
 
+	printLine2File(frameCount, o);
+
+	long double firstAction = 0.0l;
+	bool first = true;
+
+	int count = 0;
+
 	while (getScaledTime() < endTime) {
 		if (getScaledTime() <= targetTime) {
 			system.evolve();
 
 			// L * dt = ( T - V ) * dt should be constant
-			actionSum += system.lagrangianSum() * system.getParticle(0).getDt();
+			long double L = system.lagrangianSum();
+			actionSum += L * system.getParticle(0).getDt();
+			action << "Action: " << actionSum << " J * s" << std::endl;
+			action << "    Lagrangian: " << L << std::endl;
 
+			if (first) {
+				first = !first;
+				firstAction = actionSum;
+			}
+
+			count++;
 			//std::cout << system.lagrangianSum() * system.getParticle(0).getDt() << std::endl;
 		}
 		else {
+			//std::cout << count << std::endl;
+			count = 0;
+
 			targetTime = getScaledTime() + frameTime;
 
 			//o << "i:" << frameCount++ << ";t:" << getScaledTime();
@@ -45,7 +64,7 @@ void Simulation::run(long double frameTime, long double endTime, std::ofstream& 
 			o << endl;*/
 			printLine2File(frameCount, o);
 
-			action << actionSum << " J * s" << std::endl;
+			//action << actionSum << " J * s" << std::endl;
 			actionSum = 0.0l;
 
 			/*int percentComplete = (int)(100.0l - (endTime - getScaledTime()) * 100.0l / endTime);
@@ -79,7 +98,11 @@ void Simulation::run(long double frameTime, long double endTime, std::ofstream& 
 		}
 	}
 
-	action << actionSum << " J * s" << std::endl;
+	//action << actionSum << " J * s" << std::endl;
+
+	action << "Change in action: " << actionSum - firstAction;
+	action << std::endl << "Initial action: " << firstAction;
+	action << std::endl << "Final action: " << actionSum << std::endl;
 
 	std::cout << "\r|";
 	for (int i = 0; i < 100; i++) {

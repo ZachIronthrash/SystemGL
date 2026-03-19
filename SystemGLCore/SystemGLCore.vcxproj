@@ -154,11 +154,13 @@
     <ClInclude Include="include\PressureSystem.h" />
     <ClInclude Include="include\Shader.h" />
     <ClInclude Include="include\Simulation.h" />
+    <ClInclude Include="include\Simulation2.h" />
     <ClInclude Include="include\StateIO.h" />
     <ClInclude Include="include\System.h" />
     <ClInclude Include="include\SystemGLMath.h" />
     <ClInclude Include="include\SystemGLStringUtil.h" />
     <ClInclude Include="include\pch.h" />
+    <ClInclude Include="include\Temp.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Camera.cpp" />
@@ -176,11 +178,13 @@
     <ClCompile Include="src\PressureSystem.cpp" />
     <ClCompile Include="src\Shader.cpp" />
     <ClCompile Include="src\Simulation.cpp" />
+    <ClCompile Include="src\Simulation2.cpp" />
     <ClCompile Include="src\StateIO.cpp" />
     <ClCompile Include="src\System.cpp" />
     <ClCompile Include="src\SystemGLMath.cpp" />
     <ClCompile Include="src\SystemGLStringUtil.cpp" />
     <ClCompile Include="src\SystemGLCore.cpp" />
+    <ClCompile Include="src\Temp.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

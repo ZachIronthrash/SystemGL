@@ -473,9 +473,9 @@ int main() {
 	// ---------------
 	SoftBoxInBox system(numParticles, pointSeparation, connectionThreshold, springConstant, dampingConstant, massPer, gravitationalAcceleration, boxSize, dt);
 
-	for (Particle& p : system.getParticles()) {
-		p.translateBy(vec3(0, -boxSize.y * 0.0l, 0));
-	}
+	//for (Particle& p : system.getParticles()) {
+	//	p.translateBy(vec3(0, -boxSize.y * 0.0l, 0));
+	//}
 
 	Simulation simulation(system, positionFile, renderTimeScale, renderSpaceScale);
 

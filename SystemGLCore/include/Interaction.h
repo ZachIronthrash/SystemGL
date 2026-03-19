@@ -88,6 +88,7 @@ public:
 	}
 	virtual void recordDeltaV() { // (in direction of displacement)
 		vec3 displacementHat = (second().getPosition() - first().getPosition()).normalized();
+		// THIS IS EITHER VERY WRONG OR VERY RIGHT
 		deltaV = displacementHat * (second().getVelocity() - first().getVelocity()).dot(displacementHat);
 		//std::cout << deltaV << std::endl;
 	}

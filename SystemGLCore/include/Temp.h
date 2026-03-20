@@ -5,6 +5,7 @@
 #include <vector>
 #include <type_traits>
 #include <map>
+#include <set>
 #include <functional>
 #include <cassert>
 
@@ -119,6 +120,9 @@ public:
 			L = mass * temp1.dot(displacement - parameters.at(3) * temp2); // this last part is displacement - equilibrium_displacement * displacement_hat
 			return L;
 			break;
+		default:
+			return 0;
+			break;
 		}
 	}
 
@@ -129,13 +133,19 @@ private:
 	enum PotentialType type;
 };
 
-struct interaction {
+struct Interaction {
 	Potential pot;
 	vec3 displacement = vec3(0.0l);
 	vec3 relVel = vec3(0.0l);
 	//vec3 relVel2 = vec3(0.0l);
 
-	interaction(Potential pot) : pot(pot) {}
+	Interaction(Potential pot) : pot(pot) {}
+};
+
+struct InteractionCmp {
+	bool operator()(const Interaction& a, const Interaction& b) const noexcept {
+		return std::addressof(a) < std::addressof(b);
+	}
 };
 
 enum class BoundaryConditions {
@@ -148,7 +158,7 @@ public:
 	System(BoundaryConditions bc) : bc(bc) {}
 
 	void addNode(Particle& p) {
-		graph.insert({ std::ref(p), {} });
+		graph.emplace(std::ref(p), std::map<std::reference_wrapper<Particle>, std::set<Interaction, InteractionCmp>, RefWrapperCmp>{});
 	}
 
 	size_t nodeCount() {
@@ -156,11 +166,50 @@ public:
 	}
 
 	void createInteraction(Particle& p1, Particle& p2, Potential pot) {
-		auto pair1 = graph.find(std::ref(p1));
-		auto pair2 = graph.find(std::ref(p2));
+		//auto outerPair1 = graph.find(std::ref(p1));
+		//auto outerPair2 = graph.find(std::ref(p2));
 
-		pair1->second.insert({ std::ref(p2), interaction(pot) });
-		pair2->second.insert({ std::ref(p1), interaction(pot) });
+		//auto innerPair1 = outerPair1->second.find(std::ref(p2));
+		//auto innerPair2 = outerPair2->second.find(std::ref(p1));
+
+		//if (innerPair1 == outerPair1->second.end()) {
+		//	outerPair1->second.insert({ std::ref(p2), { Interaction(pot) } });
+		//}
+		//else {
+		//	auto interactionSet = innerPair1->second;
+		//	
+		//	interactionSet.insert(Interaction(pot));
+		//}
+
+		//if (innerPair2 == outerPair2->second.end()) {
+		//	outerPair2->second.insert({ std::ref(p1), { Interaction(pot) } });
+		//}
+		//else {
+		//	auto interactionSet = innerPair2->second;
+
+		//	interactionSet.insert(Interaction(pot));
+		//}
+
+		// MAKE SURE TO ADD AN ASSERTION THAT EACH PARTICLE MUST ALREADY BE IN THE SYSTEM
+		// SINCE EACH INTERACTION IS CREATED ONCE THIS CHECK WON'T ADD TOO MUCH RUNTIME
+
+		// ensure node for p1
+		auto res1 = graph.emplace(std::ref(p1), std::map<std::reference_wrapper<Particle>, std::set<Interaction, InteractionCmp>, RefWrapperCmp>{});
+		auto outerPair1 = res1.first;
+
+		// ensure node for p2
+		auto res2 = graph.emplace(std::ref(p2), std::map<std::reference_wrapper<Particle>, std::set<Interaction, InteractionCmp>, RefWrapperCmp>{});
+		auto outerPair2 = res2.first;
+
+		// find or create inner entries and emplace interaction (no copies of sets)
+		auto& map1 = outerPair1->second;
+		auto& map2 = outerPair2->second;
+
+		auto inner1 = map1.emplace(std::ref(p2), std::set<Interaction, InteractionCmp>{}).first;
+		inner1->second.emplace(pot);
+
+		auto inner2 = map2.emplace(std::ref(p1), std::set<Interaction, InteractionCmp>{}).first;
+		inner2->second.emplace(pot);
 	}
 
 	void pushVelocity() {
@@ -173,11 +222,13 @@ public:
 
 			// "double counting" the interactions makes this portion a lot simpler
 			for (auto& innerPair : outerPair.second) {
-				Potential V = innerPair.second.pot;
-				vec3 disp = innerPair.second.displacement;
-				vec3 relVel = innerPair.second.relVel;
+				for (Interaction i : innerPair.second) {
+					Potential V = i.pot;
+					vec3 disp = i.displacement;
+					vec3 relVel = i.relVel;
 
-				dv += V.velocityGradientOverM(relVel, current.getMass()) - current.getDt() * V.positionGradientOverM(disp, current.getMass());
+					dv += V.velocityGradientOverM(relVel, current.getMass()) - current.getDt() * V.positionGradientOverM(disp, current.getMass());
+				}
 			}
 
 			current.accelerateBy(dv);
@@ -221,11 +272,13 @@ public:
 			Particle& current = outerPair.first.get();
 
 			for (auto& innerPair : outerPair.second) {
-				Potential V = innerPair.second.pot;
-				vec3 disp = innerPair.second.displacement;
-				vec3 relVel = innerPair.second.relVel;
+				for (Interaction i : innerPair.second) {
+					Potential V = i.pot;
+					vec3 disp = i.displacement;
+					vec3 relVel = i.relVel;
 
-				PE += V.potentialEnergy(disp, relVel, current.getTime(), current.getDt());
+					PE += V.potentialEnergy(disp, relVel, current.getTime(), current.getDt());
+				}
 			}
 		}
 
@@ -243,7 +296,27 @@ public:
 	}
 
 private:
-    std::map<std::reference_wrapper<Particle>, std::map<std::reference_wrapper<Particle>, interaction, RefWrapperCmp>, RefWrapperCmp> graph;
+	/*
+	* * ABSTRACTION:
+	*	Systems are modelled as an undirected graph where particles form the nodes, and interactions the edges.
+	*		- Interactions must consist of nodes (particles) which are already inside the system
+	*		- Note: nothing is stopping the user from creating multiple systems out of the same set of particles, however:
+	*			- currently the time tracking mechanism will always iterate the time of each particle regardless of if it has already been updated
+	*			- calculations involving energy will still be in the lab (render/camera) frame (and not a subsystem frame, ie: a spinning one)
+	* CORRESPONDENCE:
+	*	graph.key represents the nodes in the graph and must be unique
+	*	graph.value represents the edges of the graph:
+	*		- abstracted as a map of end-nodes corresponding to a set of interactions
+	*			- the end nodes indicate the edge in consideration
+	*			- the set of interactions store each force/potential along that edge
+	*		- insertions for interactions must add each pair, ie: add { p1, { ..., { p2, i } } } & { p2, { ..., { p1, i } } }
+	*			- the above design decision makes pushing velocity very easy as each particle has its own reference to its 
+	*				corresponding interaction
+	*			- in contract, potential energy is harder, since a naive iteration will double-count each interaction
+	*	TODO:
+	*		- universal interactions
+	*/
+    std::map<std::reference_wrapper<Particle>, std::map<std::reference_wrapper<Particle>, std::set<Interaction, InteractionCmp>, RefWrapperCmp>, RefWrapperCmp> graph;
 
 	enum BoundaryConditions bc;
 
@@ -252,15 +325,35 @@ private:
 	void recordState() {
 		for (auto& pair : graph) {
 			for (auto& subPair : pair.second) {
-				Particle& first = pair.first.get();
-				Particle& second = subPair.first.get();
-				interaction& i = subPair.second;
-				i.displacement = first.getPosition() - second.getPosition(); // from other to current
-				vec3 cmVelocity = (first.getMass() * first.getVelocity() + second.getMass() * second.getVelocity()) / (first.getMass() + second.getMass());
-				i.relVel = first.getVelocity() - cmVelocity; // only record one since we are already storing both directions of the edge
-				// if the above comment does not make sense, consider why when insertting an interaction between particle A and B
-				// we insert the corresponding particle-potential pair to both A *and* B
-				//i.relVel2 = second.getVelocity() - cmVelocity;
+				// **** AI ****
+				// ... but I think I mostly understand it
+
+				// this call pulls an iterator for our set of interactions
+				std::set<Interaction, InteractionCmp>::iterator it = subPair.second.begin();
+
+				// we use the iterator to update each entry until we reach the end
+				while (it != subPair.second.end()) {
+					// we extract the current node and capture the iterator as we increment this
+					// (if we end the loop with it++ or put it anywhere else, this will throw a runtime error)
+					auto node = subPair.second.extract(it++);
+
+					// then we pull out and update our values
+					Particle& first = pair.first.get();
+				  	Particle& second = subPair.first.get();
+
+					Interaction& i = node.value();
+
+					i.displacement = first.getPosition() - second.getPosition(); // from other to current
+					vec3 cmVelocity = (first.getMass() * first.getVelocity() + second.getMass() * second.getVelocity()) / (first.getMass() + second.getMass());
+					i.relVel = first.getVelocity() - cmVelocity; // only record one since we are already storing both directions of the edge
+					// if the above comment does not make sense, consider why when insertting an interaction between particle A and B
+					// we insert the corresponding particle-potential pair to both A *and* B
+					//i.relVel2 = second.getVelocity() - cmVelocity;
+
+					// and re-insert the node
+					// I'm pretty sure emplace would mess up the iterator somehow but maybe not
+					subPair.second.insert(std::move(node));
+				}
 			}
 		}
 	}

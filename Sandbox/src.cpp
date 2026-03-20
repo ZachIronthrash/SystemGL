@@ -497,12 +497,16 @@ int main() {
 	Particle p1 = Particle(vec3(pointSeparation / 2.0l, 0.0l, 0.0l), vec3(0.0l, velocity, 0.0l), massPer, 0.0l, dt);
 	Particle p2 = Particle(vec3(-pointSeparation / 2.0l, 0.0l, 0.0l), vec3(0.0l, -velocity, 0.0l), massPer, 0.0l, dt);
 
+	//Particle p0 = Particle(vec3(0), vec3(0), 1.0, 0.0, 0.0);
+
 	System system(BoundaryConditions::reflection);
 
 	system.addNode(p1);
 	system.addNode(p2);
 
-	system.createInteraction(p1, p2, Potential(PotentialType::SimpleHarmonicOscillator, { 0.0l, springConstant }));
+	system.createInteraction(p1, p2, Potential(PotentialType::SimpleHarmonicOscillator, { 0.5l, springConstant }));
+	//system.createInteraction(p1, p0, Potential(PotentialType::PlanetaryGravitationalPotential, { gravitationalAcceleration.x, gravitationalAcceleration.y, gravitationalAcceleration.z, 0.0l }));
+	//system.createInteraction(p2, p0, Potential(PotentialType::PlanetaryGravitationalPotential, { gravitationalAcceleration.x, gravitationalAcceleration.y, gravitationalAcceleration.z, 0.0l }));
 	
 	{
 		long double T = system.kineticEnergy();

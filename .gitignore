@@ -1,5 +1,24 @@
-data/*.txt
-**/*.sim
-**/*.ipch
-**/*.pch
-**/*.pchast
+# Visual Studio
+.vs/
+*.VC.db
+*.VC.opendb
+
+# Build folders
+x64/
+Debug/
+Release/
+
+# Build artifacts
+*.obj
+*.obj.enc
+*.pch
+*.pdb
+*.ilk
+*.log
+
+# Generated simulation output
+SystemGL/*.txt
+
+# Custom file types
+*.sim
+*.state

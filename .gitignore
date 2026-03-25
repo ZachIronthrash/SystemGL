@@ -15,6 +15,7 @@ Release/
 *.pdb
 *.ilk
 *.log
+*.ipch
 
 # Generated simulation output
 SystemGL/*.txt

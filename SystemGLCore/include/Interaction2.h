@@ -89,6 +89,9 @@ public:
 		case RayleighType::VelocityDissipation:
 			assert(parameters.size() == 1);
 			break;
+		case RayleighType::Default:
+			assert(parameters.size() == 0);
+			break;
 		default:
 			assert(parameters.size() == 0);
 			break;
@@ -99,6 +102,9 @@ public:
 		switch (type) {
 		case RayleighType::VelocityDissipation:
 			return parameters.at(0) * velocity;
+			break;
+		case RayleighType::Default:
+			return vec3(0);
 			break;
 		default:
 			return vec3(0);
@@ -111,6 +117,9 @@ public:
 		case RayleighType::VelocityDissipation:
 			//  R = 0.5 * b * v^2
 			return parameters.at(0) * velocity.dot(velocity);
+			break;
+		case RayleighType::Default:
+			return 0.0l;
 			break;
 		default:
 			return 0.0l;

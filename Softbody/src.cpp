@@ -411,8 +411,8 @@ int main() {
 			cout << "Select the strength of the springs (default: " << springConstant << "): ";
 			getLongDoubleWithDefault(cin, springConstant);
 
-			cout << "Select the strength of the damping (default: " << dampingConstant << "): ";
-			getLongDoubleWithDefault(cin, dampingConstant);
+			//cout << "Select the strength of the damping (default: " << dampingConstant << "): ";
+			//getLongDoubleWithDefault(cin, dampingConstant);
 
 			cout << "Select the mass per particle (default: " << massPer << "): ";
 			getLongDoubleWithDefault(cin, massPer);
@@ -441,7 +441,7 @@ int main() {
 		stateIO.states.add("point_separation", pointSeparation);
 		stateIO.states.add("connection_threshold", connectionThreshold);
 		stateIO.states.add("spring_constant", springConstant);
-		stateIO.states.add("damping_constant", dampingConstant);
+		//stateIO.states.add("damping_constant", dampingConstant);
 		stateIO.states.add("mass_per_particle", massPer);
 		stateIO.states.add("gravitational_acceleration", gravitationalAcceleration);
 		stateIO.states.add("delta_time", dt);
@@ -461,7 +461,7 @@ int main() {
 		pointSeparation = stateIO.states.fetchLD("point_separation");
 		connectionThreshold = stateIO.states.fetchLD("connection_threshold");
 		springConstant = stateIO.states.fetchLD("spring_constant");
-		dampingConstant = stateIO.states.fetchLD("damping_constant");
+		//dampingConstant = stateIO.states.fetchLD("damping_constant");
 		massPer = stateIO.states.fetchLD("mass_per_particle");
 		gravitationalAcceleration = stateIO.states.fetchV("gravitational_acceleration");
 		dt = stateIO.states.fetchLD("delta_time");

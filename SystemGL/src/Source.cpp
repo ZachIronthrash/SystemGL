@@ -391,7 +391,7 @@ int main() {
 	vector<float> circleVert;
 	vector<unsigned int> circleInd;
 
-	float circleRadius = 0.01f;
+	float circleRadius = 0.05f;
 
 	circleZ(circleVert, circleInd, circleRadius, 6, { 1.0f, 0.0f, 0.0f });
 

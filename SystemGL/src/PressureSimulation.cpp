@@ -13,7 +13,7 @@
 
 PressureSimulation::PressureSimulation(PressureSystem& s, std::string posFile, std::string impFile, long double ts, long double ss) : Simulation(s, posFile, ts, ss), impulseFile(impFile), system(s) {}
 
-void PressureSimulation::run(long double frameTime, long double endTime, std::ofstream& action) {
+void PressureSimulation::run(long double frameTime, long double endTime, std::ostream& debug) {
 	std::ofstream o;
 	std::ofstream imp;
 	o.open(file);

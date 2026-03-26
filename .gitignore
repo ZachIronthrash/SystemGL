@@ -15,9 +15,12 @@ Release/
 *.pdb
 *.ilk
 *.log
+*.ulog
+*.ipch
 
 # Generated simulation output
 SystemGL/*.txt
+data/*.txt
 
 # Custom file types
 *.sim

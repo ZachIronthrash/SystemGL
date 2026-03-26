@@ -17,6 +17,9 @@ Release/
 *.log
 *.ulog
 *.ipch
+*.lastbuildstate
+*.tlog
+*.idb
 
 # Generated simulation output
 SystemGL/*.txt
@@ -25,6 +28,3 @@ data/
 # Custom file types
 *.sim
 *.state
-*.lastbuildstate
-*.tlog
-*.idb

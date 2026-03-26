@@ -20,7 +20,7 @@ Release/
 
 # Generated simulation output
 SystemGL/*.txt
-data/*.txt
+data/
 
 # Custom file types
 *.sim

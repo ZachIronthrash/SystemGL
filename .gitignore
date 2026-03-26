@@ -25,3 +25,6 @@ data/
 # Custom file types
 *.sim
 *.state
+*.lastbuildstate
+*.tlog
+*.idb

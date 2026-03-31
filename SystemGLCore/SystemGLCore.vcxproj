@@ -73,6 +73,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <SourcePath>$(VC_SourcePath);$(SolutionDir)/SystemGLCore/src;</SourcePath>
     <AllProjectIncludesArePublic>true</AllProjectIncludesArePublic>
+    <LibraryPath>$(SolutionDir)external\assimp\lib\Debug;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -117,7 +118,7 @@
       <LanguageStandard>stdcpp20</LanguageStandard>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(SolutionDir)SystemGLCore/include;$(SolutionDir)\external\glm;$(SolutionDir)\external\glfw\include;$(SolutionDir)\external\glad\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)SystemGLCore/include;$(SolutionDir)external\glm;$(SolutionDir)external\glfw\include;$(SolutionDir)external\glad\include;$(SolutionDir)external\assimp\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -144,11 +145,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\..\Downloads\stb_image.h" />
     <ClInclude Include="include\Camera.h" />
     <ClInclude Include="include\ColorHarmonies.h" />
     <ClInclude Include="include\framework.h" />
     <ClInclude Include="include\Interaction.h" />
     <ClInclude Include="include\Mesh.h" />
+    <ClInclude Include="include\Mesh2.h" />
+    <ClInclude Include="include\Model.h" />
     <ClInclude Include="include\Particle.h" />
     <ClInclude Include="include\PressureSimulation.h" />
     <ClInclude Include="include\PressureSystem.h" />

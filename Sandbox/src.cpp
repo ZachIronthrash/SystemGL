@@ -8,6 +8,7 @@
 //#include "../SystemGLCore/include/StateIO.h"
 #include "../SystemGLCore/include/Temp.h"
 #include "../SystemGLCore/include/SystemGLMath.h"
+#include "../SystemGLCore/include/Model.h"
 #include <algorithm>
 #include <chrono>
 #include <cmath>

@@ -12,3 +12,16 @@ Which includes an accurate approximation of the pressure an ideal gas exerts (wi
 
 Core custom libraries are located in SystemGLCore.
 Reference libraries are located in external.
+
+/data folders are now deprecated.
+Recommended project structure:
+    - /SystemGLCore (or through linker)
+    - /external     ^ as above
+    - /generated
+    - /build
+    - /include      
+    - /source
+        or
+    - src.cpp       
+
+To commit pre-generated files create an /examples folder, which are tracked by git.    

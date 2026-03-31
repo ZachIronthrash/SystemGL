@@ -1,12 +1,38 @@
-# Visual Studio
+# Environment
 .vs/
-*.VC.db
-*.VC.opendb
+.vscode/
+.idea/
+
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# OS noise
+.DS_Store
+Thumbs.db
 
 # Build folders
+build/
+bin/
+out/
 x64/
 Debug/
 Release/
+cmake-build-*/
+
+# CMake
+CMakeFiles/
+CMakeCache.txt
+
+# Generated runtime output
+generated/
+output/
+*.sim
+*.state
+
+# External dependencies
+!external/**
 
 # Build artifacts
 *.obj
@@ -14,17 +40,14 @@ Release/
 *.pch
 *.pdb
 *.ilk
+*.idb
+*.tlog
+*.lastbuildstate
+
+*.exe
+*.dll
+*.lib
+
+# Logs
 *.log
 *.ulog
-*.ipch
-*.lastbuildstate
-*.tlog
-*.idb
-
-# Generated simulation output
-SystemGL/*.txt
-data/
-
-# Custom file types
-*.sim
-*.state
